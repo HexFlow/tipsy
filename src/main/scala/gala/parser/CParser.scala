@@ -33,10 +33,10 @@ object CParser extends Parsers {
 
   def statementList: Parser[ParseTree] = positioned {
     // It has a lot of statements
-    rep1(statement) ^^ { case x => x reduceRight DefinitionList }
+    rep1(globalDefinitions) ^^ { case x => x reduceRight DefinitionList }
   }
 
-  def statement: Parser[ParseTree] = positioned {
+  def globalDefinitions: Parser[ParseTree] = positioned {
     // Statement may be a function or a regular definition
     functionDefinition | definition
   }
@@ -62,7 +62,7 @@ object CParser extends Parsers {
     BRACKET(ROUND(true)) ~
     BRACKET(ROUND(false)) ~
     BRACKET(CURLY(true)) ~
-    rep(definition) ~
+    rep(definition | statement) ~
     BRACKET(CURLY(false)) ^^ {
 
       case qualifiedType ~ IDENT(id) ~ _ ~ _ ~ _ ~ defs ~ _ =>
@@ -70,7 +70,15 @@ object CParser extends Parsers {
     }
   }
 
-  def expression: Parser[ParseTree] = positioned {
+  def statement: Parser[ParseTree] = positioned {
+    // Returns a complete statement
+    identifier ~ operator ~ expression ~ SEMI() ^^ {
+      case id ~ op ~ expr ~ _ => Statement(id, op, expr)
+    }
+  }
+
+  def expression: Parser[Expression] = positioned {
+    // Returns an expression object
     val identExpr = identifier ^^ { case a @ IDENT(_) => IdentExpr(a) }
     val literExpr = literal ^^ { case a @ LITER(_) => LiterExpr(a) }
     identExpr | literExpr
@@ -83,6 +91,10 @@ object CParser extends Parsers {
 
   private def literal: Parser[LITER] = positioned {
     accept("string literal", { case lit @ LITER(name) => lit })
+  }
+
+  private def operator: Parser[OPERATOR] = positioned {
+    accept("operator", { case op @ OPERATOR(_) => op })
   }
 
   private def typeparse: Parser[QualifiedType] = positioned {

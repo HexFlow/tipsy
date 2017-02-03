@@ -3,4 +3,5 @@
  */
 int main() {
     static int k = 0;
+    k = 3;
 }

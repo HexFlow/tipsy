@@ -24,6 +24,9 @@ case class Definition(
 // An uninitialized definition
 case class UnDefinition(qt: QualifiedType, name: String) extends ParseTree
 
+// A statement
+case class Statement(id: IDENT, op: OPERATOR, expr: Expression) extends ParseTree
+
 // A function with type and definition
 case class FunctionDefinition(
   qt: QualifiedType,
