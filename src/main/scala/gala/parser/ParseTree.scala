@@ -39,3 +39,6 @@ case class FunctionDefinition(
 sealed trait Expression extends ParseTree
 case class IdentExpr(id: IDENT) extends Expression
 case class LiterExpr(liter: LITER) extends Expression
+case class BinaryExpr(exp1: Expression, op: BinaryOp, exp2: Expression) extends Expression
+case class PreUnaryExpr(op: PreUnaryOp, exp: Expression) extends Expression
+case class PostUnaryExpr(exp: Expression, op: PostUnaryOp) extends Expression

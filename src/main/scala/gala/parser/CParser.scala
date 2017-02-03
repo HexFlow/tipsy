@@ -47,11 +47,14 @@ object CParser extends Parsers {
         UnDefinition(qualifiedType, id)
     }
 
-    val initialized =
-      typeparse ~ identifier ~ OPERATOR("=") ~ expression ~ SEMI() ^^ {
+    val initialized = {
+      typeparse ~ identifier ~
+      OPERATOR(StatementOp("=")) ~
+      expression ~ SEMI() ^^ {
+
         case qualifiedType ~ IDENT(id) ~ _ ~ expr ~ _ =>
           Definition(qualifiedType, id, expr)
-      }
+      }}
 
     // A regular definition will either be uninitialized, or initialized
     uninitialized | initialized
@@ -72,7 +75,7 @@ object CParser extends Parsers {
 
   def statement: Parser[ParseTree] = positioned {
     // Returns a complete statement
-    identifier ~ operator ~ expression ~ SEMI() ^^ {
+    identifier ~ operator("stmt") ~ expression ~ SEMI() ^^ {
       case id ~ op ~ expr ~ _ => Statement(id, op, expr)
     }
   }
@@ -81,7 +84,32 @@ object CParser extends Parsers {
     // Returns an expression object
     val identExpr = identifier ^^ { case a @ IDENT(_) => IdentExpr(a) }
     val literExpr = literal ^^ { case a @ LITER(_) => LiterExpr(a) }
-    identExpr | literExpr
+
+    val binaryExpr = (identExpr | literExpr) ~ operator("bin") ~ expression ^^ {
+      case e1 ~ OPERATOR(op) ~ e2 => {
+        op match { // Ignore non-binary operators in this match
+          case a @ BinaryOp(_) => BinaryExpr(e1, a, e2)
+        }
+      }
+    }
+
+    val preUnaryExpr = operator("pre") ~ expression ^^ {
+      case OPERATOR(op) ~ e2 => {
+        op match {
+          case a @ PreUnaryOp(_) => PreUnaryExpr(a, e2)
+        }
+      }
+    }
+
+    val postUnaryExpr = (identExpr | literExpr) ~ operator("post") ^^ {
+      case e1 ~ OPERATOR(op) => {
+        op match {
+          case a @ PostUnaryOp(_) => PostUnaryExpr(e1, a)
+        }
+      }
+    }
+
+    postUnaryExpr | preUnaryExpr | binaryExpr | identExpr | literExpr
   }
 
   // Helpers
@@ -93,8 +121,14 @@ object CParser extends Parsers {
     accept("string literal", { case lit @ LITER(name) => lit })
   }
 
-  private def operator: Parser[OPERATOR] = positioned {
-    accept("operator", { case op @ OPERATOR(_) => op })
+  // TODO Make this more generic to gain compile time guarantees
+  private def operator(style: String): Parser[OPERATOR] = positioned {
+    accept("operator", {
+      case op @ OPERATOR(BinaryOp(_)) if style == "bin" => op
+      case op @ OPERATOR(PreUnaryOp(_)) if style == "pre" => op
+      case op @ OPERATOR(PostUnaryOp(_)) if style == "post" => op
+      case op @ OPERATOR(StatementOp(_)) if style == "stmt" => op
+    })
   }
 
   private def typeparse: Parser[QualifiedType] = positioned {

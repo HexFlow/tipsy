@@ -59,10 +59,28 @@ object CLexer extends RegexParsers {
   }
 
   def operator: Parser[OPERATOR] = positioned {
-    ("==|!=|>=|<=|&&|[|]{2}|[+]{2}|--|[+]=|-=|[*]=|/=".r |
-      "[[(][)]+-[*]/=&|^%<>?]".r) ^^ {
-      OPERATOR(_)
+    val statementOp = """=|\+=|\*=|-=|/=|^=|\|\|""".r ^^ {
+      case x => OPERATOR(StatementOp(x))
     }
+
+    val binaryOp = """[+]|>=|<=|==|!=|[|]{1,2}|&{1,2}""".r ^^ {
+      case x => OPERATOR(BinaryOp(x))
+    }
+
+    val preUnaryOp = """[+]{2}|-{2}|!|&""".r ^^ {
+      case x => OPERATOR(PreUnaryOp(x))
+    }
+
+    val postUnaryOp = """[+]{2}|-{2}""".r ^^ {
+      case x => OPERATOR(PostUnaryOp(x))
+    }
+
+    preUnaryOp | postUnaryOp | statementOp | binaryOp
+
+    // ("==|!=|>=|<=|&&|[|]{2}|[+]{2}|--|[+]=|-=|[*]=|/=".r |
+    //   "[[(][)]+-[*]/=&|^%<>?]".r) ^^ {
+    //   OPERATOR(_)
+    // }
   }
 
   def identifier: Parser[IDENT] = positioned {

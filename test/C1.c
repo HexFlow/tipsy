@@ -3,5 +3,6 @@
  */
 int main() {
     static int k = 0;
-    k = 3;
+    int b;
+    k = ++b + 2;
 }

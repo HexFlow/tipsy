@@ -10,7 +10,7 @@ case class TYPEQ(qualifier: String) extends CToken
 case class BRACKET(t: CBracket) extends CToken
 case class IDENT(str: String) extends CToken
 case class LITER(l: Literal) extends CToken
-case class OPERATOR(str: String) extends CToken
+case class OPERATOR(op: COperator) extends CToken
 case class SEMI() extends CToken
 
 sealed trait Literal extends Positional
@@ -32,3 +32,10 @@ sealed trait CBracket { val open: Boolean }
 case class ROUND(open: Boolean) extends CBracket
 case class CURLY(open: Boolean) extends CBracket
 case class SQUARE(open: Boolean) extends CBracket
+
+sealed trait COperator
+case class StatementOp(op: String) extends COperator
+case class PreUnaryOp(op: String) extends COperator
+case class PostUnaryOp(op: String) extends COperator
+case class BinaryOp(op: String) extends COperator
+case class TernaryOp(op: String) extends COperator
