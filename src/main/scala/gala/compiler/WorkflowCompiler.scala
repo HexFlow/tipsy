@@ -4,10 +4,10 @@ import gala.lexer._
 import gala.parser._
 
 object WorkflowCompiler {
-  def apply(code: String): Either[WorkflowCompilationError, WorkflowAST] = {
+  def apply(code: String): Either[CCompilationError, List[CToken]] = {
     for {
-      tokens <- WorkflowLexer(code).right
-      ast <- WorkflowParser(tokens).right
-    } yield ast
+      tokens <- CLexer(code).right
+      parseTree <- CParser(tokens).right
+    } yield tokens
   }
 }

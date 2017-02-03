@@ -1,7 +1,10 @@
 package gala.frontend
 
 import scala.io.Source
-import gala.compiler._
+import gala.compiler.WorkflowCompiler
+
+import scala.util.{Try, Success, Failure}
+
 
 /**
   * CLI: Frontend to handle command line compilations.
@@ -9,20 +12,15 @@ import gala.compiler._
   * a web based one.
   */
 object CLI {
-  def apply(args: Array[String]) {
+  def apply(args: Array[String]): Unit = {
     args.map(x => {
       println("Compiling " + x)
-      val source = Source.fromFile(x)
-      val code =
-        try {
-          WorkflowCompiler(source.mkString)
-        } catch {
-          case _: Throwable => {
-            println("Error while reading file: " + x)
-          }
-        } finally {
-          source.close()
-        }
+      val source = Try(Source.fromFile(x).mkString)
+
+      source match {
+        case Success(c) => println(WorkflowCompiler(c))
+        case Failure(e) => println(e)
+      }
     })
   }
 }

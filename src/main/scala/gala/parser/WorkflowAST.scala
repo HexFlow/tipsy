@@ -1,8 +1,10 @@
 package gala.parser
 
+import gala.lexer._
 import scala.util.parsing.input.Positional
 
 sealed trait WorkflowAST extends Positional
+case class TokenList(tokens: List[CToken]) extends WorkflowAST
 case class AndThen(step1: WorkflowAST, step2: WorkflowAST) extends WorkflowAST
 case class ReadInput(inputs: Seq[String]) extends WorkflowAST
 case class CallService(serviceName: String) extends WorkflowAST

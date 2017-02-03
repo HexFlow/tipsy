@@ -6,7 +6,7 @@ sealed trait CToken extends Positional
 
 case class KEYWORD(str: String) extends CToken
 case class TYPE(t: CType) extends CToken
-case class TYPEQ(qualifiers: List[String]) extends CToken
+case class TYPEQ(qualifier: String) extends CToken
 case class BRACKET(t: CBracket) extends CToken
 case class IDENT(str: String) extends CToken
 case class LITER(str: String) extends CToken
@@ -15,7 +15,7 @@ case class FCONSTANT(value: Double) extends CToken
 case class OPERATOR(str: String) extends CToken
 case class SEMI() extends CToken
 
-sealed trait CType
+sealed trait CType extends Positional
 case class INT() extends CType
 case class BYTE() extends CType
 case class SHORT() extends CType

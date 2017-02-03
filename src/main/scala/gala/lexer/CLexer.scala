@@ -39,7 +39,7 @@ object CLexer extends RegexParsers {
   }
 
   def ctypequalifier: Parser[TYPEQ] = positioned {
-    (rep1("static|volatile|unsigned|signed|const".r)) ^^ {
+    ("static|volatile|unsigned|signed|const".r) ^^ {
       TYPEQ(_)
     }
   }
