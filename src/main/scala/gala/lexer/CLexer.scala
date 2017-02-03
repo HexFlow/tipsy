@@ -23,7 +23,6 @@ object CLexer extends RegexParsers {
     phrase {
       rep1 {
         keyword | ctype | ctypequalifier |
-        iconstant | fconstant |
         semi | bracket |
         identifier | literal | operator
       }
@@ -59,17 +58,6 @@ object CLexer extends RegexParsers {
     }
   }
 
-  def iconstant: Parser[ICONSTANT] = positioned {
-    (hex | octal | integer) ^^ { ICONSTANT(_) }
-  }
-
-  def fconstant: Parser[FCONSTANT] = positioned {
-    (integer ~ "." ~ integer) ^^ {
-      case (x ~ "." ~ y) =>
-        FCONSTANT((x.toString ++ "." ++ y.toString).toDouble)
-    }
-  }
-
   def operator: Parser[OPERATOR] = positioned {
     ("==|!=|>=|<=|&&|[|]{2}|[+]{2}|--|[+]=|-=|[*]=|/=".r |
       "[[(][)]+-[*]/=&|^%<>?]".r) ^^ {
@@ -82,9 +70,7 @@ object CLexer extends RegexParsers {
   }
 
   def literal: Parser[LITER] = positioned {
-    """"[^"]*"""".r ^^ { str =>
-      LITER(str.substring(1, str.length - 1))
-    }
+    (iliteral | fliteral | sliteral) ^^ { LITER(_) }
   }
 
   def semi: Parser[SEMI] = positioned { ";".r ^^ { _ => SEMI() } }
@@ -93,8 +79,25 @@ object CLexer extends RegexParsers {
     (obracket | cbracket) ^^ { BRACKET(_) }
   }
 
-  // Helper parsers here
-  // ===================
+  // Helper parsers here =>
+  // ------------------- =>
+
+  def iliteral: Parser[IntLiteral] = positioned {
+    (hex | octal | integer) ^^ { IntLiteral(_) }
+  }
+
+  def fliteral: Parser[FloatLiteral] = positioned {
+    (integer ~ "." ~ integer) ^^ {
+      case (x ~ "." ~ y) =>
+        FloatLiteral((x.toString ++ "." ++ y.toString).toDouble)
+    }
+  }
+
+  def sliteral: Parser[StrLiteral] = positioned {
+    """"[^"]*"""".r ^^ { str =>
+      StrLiteral(str.substring(1, str.length - 1))
+    }
+  }
 
   def integer: Parser[Int] = {
     "[0-9]+".r ^^ { x => x.toInt }

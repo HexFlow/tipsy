@@ -27,25 +27,34 @@ object CParser extends Parsers {
   }
 
   def program: Parser[ParseTree] = positioned {
+    // Program comprises of statementList
     phrase(statementList)
   }
 
   def statementList: Parser[ParseTree] = positioned {
-    // Get a list of statements
+    // It has a lot of statements
     rep1(statement) ^^ { case x => x reduceRight DefinitionList }
   }
 
   def statement: Parser[ParseTree] = positioned {
+    // Statement may be a function or a regular definition
     functionDefinition | definition
   }
 
   def definition: Parser[ParseTree] = positioned {
     val uninitialized = typeparse ~ identifier ~ SEMI() ^^ {
-
       case qualifiedType ~ IDENT(id) ~ _ =>
-        Definition(qualifiedType, id)
+        UnDefinition(qualifiedType, id)
     }
-    uninitialized
+
+    val initialized =
+      typeparse ~ identifier ~ OPERATOR("=") ~ expression ~ SEMI() ^^ {
+        case qualifiedType ~ IDENT(id) ~ _ ~ expr ~ _ =>
+          Definition(qualifiedType, id, expr)
+      }
+
+    // A regular definition will either be uninitialized, or initialized
+    uninitialized | initialized
   }
 
   def functionDefinition: Parser[ParseTree] = positioned {
@@ -61,6 +70,12 @@ object CParser extends Parsers {
     }
   }
 
+  def expression: Parser[ParseTree] = positioned {
+    val identExpr = identifier ^^ { case a @ IDENT(_) => IdentExpr(a) }
+    val literExpr = literal ^^ { case a @ LITER(_) => LiterExpr(a) }
+    identExpr | literExpr
+  }
+
   // Helpers
   private def identifier: Parser[IDENT] = positioned {
     accept("identifier", { case id @ IDENT(name) => id })
@@ -70,15 +85,16 @@ object CParser extends Parsers {
     accept("string literal", { case lit @ LITER(name) => lit })
   }
 
-  private def typename: Parser[TYPE] = {
-    accept("type", { case ty @ TYPE(ctype) => ty })
-  }
-
-  private def typequalifiers: Parser[TYPEQ] = {
-    accept("type qualifier", { case tyq @ TYPEQ(quals) => tyq })
-  }
-
   private def typeparse: Parser[QualifiedType] = positioned {
+
+    def typename: Parser[TYPE] = {
+      accept("type", { case ty @ TYPE(ctype) => ty })
+    }
+
+    def typequalifiers: Parser[TYPEQ] = {
+      accept("type qualifier", { case tyq @ TYPEQ(quals) => tyq })
+    }
+
     rep(typequalifiers) ~ typename ^^ {
       case tql ~ TYPE(ct) => QualifiedType(tql.map(_.qualifier), ct)
     }

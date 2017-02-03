@@ -2,5 +2,5 @@
  * This is my test file :)
  */
 int main() {
-    int k;
+    static int k = 0;
 }
