@@ -1,7 +1,7 @@
-package gala.parser
+package tipsy.parser
 
-import gala.compiler.{Location, CParserError}
-import gala.lexer._
+import tipsy.compiler.{Location, CParserError}
+import tipsy.lexer._
 
 import scala.util.parsing.combinator.Parsers
 import scala.util.parsing.input.{NoPosition, Position, Reader}

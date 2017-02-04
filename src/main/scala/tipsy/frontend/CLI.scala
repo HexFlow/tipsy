@@ -1,7 +1,7 @@
-package gala.frontend
+package tipsy.frontend
 
 import scala.io.Source
-import gala.compiler.WorkflowCompiler
+import tipsy.compiler.WorkflowCompiler
 
 import scala.util.{Try, Success, Failure}
 

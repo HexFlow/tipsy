@@ -1,4 +1,4 @@
-package gala.lexer
+package tipsy.lexer
 
 import scala.util.parsing.input.Positional
 

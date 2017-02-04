@@ -1,4 +1,4 @@
-package gala.compiler
+package tipsy.compiler
 
 sealed trait WorkflowCompilationError
 

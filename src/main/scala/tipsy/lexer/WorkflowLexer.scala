@@ -1,6 +1,6 @@
-package gala.lexer
+package tipsy.lexer
 
-import gala.compiler.{Location, WorkflowLexerError}
+import tipsy.compiler.{Location, WorkflowLexerError}
 
 import scala.util.parsing.combinator.RegexParsers
 

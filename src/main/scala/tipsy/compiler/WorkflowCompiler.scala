@@ -1,7 +1,7 @@
-package gala.compiler
+package tipsy.compiler
 
-import gala.lexer._
-import gala.parser._
+import tipsy.lexer._
+import tipsy.parser._
 
 object WorkflowCompiler {
   def apply(code: String): Either[CCompilationError, ParseTree] = {

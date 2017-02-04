@@ -1,6 +1,6 @@
-package gala.parser
+package tipsy.parser
 
-import gala.lexer._
+import tipsy.lexer._
 import scala.util.parsing.input.Positional
 
 // Used for storing types

@@ -1,4 +1,4 @@
-name := "gala"
+name := "tipsy"
 
 version := "0.1"
 

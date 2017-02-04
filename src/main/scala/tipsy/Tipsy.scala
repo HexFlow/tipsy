@@ -1,8 +1,8 @@
-package gala
+package tipsy
 
-import gala.frontend._
+import tipsy.frontend._
 
-object Gala {
+object Tipsy {
   def main(args: Array[String]): Unit = {
     // Using the CLI frontend by default
     CLI(args)
