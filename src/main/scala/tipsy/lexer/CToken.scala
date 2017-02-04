@@ -33,7 +33,7 @@ case class ROUND(open: Boolean) extends CBracket
 case class CURLY(open: Boolean) extends CBracket
 case class SQUARE(open: Boolean) extends CBracket
 
-sealed trait COperator
+sealed trait COperator extends Positional
 case class StatementOp(op: String) extends COperator
 case class PreUnaryOp(op: String) extends COperator
 case class PostUnaryOp(op: String) extends COperator
