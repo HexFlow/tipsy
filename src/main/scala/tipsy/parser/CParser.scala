@@ -6,7 +6,7 @@ import tipsy.lexer._
 import scala.util.parsing.combinator.Parsers
 import scala.util.parsing.input.{NoPosition, Position, Reader}
 
-object CParser extends Parsers {
+object CParser extends Parsers with OperatorParsers {
   override type Elem = CToken
 
   class CTokenReader(tokens: Seq[Elem]) extends Reader[Elem] {
@@ -54,7 +54,8 @@ object CParser extends Parsers {
 
         case qualifiedType ~ IDENT(id) ~ _ ~ expr ~ _ =>
           Definition(qualifiedType, id, expr)
-      }}
+      }
+    }
 
     // A regular definition will either be uninitialized, or initialized
     uninitialized | initialized
@@ -85,10 +86,6 @@ object CParser extends Parsers {
     val identExpr = identifier ^^ { case a @ IDENT(_) => IdentExpr(a) }
     val literExpr = literal ^^ { case a @ LITER(_) => LiterExpr(a) }
 
-    val binaryExpr = (identExpr | literExpr) ~ binOp ~ expression ^^ {
-      case e1 ~ bop ~ e2 => BinaryExpr(e1, bop, e2)
-    }
-
     val preUnaryExpr = preOp ~ identExpr ^^ {
       case pop ~ e2 => PreUnaryExpr(pop, e2)
     }
@@ -97,7 +94,53 @@ object CParser extends Parsers {
       case e1 ~ pop => PostUnaryExpr(e1, pop)
     }
 
-    postUnaryExpr | preUnaryExpr | binaryExpr | identExpr | literExpr
+    val fxnExpr = {
+      identifier ~ BRACKET(ROUND(true)) ~
+      expression ~ BRACKET(ROUND(false)) ^^ {
+        case ident ~ _ ~ exp ~ _ => FxnExpr(ident, exp)
+      }
+    }
+
+    val bracketExpr = {
+      BRACKET(ROUND(true)) ~ expression ~ BRACKET(ROUND(false)) ^^ {
+        case _ ~ exp ~ _ => exp
+      }
+    }
+
+    def prio1Expr: Parser[Expression] = positioned {
+      (prio2Expr | prio3Expr | prio4Expr | prio5Expr) ~ prio1op ~ expression ^^ {
+        case e1 ~ op ~ e2 => BinaryExpr(e1, op, e2)
+      }
+    }
+
+    def prio2Expr: Parser[Expression] = positioned {
+      (prio3Expr | prio4Expr | prio5Expr) ~ prio2op ~ expression ^^ {
+        case e1 ~ op ~ e2 => BinaryExpr(e1, op, e2)
+      }
+    }
+
+    def prio3Expr: Parser[Expression] = positioned {
+      (prio4Expr | prio5Expr) ~ prio3op ~ expression ^^ {
+        case e1 ~ op ~ e2 => BinaryExpr(e1, op, e2)
+      }
+    }
+
+    def prio4Expr: Parser[Expression] = positioned {
+      prio5Expr ~ prio4op ~ expression ^^ {
+        case e1 ~ op ~ e2 => BinaryExpr(e1, op, e2)
+      }
+    }
+
+    def prio5Expr: Parser[Expression] = positioned {
+      fxnExpr | bracketExpr |
+      identExpr | literExpr |
+      preUnaryExpr | postUnaryExpr
+    }
+
+    val prioExprs = List(prio1Expr, prio2Expr, prio3Expr, prio4Expr, prio5Expr)
+
+    // Expression is the OR of all these prioritized expressions
+    prioExprs reduceRight ((x, y) => x | y)
   }
 
   // Helpers
@@ -107,26 +150,6 @@ object CParser extends Parsers {
 
   private def literal: Parser[LITER] = positioned {
     accept("string literal", { case lit @ LITER(name) => lit })
-  }
-
-  private def postOp: Parser[PostUnaryOp] = positioned {
-    operator ^^ { case OPERATOR(pop @ PostUnaryOp(_)) => pop }
-  }
-
-  private def preOp: Parser[PreUnaryOp] = positioned {
-    operator ^^ { case OPERATOR(pop @ PreUnaryOp(_)) => pop }
-  }
-
-  private def binOp: Parser[BinaryOp] = positioned {
-    operator ^^ { case OPERATOR(bop @ BinaryOp(_)) => bop }
-  }
-
-  private def stmtOp: Parser[StatementOp] = positioned {
-    operator ^^ { case OPERATOR(sop @ StatementOp(_)) => sop }
-  }
-
-  private def operator: Parser[OPERATOR] = positioned {
-    accept("operator", {case op @ OPERATOR(_) => op})
   }
 
   private def typeparse: Parser[QualifiedType] = positioned {

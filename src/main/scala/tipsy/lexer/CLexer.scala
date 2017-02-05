@@ -63,8 +63,12 @@ object CLexer extends RegexParsers {
       case x => OPERATOR(StatementOp(x))
     }
 
-    val binaryOp = """[+]|>=|<=|==|!=|[|]{1,2}|&{1,2}""".r ^^ {
-      case x => OPERATOR(BinaryOp(x))
+    val binaryOp = """[+]|[*]|>=|>|<|<=|==|!=|[|]{1,2}|&{1,2}""".r ^^ {
+      case x @ (">=" | "<=" | ">" | "<" | "!=" | "==") =>
+        OPERATOR(BinaryOp(Prio1(x)))
+      case x @ ("*" | "/") => OPERATOR(BinaryOp(Prio2(x)))
+      case x @ ("+" | "-") => OPERATOR(BinaryOp(Prio3(x)))
+      case x => OPERATOR(BinaryOp(Prio4(x)))
     }
 
     val preUnaryOp = """[+]{2}|-{2}|!|&""".r ^^ {
@@ -76,11 +80,6 @@ object CLexer extends RegexParsers {
     }
 
     preUnaryOp | postUnaryOp | statementOp | binaryOp
-
-    // ("==|!=|>=|<=|&&|[|]{2}|[+]{2}|--|[+]=|-=|[*]=|/=".r |
-    //   "[[(][)]+-[*]/=&|^%<>?]".r) ^^ {
-    //   OPERATOR(_)
-    // }
   }
 
   def identifier: Parser[IDENT] = positioned {
@@ -101,7 +100,7 @@ object CLexer extends RegexParsers {
   // ------------------- =>
 
   def iliteral: Parser[IntLiteral] = positioned {
-    (hex | octal | integer) ^^ { IntLiteral(_) }
+    (hex | octal | integer | binary) ^^ { IntLiteral(_) }
   }
 
   def fliteral: Parser[FloatLiteral] = positioned {
@@ -124,6 +123,12 @@ object CLexer extends RegexParsers {
   def hex: Parser[Int] = {
     "0[xX][a-fA-F0-9]+".r ^^ {
       s => Integer.parseInt(s.substring(2), 16)
+    }
+  }
+
+  def binary: Parser[Int] = {
+    "0[bB][0-1]+".r ^^ {
+      s => Integer.parseInt(s.substring(2), 2)
     }
   }
 
