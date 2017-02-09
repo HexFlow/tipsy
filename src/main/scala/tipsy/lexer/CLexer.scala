@@ -63,7 +63,7 @@ object CLexer extends RegexParsers {
       case x => OPERATOR(StatementOp(x))
     }
 
-    val binaryOp = """[+]|[*]|>=|>|<|<=|==|!=|[|]{1,2}|&{1,2}""".r ^^ {
+    val binaryOp = """[+*/-]|>=|>|<|<=|==|!=|[|]{1,2}|&{1,2}""".r ^^ {
       case x @ (">=" | "<=" | ">" | "<" | "!=" | "==") =>
         OPERATOR(ParseBinaryOp(Prio1(x)))
       case x @ ("*" | "/") => OPERATOR(ParseBinaryOp(Prio2(x)))

@@ -120,28 +120,72 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
 
     type ExprOp = (Expression, BinaryOp)
 
-    def exprOpPairParser: Parser[ExprOp] = {
-      expression ~ binOp ^^ {
+    /**
+      * Takes a binary operator parser.
+      * Returns a parser which parses an expression followed
+      * by that binary operator
+      */
+    def getPairParser(opP: => Parser[BinaryOp]): Parser[ExprOp] = {
+      expression ~ opP ^^ {
         case expr ~ op => (expr, op)
       }
     }
 
-    rep(exprOpPairParser) ~ identExpr ^^ {
-      case lis ~ id => {
+    /**
+      * Takes a list of (expression, binary operator), and a
+      * final expression (of lower priority) after the list.
+      *
+      * Returns a left recursive parse tree of the above
+      */
+    def getTreeFromExprList(lis: List[ExprOp], id: Expression) = {
+      val parseList: List[ExprOp] = lis :+ (id, BinaryOp("*"))
 
-        val parseList: List[ExprOp] = lis :+ (id, BinaryOp("*"))
-
-        (parseList match {
-          case x :: xs => {
-            xs.foldLeft (x) {
-              (prevRes: ExprOp, nEO: ExprOp) => {
-                (BinaryExpr(prevRes._1, prevRes._2, nEO._1), nEO._2)
-              }
+      (parseList match {
+        case x :: xs => {
+          xs.foldLeft (x) {
+            (prevRes: ExprOp, nEO: ExprOp) => {
+              (BinaryExpr(prevRes._1, prevRes._2, nEO._1), nEO._2)
             }
           }
-          case _ => ???
-        })._1
+        }
+        case _ => ???
+      })._1
+    }
+
+    def prio1Expr: Parser[Expression] = positioned {
+      rep(getPairParser(prio1op | prio2op | prio3op | prio4op)) ~
+      (prio2Expr | prio3Expr | prio4Expr | prio5Expr) ^^ {
+        case lis ~ id => getTreeFromExprList(lis, id)
       }
+    }
+
+    def prio2Expr: Parser[Expression] = positioned {
+      rep(getPairParser(
+        prio2op | prio3op | prio4op)) ~ (prio3Expr | prio4Expr | prio5Expr) ^^ {
+        case lis ~ id => getTreeFromExprList(lis, id)
+      }
+    }
+
+    def prio3Expr: Parser[Expression] = positioned {
+      rep(getPairParser(prio3op | prio4op)) ~ (prio4Expr | prio5Expr) ^^ {
+        case lis ~ id => getTreeFromExprList(lis, id)
+      }
+    }
+
+    def prio4Expr: Parser[Expression] = positioned {
+      rep(getPairParser(prio4op)) ~ prio5Expr ^^ {
+        case lis ~ id => getTreeFromExprList(lis, id)
+      }
+    }
+
+    def prio5Expr: Parser[Expression] = positioned {
+      fxnExpr | bracketExpr |
+      identExpr | literExpr |
+      preUnaryExpr | postUnaryExpr
+    }
+
+    rep(getPairParser(prio1op)) ~ prio1Expr ^^ {
+      case lis ~ id => getTreeFromExprList(lis, id)
     }
   }
 
@@ -157,7 +201,7 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
   def typeparse: Parser[QualifiedType] = positioned {
 
     def typename: Parser[CType] = {
-      accept("type", { case TYPE(ctype) => ctype })
+      accept("type name", { case TYPE(ctype) => ctype })
     }
 
     def typenameFromIdent: Parser[CType] = {
