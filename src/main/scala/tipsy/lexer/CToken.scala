@@ -27,6 +27,7 @@ case class LONGLONG() extends CType
 case class FLOAT() extends CType
 case class DOUBLE() extends CType
 case class STRING() extends CType
+case class CUSTOMTYPE(n: String) extends CType
 
 sealed trait CBracket { val open: Boolean }
 case class ROUND(open: Boolean) extends CBracket
