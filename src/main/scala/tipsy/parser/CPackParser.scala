@@ -48,7 +48,7 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
   lazy val definition: TreeParse = positioned {
     val uninitialized = {
       typeparse ~ identifier ~ SEMI() ^^ {
-        case qualifiedType ~ IDENT(id) ~ _ => {
+        case qualifiedType ~ id ~ _ => {
           UnDefinition(qualifiedType, id)
         }
       }
@@ -59,7 +59,7 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
       OPERATOR(StatementOp("=")) ~
       expression ~ SEMI() ^^ {
 
-        case qualifiedType ~ IDENT(id) ~ _ ~ expr ~ _ => {
+        case qualifiedType ~ id ~ _ ~ expr ~ _ => {
           Definition(qualifiedType, id, expr)
         }
       }
@@ -77,7 +77,7 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
     rep(definition | statement) ~
     BRACKET(CURLY(false)) ^^ {
 
-      case qualifiedType ~ IDENT(id) ~ _ ~ _ ~ _ ~ defs ~ _ =>
+      case qualifiedType ~ id ~ _ ~ _ ~ _ ~ defs ~ _ =>
         FunctionDefinition(qualifiedType, id, defs)
     }
   }
@@ -191,11 +191,11 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
 
   // Helpers
   lazy val identifier: PackratParser[IDENT] = positioned {
-    accept("identifier", { case id @ IDENT(name) => id })
+    accept("identifier", { case id @ IDENT(_) => id })
   }
 
   lazy val literal: PackratParser[LITER] = positioned {
-    accept("string literal", { case lit @ LITER(name) => lit })
+    accept("string literal", { case lit @ LITER(_) => lit })
   }
 
   def typeparse: Parser[QualifiedType] = positioned {

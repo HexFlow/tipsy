@@ -1,5 +1,5 @@
-int a() {
+int main() {
     /*static int a = a * b;*/
-    a = a / b + c / d / e;
+    int a = a / b + c / d / e;
     b = c;
 }

@@ -34,17 +34,19 @@ case class ROUND(open: Boolean) extends CBracket
 case class CURLY(open: Boolean) extends CBracket
 case class SQUARE(open: Boolean) extends CBracket
 
-sealed trait COperator extends Positional with CToken
+sealed trait COperator extends Positional with CToken {
+  val op: String
+}
 case class StatementOp(op: String) extends COperator
 case class PreUnaryOp(op: String) extends COperator
 case class PostUnaryOp(op: String) extends COperator
 case class TernaryOp(op: String) extends COperator
-case class ParseBinaryOp(op: PriorityBinaryOperator) extends COperator
+case class ParseBinaryOp(prio: PriorityBinaryOperator) extends COperator {
+  val op = prio.op
+}
 case class BinaryOp(op: String) extends COperator
 
-sealed trait PriorityBinaryOperator extends COperator with CToken {
-  val op: String
-}
+sealed trait PriorityBinaryOperator extends COperator with CToken
 case class Prio1(op: String) extends PriorityBinaryOperator
 case class Prio2(op: String) extends PriorityBinaryOperator
 case class Prio3(op: String) extends PriorityBinaryOperator

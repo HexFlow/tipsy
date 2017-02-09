@@ -18,11 +18,11 @@ case class DefinitionList(def1: ParseTree, def2: ParseTree) extends ParseTree
 // An initialized definition
 case class Definition(
   qt: QualifiedType,
-  name: String,
+  name: IDENT,
   value: ParseTree) extends ParseTree
 
 // An uninitialized definition
-case class UnDefinition(qt: QualifiedType, name: String) extends ParseTree
+case class UnDefinition(qt: QualifiedType, name: IDENT) extends ParseTree
 
 // A statement
 case class Statement(id: IDENT, op: StatementOp, expr: Expression) extends ParseTree
@@ -30,7 +30,7 @@ case class Statement(id: IDENT, op: StatementOp, expr: Expression) extends Parse
 // A function with type and definition
 case class FunctionDefinition(
   qt: QualifiedType,
-  name: String,
+  name: IDENT,
   defs: List[ParseTree]) extends ParseTree
 
 // Expression constructs follow =>
