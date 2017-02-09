@@ -5,5 +5,9 @@ int main(int a, int b) {
 
     if (k + 2) {
         b = 2;
+    } else if (k - 23) {
+        c = 3;
+    } else {
+        d = 0;
     }
 }

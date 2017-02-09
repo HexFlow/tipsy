@@ -78,8 +78,10 @@ trait Draw {
     }
 
     case x: IfStatement => {
-      RefTree.Ref(x, Seq(x.cond.refTree, x.body.refTree)
-      ).rename("If")
+      RefTree.Ref(x,
+        x.cond.refTree :: x.body.refTree :: x.elif.map(_.refTree)
+          ++ Seq(x.elsebody.refTree))
+        .rename("If")
     }
 
     case x: Expression => {

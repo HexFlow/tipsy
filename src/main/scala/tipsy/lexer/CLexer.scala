@@ -22,17 +22,19 @@ object CLexer extends RegexParsers {
   def tokens: Parser[List[CToken]] = {
     phrase {
       rep1 {
-        keyword | iff | ctype | ctypequalifier |
-        semi | comma | bracket |
+        keyword | ctype |
+        elsef | iff |
+        forf | whilef | dof |
+        ctypequalifier | semi | comma | bracket |
         identifier | literal | operator
       }
     }
   }
 
   def keyword: Parser[KEYWORD] = positioned {
-    ("auto|break|case|continue|default|do|else|enum|extern" |
-      "for|goto|register|return|sizeof" |
-      "struct|switch|typedef|union|while") ^^ {
+    ("auto|break|case|continue|default|enum|extern" |
+      "goto|register|return|sizeof" |
+      "struct|switch|typedef|union") ^^ {
       KEYWORD(_)
     }
   }
@@ -96,6 +98,10 @@ object CLexer extends RegexParsers {
   def comma: Parser[COMMA] = positioned { ",".r ^^ { _ => COMMA() } }
 
   def iff: Parser[IF] = positioned { "if".r ^^ { _ => IF() } }
+  def elsef: Parser[ELSE] = positioned { "else".r ^^ { _ => ELSE() } }
+  def forf: Parser[FOR] = positioned { "for".r ^^ { _ => FOR() }}
+  def whilef: Parser[WHILE] = positioned { "while".r ^^ { _ => WHILE() }}
+  def dof: Parser[DO] = positioned { "do".r ^^ { _ => DO() }}
 
   def bracket: Parser[BRACKET] = positioned {
     (obracket | cbracket) ^^ { BRACKET(_) }

@@ -116,17 +116,29 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
       }
     }
 
-    lazy val ifstmt = {
+    lazy val ifstmt: PackratParser[IfStatement] = {
       IF() ~
       BRACKET(ROUND(true)) ~
       opt(expression) ~
       BRACKET(ROUND(false)) ~
       BRACKET(CURLY(true)) ~
       blockparser ~
-      BRACKET(CURLY(false)) ^^ {
-        case _ ~ _ ~ cond ~ _ ~ _ ~ body ~ _ => {
+      BRACKET(CURLY(false)) ~
+      rep(
+        ELSE() ~ ifstmt
+      ) ~
+      opt(
+        ELSE() ~ BRACKET(CURLY(true)) ~
+        blockparser ~
+        BRACKET(CURLY(false))
+      ) ^^ {
+        case _ ~ _ ~ cond ~ _ ~ _ ~ body ~ _ ~ elifs ~ elseblk => {
+          val ebody = elseblk match {
+            case Some(_ ~ _ ~ elsebody ~ _) => elsebody
+            case _ => BlockList(List())
+          }
           IfStatement(cond.getOrElse(BlockList(List())),
-            body, List(), BlockList(List()))
+            body, elifs.map(_._2), ebody)
         }
       }
     }
