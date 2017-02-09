@@ -39,9 +39,12 @@ case class StatementOp(op: String) extends COperator
 case class PreUnaryOp(op: String) extends COperator
 case class PostUnaryOp(op: String) extends COperator
 case class TernaryOp(op: String) extends COperator
-case class BinaryOp(op: PriorityBinaryOperator) extends COperator
+case class ParseBinaryOp(op: PriorityBinaryOperator) extends COperator
+case class BinaryOp(op: String) extends COperator
 
-sealed trait PriorityBinaryOperator extends COperator with CToken
+sealed trait PriorityBinaryOperator extends COperator with CToken {
+  val op: String
+}
 case class Prio1(op: String) extends PriorityBinaryOperator
 case class Prio2(op: String) extends PriorityBinaryOperator
 case class Prio3(op: String) extends PriorityBinaryOperator

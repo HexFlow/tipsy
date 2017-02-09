@@ -18,7 +18,8 @@ trait OperatorParsers extends Parsers {
   }
 
   def binOp: Parser[BinaryOp] = positioned {
-    operator ^^ { case OPERATOR(bop @ BinaryOp(_)) => bop }
+    // Returns an arbitrary binary operator without considering priorities
+    operator ^^ { case OPERATOR(ParseBinaryOp(x)) => BinaryOp(x.op) }
   }
 
   def stmtOp: Parser[StatementOp] = positioned {
@@ -26,19 +27,19 @@ trait OperatorParsers extends Parsers {
   }
 
   def prio1op: Parser[BinaryOp] = positioned {
-    accept("prio1op", { case OPERATOR(bop @ BinaryOp(Prio1(_))) => bop })
+    accept("prio1op", { case OPERATOR(ParseBinaryOp(Prio1(x))) => BinaryOp(x) })
   }
 
   def prio2op: Parser[BinaryOp] = positioned {
-    accept("prio2op", { case OPERATOR(bop @ BinaryOp(Prio2(_))) => bop })
+    accept("prio2op", { case OPERATOR(ParseBinaryOp(Prio2(x))) => BinaryOp(x) })
   }
 
   def prio3op: Parser[BinaryOp] = positioned {
-    accept("prio3op", { case OPERATOR(bop @ BinaryOp(Prio3(_))) => bop })
+    accept("prio3op", { case OPERATOR(ParseBinaryOp(Prio3(x))) => BinaryOp(x) })
   }
 
   def prio4op: Parser[BinaryOp] = positioned {
-    accept("prio4op", { case OPERATOR(bop @ BinaryOp(Prio4(_))) => bop })
+    accept("prio4op", { case OPERATOR(ParseBinaryOp(Prio4(x))) => BinaryOp(x) })
   }
 
   def operator: Parser[OPERATOR] = positioned {

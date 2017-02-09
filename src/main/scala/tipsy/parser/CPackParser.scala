@@ -129,7 +129,7 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
     rep(exprOpPairParser) ~ identExpr ^^ {
       case lis ~ id => {
 
-        val parseList: List[ExprOp] = lis :+ (id, BinaryOp(Prio1("*")))
+        val parseList: List[ExprOp] = lis :+ (id, BinaryOp("*"))
 
         (parseList match {
           case x :: xs => {

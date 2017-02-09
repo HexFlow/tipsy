@@ -65,10 +65,10 @@ object CLexer extends RegexParsers {
 
     val binaryOp = """[+]|[*]|>=|>|<|<=|==|!=|[|]{1,2}|&{1,2}""".r ^^ {
       case x @ (">=" | "<=" | ">" | "<" | "!=" | "==") =>
-        OPERATOR(BinaryOp(Prio1(x)))
-      case x @ ("*" | "/") => OPERATOR(BinaryOp(Prio2(x)))
-      case x @ ("+" | "-") => OPERATOR(BinaryOp(Prio3(x)))
-      case x => OPERATOR(BinaryOp(Prio4(x)))
+        OPERATOR(ParseBinaryOp(Prio1(x)))
+      case x @ ("*" | "/") => OPERATOR(ParseBinaryOp(Prio2(x)))
+      case x @ ("+" | "-") => OPERATOR(ParseBinaryOp(Prio3(x)))
+      case x => OPERATOR(ParseBinaryOp(Prio4(x)))
     }
 
     val preUnaryOp = """[+]{2}|-{2}|!|&""".r ^^ {
