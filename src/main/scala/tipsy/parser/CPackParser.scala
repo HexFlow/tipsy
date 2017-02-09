@@ -32,54 +32,79 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
 
   lazy val program: TreeParse = positioned {
     // Program comprises of statementList
-    phrase(statementList)
+    phrase(programparser)
   }
 
-  lazy val statementList: TreeParse = positioned {
-    // It has a lot of statements
-    rep1(globalDefinitions) ^^ { case x => x reduceRight DefinitionList }
+  lazy val programparser: PackratParser[TopList] = positioned {
+    // Program may have functions or other definitions/declarations
+    rep1(functionDefinition | definition) ^^ {
+      case x => TopList(x)
+    }
   }
 
-  lazy val globalDefinitions: TreeParse = positioned {
-    // Statement may be a function or a regular definition
-    functionDefinition | definition
+  lazy val blockparser: PackratParser[BlockList] = positioned {
+    // A block may have definitions or statements
+    rep1(definition | statement) ^^ {
+      case x => BlockList(x)
+    }
   }
 
-  lazy val definition: TreeParse = positioned {
+  lazy val definition: PackratParser[Definition] = positioned {
+    // A definition may be for an uninitialized object
     val uninitialized = {
-      typeparse ~ identifier ~ SEMI() ^^ {
-        case qualifiedType ~ id ~ _ => {
-          UnDefinition(qualifiedType, id)
+      typedvariable ~ SEMI() ^^ {
+        case tid ~ _ => {
+          Uninitialized(tid)
         }
       }
     }
 
+    // Or an initialized one
     val initialized = {
-      typeparse ~ identifier ~
+      typedvariable ~
       OPERATOR(StatementOp("=")) ~
       expression ~ SEMI() ^^ {
 
-        case qualifiedType ~ id ~ _ ~ expr ~ _ => {
-          Definition(qualifiedType, id, expr)
+        case tid ~ _ ~ expr ~ _ => {
+          Initialized(tid, expr)
         }
       }
     }
 
-    // A regular definition will either be uninitialized, or initialized
     uninitialized | initialized
   }
 
-  lazy val functionDefinition: TreeParse = positioned {
-    typeparse ~ identifier ~
-    BRACKET(ROUND(true)) ~
-    BRACKET(ROUND(false)) ~
-    BRACKET(CURLY(true)) ~
-    rep(definition | statement) ~
-    BRACKET(CURLY(false)) ^^ {
+  lazy val functionDefinition: PackratParser[FxnDefinition] = positioned {
+    // Similarly, a function may be defined at the same place
+    val initialized = {
+      typedvariable ~
+      BRACKET(ROUND(true)) ~
+      rep(typedvariable ~ COMMA()) ~
+      BRACKET(ROUND(false)) ~
+      BRACKET(CURLY(true)) ~
+      blockparser ~
+      BRACKET(CURLY(false)) ^^ {
 
-      case qualifiedType ~ id ~ _ ~ _ ~ _ ~ defs ~ _ =>
-        FunctionDefinition(qualifiedType, id, defs)
+        case tid ~ _ ~ args ~_ ~ _ ~ block ~ _ => {
+          InitializedFxn(tid, args.map(_._1), block)
+        }
+      }
     }
+
+    // Or just declared here
+    val uninitialized = {
+      typedvariable ~
+      BRACKET(ROUND(true)) ~
+      rep(typedvariable ~ COMMA()) ~
+      BRACKET(ROUND(false)) ~ SEMI() ^^ {
+
+        case tid ~ _ ~ args ~_ ~ _ => {
+          UninitializedFxn(tid, args.map(_._1))
+        }
+      }
+    }
+
+    initialized | uninitialized
   }
 
   lazy val statement: TreeParse = positioned {
@@ -190,6 +215,18 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
   }
 
   // Helpers
+  def typeparse: Parser[QualifiedType] = positioned {
+    rep(typequalifiers) ~ (typename | typenameFromIdent) ^^ {
+      case tql ~ ct => QualifiedType(tql.map(_.qualifier), ct)
+    }
+  }
+
+  def typedvariable: Parser[TypedIdent] = positioned {
+    typeparse ~ identifier ^^ {
+      case tql ~ id => TypedIdent(tql, id)
+    }
+  }
+
   lazy val identifier: PackratParser[IDENT] = positioned {
     accept("identifier", { case id @ IDENT(_) => id })
   }
@@ -198,24 +235,17 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
     accept("string literal", { case lit @ LITER(_) => lit })
   }
 
-  def typeparse: Parser[QualifiedType] = positioned {
+  private def typename: Parser[CType] = {
+    accept("type name", { case TYPE(ctype) => ctype })
+  }
 
-    def typename: Parser[CType] = {
-      accept("type name", { case TYPE(ctype) => ctype })
+  private def typenameFromIdent: Parser[CType] = {
+    identifier ^^ {
+      case IDENT(id) => CUSTOMTYPE(id)
     }
+  }
 
-    def typenameFromIdent: Parser[CType] = {
-      identifier ^^ {
-        case IDENT(id) => CUSTOMTYPE(id)
-      }
-    }
-
-    def typequalifiers: Parser[TYPEQ] = {
-      accept("type qualifier", { case tyq @ TYPEQ(quals) => tyq })
-    }
-
-    rep(typequalifiers) ~ (typename | typenameFromIdent) ^^ {
-      case tql ~ ct => QualifiedType(tql.map(_.qualifier), ct)
-    }
+  private def typequalifiers: Parser[TYPEQ] = {
+    accept("type qualifier", { case tyq @ TYPEQ(quals) => tyq })
   }
 }

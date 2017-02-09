@@ -40,18 +40,36 @@ trait Draw {
       RefTree.Ref(x, x.qualifiers.map(_.refTree) :+ x.name.refTree).rename("Type")
     }
 
-    case x @ DefinitionList(d1, d2) => {
-      RefTree.Ref(x, Seq(d1.refTree, d2.refTree))
+    case x: TypedIdent => {
+      RefTree.Ref(x, Seq(x.qt.refTree, x.name.refTree))
+        .rename("Typed variable")
     }
 
-    case x @ Definition(qt, name, value) => {
-      RefTree.Ref(x, Seq(qt.refTree, name.refTree, value.refTree))
-        .rename("Definition")
+    case x @ TopList(items) => {
+      RefTree.Ref(x, items.map(_.refTree)).rename("Global")
     }
 
-    case x @ UnDefinition(qt, name) => {
-      RefTree.Ref(x, Seq(qt.refTree, name.refTree))
-        .rename("Definition")
+    case x @ BlockList(items) => {
+      RefTree.Ref(x, items.map(_.refTree)).rename("Block")
+    }
+
+    case x @ Initialized(ti, value) => {
+      RefTree.Ref(x, Seq(ti.refTree, value.refTree))
+        .rename("Initialization")
+    }
+
+    case x @ Uninitialized(qt) => {
+      RefTree.Ref(x, Seq(qt.refTree))
+        .rename("Declaration")
+    }
+
+    case x @ InitializedFxn(tid, args, body) => {
+      RefTree.Ref(x,
+        Seq(tid.refTree, args.refTree, body.refTree)).rename("Function")
+    }
+
+    case x @ UninitializedFxn(tid, args) => {
+      RefTree.Ref(x, Seq(tid.refTree, args.refTree)).rename("Function declaration")
     }
 
     case x: Statement => {
@@ -72,11 +90,6 @@ trait Draw {
         case BinaryExpr(e, op, f) =>
           RefTree.Ref(x, Seq(e.refTree, op.refTree, f.refTree)).rename("BinaryExp")
       }
-    }
-
-    case x @ FunctionDefinition(typ, id, defs) => {
-      RefTree.Ref(x,
-        typ.refTree :: id.refTree :: defs.map(_.refTree)).rename("Function")
     }
   }
 }

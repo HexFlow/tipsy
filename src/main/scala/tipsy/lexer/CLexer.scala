@@ -92,6 +92,8 @@ object CLexer extends RegexParsers {
 
   def semi: Parser[SEMI] = positioned { ";".r ^^ { _ => SEMI() } }
 
+  def comma: Parser[COMMA] = positioned { ",".r ^^ { _ => COMMA() } }
+
   def bracket: Parser[BRACKET] = positioned {
     (obracket | cbracket) ^^ { BRACKET(_) }
   }
