@@ -44,7 +44,7 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
 
   lazy val blockparser: PackratParser[BlockList] = positioned {
     // A block may have definitions or statements
-    rep1(definition | statement) ^^ {
+    rep(statement | definition) ^^ {
       case x => BlockList(x)
     }
   }
@@ -79,14 +79,14 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
     val initialized = {
       typedvariable ~
       BRACKET(ROUND(true)) ~
-      rep(typedvariable ~ COMMA()) ~
+      repsep(typedvariable, COMMA()) ~
       BRACKET(ROUND(false)) ~
       BRACKET(CURLY(true)) ~
       blockparser ~
       BRACKET(CURLY(false)) ^^ {
 
         case tid ~ _ ~ args ~_ ~ _ ~ block ~ _ => {
-          InitializedFxn(tid, args.map(_._1), block)
+          InitializedFxn(tid, args, block)
         }
       }
     }
@@ -109,9 +109,29 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
 
   lazy val statement: TreeParse = positioned {
     // Returns a complete statement
-    identifier ~ stmtOp ~ expression ~ SEMI() ^^ {
-      case id ~ op ~ expr ~ _ => Statement(id, op, expr)
+
+    lazy val stmt = {
+      identifier ~ stmtOp ~ expression ~ SEMI() ^^ {
+        case id ~ op ~ expr ~ _ => Statement(id, op, expr)
+      }
     }
+
+    lazy val ifstmt = {
+      IF() ~
+      BRACKET(ROUND(true)) ~
+      opt(expression) ~
+      BRACKET(ROUND(false)) ~
+      BRACKET(CURLY(true)) ~
+      blockparser ~
+      BRACKET(CURLY(false)) ^^ {
+        case _ ~ _ ~ cond ~ _ ~ _ ~ body ~ _ => {
+          IfStatement(cond.getOrElse(BlockList(List())),
+            body, List(), BlockList(List()))
+        }
+      }
+    }
+
+    ifstmt | stmt
   }
 
   lazy val expression: ExprParse = positioned {

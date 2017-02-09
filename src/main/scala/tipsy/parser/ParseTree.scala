@@ -39,6 +39,9 @@ case class
 case class
   Statement(id: IDENT, op: StatementOp, expr: Expression) extends ParseTree
 
+case class IfStatement(cond: ParseTree,
+  body: BlockList, elif: List[IfStatement], elsebody: BlockList) extends ParseTree
+
 // Expression constructs follow =>
 // ---------------------------- =>
 

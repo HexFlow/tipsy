@@ -22,17 +22,17 @@ object CLexer extends RegexParsers {
   def tokens: Parser[List[CToken]] = {
     phrase {
       rep1 {
-        keyword | ctype | ctypequalifier |
-        semi | bracket |
+        keyword | iff | ctype | ctypequalifier |
+        semi | comma | bracket |
         identifier | literal | operator
       }
     }
   }
 
   def keyword: Parser[KEYWORD] = positioned {
-    ("auto|break|case|char|const|continue|default|do|double|else|enum|extern" |
-      "for|goto|if|register|return|signed|sizeof|static" |
-      "struct|switch|typedef|union|unsigned|void|volatile|while") ^^ {
+    ("auto|break|case|continue|default|do|else|enum|extern" |
+      "for|goto|register|return|sizeof" |
+      "struct|switch|typedef|union|while") ^^ {
       KEYWORD(_)
     }
   }
@@ -44,7 +44,7 @@ object CLexer extends RegexParsers {
   }
 
   def ctype: Parser[TYPE] = positioned {
-    ("int|byte|short|long|long long|float|double".r) ^^ {
+    ("int|char|byte|short|long|long long|float|double|void".r) ^^ {
         _ match {
           case "int" => TYPE(INT())
           case "byte" => TYPE(BYTE())
@@ -54,6 +54,7 @@ object CLexer extends RegexParsers {
           case "long long" => TYPE(LONGLONG())
           case "float" => TYPE(FLOAT())
           case "double" => TYPE(DOUBLE())
+          case x => TYPE(CUSTOMTYPE(x))
         }
     }
   }
@@ -93,6 +94,8 @@ object CLexer extends RegexParsers {
   def semi: Parser[SEMI] = positioned { ";".r ^^ { _ => SEMI() } }
 
   def comma: Parser[COMMA] = positioned { ",".r ^^ { _ => COMMA() } }
+
+  def iff: Parser[IF] = positioned { "if".r ^^ { _ => IF() } }
 
   def bracket: Parser[BRACKET] = positioned {
     (obracket | cbracket) ^^ { BRACKET(_) }

@@ -77,6 +77,11 @@ trait Draw {
       ).rename("Statement")
     }
 
+    case x: IfStatement => {
+      RefTree.Ref(x, Seq(x.cond.refTree, x.body.refTree)
+      ).rename("If")
+    }
+
     case x: Expression => {
       x match {
         case IdentExpr(id) => RefTree.Ref(x, Seq(id.refTree)).rename("IdentExpr")

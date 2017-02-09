@@ -11,6 +11,7 @@ case class BRACKET(t: CBracket) extends CToken
 case class IDENT(str: String) extends CToken
 case class LITER(l: Literal) extends CToken
 case class OPERATOR(op: COperator) extends CToken
+case class IF() extends CToken
 case class SEMI() extends CToken
 case class COMMA() extends CToken
 
