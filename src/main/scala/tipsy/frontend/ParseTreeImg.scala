@@ -28,8 +28,14 @@ object ParseTreeImg extends Draw {
       source match {
         case Success(c) => {
           WorkflowCompiler(c) match {
-            case Right(tree) => renderer.render("parsetree", Diagram(tree))
-            case Left(err) => println(err)
+            case Right(tree) => {
+              println(tree)
+              renderer.render("parsetree", Diagram(tree))
+            }
+            case Left(err) => {
+              println("Error =>")
+              println(err)
+            }
           }
         }
         case Failure(e) => println(e)

@@ -24,7 +24,14 @@ trait Draw {
 
   implicit def typeDrawer: ToRefTree[CType] = ToRefTree[CType] {
     case INT() => IDENT("int").refTree
-    case _ => "some type".refTree
+    case BYTE() => IDENT("byte").refTree
+    case CHAR() => IDENT("char").refTree
+    case SHORT() => IDENT("short").refTree
+    case LONG() => IDENT("long").refTree
+    case LONGLONG() => IDENT("long long").refTree
+    case FLOAT() => IDENT("float").refTree
+    case DOUBLE() => IDENT("double").refTree
+    case CUSTOMTYPE(n) => IDENT(n).refTree
   }
 
   implicit def treeDrawer: ToRefTree[ParseTree] = ToRefTree[ParseTree] {
@@ -71,7 +78,5 @@ trait Draw {
       RefTree.Ref(x,
         typ.refTree :: id.refTree :: defs.map(_.refTree)).rename("Function")
     }
-
-    case _ => RefTree.Null()
   }
 }

@@ -48,12 +48,12 @@ object CLexer extends RegexParsers {
         _ match {
           case "int" => TYPE(INT())
           case "byte" => TYPE(BYTE())
+          case "char" => TYPE(CHAR())
           case "short" => TYPE(SHORT())
           case "long" => TYPE(LONG())
           case "long long" => TYPE(LONGLONG())
           case "float" => TYPE(FLOAT())
           case "double" => TYPE(DOUBLE())
-          case "string" => TYPE(STRING())
         }
     }
   }
