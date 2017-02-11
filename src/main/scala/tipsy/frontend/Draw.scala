@@ -87,7 +87,7 @@ trait Draw {
     case x: Expression => {
       x match {
         case IdentExpr(id) => RefTree.Ref(x, Seq(id.refTree)).rename("IdentExpr")
-        case LiterExpr(li) => RefTree.Ref(x, Seq(li.refTree)).rename("LiterExpr")
+        case LiterExpr(LITER(li)) => RefTree.Ref(x, Seq()).rename("Literal(" + li + ")")
         case FxnExpr(n, exp) =>
           RefTree.Ref(x, Seq(n.refTree, exp.refTree)).rename("FxnExpr")
         case PreUnaryExpr(op, exp) =>

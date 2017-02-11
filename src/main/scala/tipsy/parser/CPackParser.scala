@@ -49,6 +49,19 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
     }
   }
 
+  lazy val maybeWithoutBracesBlock: PackratParser[BlockList] = positioned {
+    val withoutBraces = (statement | definition) ^^ {
+      case x => BlockList(List(x))
+    }
+
+    val withBraces =
+      BRACKET(CURLY(true)) ~ blockparser ~ BRACKET(CURLY(false)) ^^ {
+        case _ ~ body ~ _ => body
+      }
+
+    withoutBraces | withBraces
+  }
+
   lazy val definition: PackratParser[Definition] = positioned {
     // A definition may be for an uninitialized object
     val uninitialized = {
@@ -121,20 +134,16 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
       BRACKET(ROUND(true)) ~
       opt(expression) ~
       BRACKET(ROUND(false)) ~
-      BRACKET(CURLY(true)) ~
-      blockparser ~
-      BRACKET(CURLY(false)) ~
+      maybeWithoutBracesBlock ~
       rep(
         ELSE() ~ ifstmt
       ) ~
       opt(
-        ELSE() ~ BRACKET(CURLY(true)) ~
-        blockparser ~
-        BRACKET(CURLY(false))
+        ELSE() ~ maybeWithoutBracesBlock
       ) ^^ {
-        case _ ~ _ ~ cond ~ _ ~ _ ~ body ~ _ ~ elifs ~ elseblk => {
+        case _ ~ _ ~ cond ~ _ ~ body ~ elifs ~ elseblk => {
           val ebody = elseblk match {
-            case Some(_ ~ _ ~ elsebody ~ _) => elsebody
+            case Some(_ ~ elsebody) => elsebody
             case _ => BlockList(List())
           }
           IfStatement(cond.getOrElse(BlockList(List())),
