@@ -182,11 +182,11 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
     lazy val literExpr: PackratParser[LiterExpr] =
       literal ^^ { case a @ LITER(_) => LiterExpr(a) }
 
-    lazy val preUnaryExpr: PackratParser[Expression] = preOp ~ identExpr ^^ {
+    lazy val preUnaryExpr: PackratParser[Expression] = unaryOp ~ identExpr ^^ {
       case pop ~ e2 => PreUnaryExpr(pop, e2)
     }
 
-    lazy val postUnaryExpr: PackratParser[Expression] = identExpr ~ postOp ^^ {
+    lazy val postUnaryExpr: PackratParser[Expression] = identExpr ~ unaryOp ^^ {
       case e1 ~ pop => PostUnaryExpr(e1, pop)
     }
 

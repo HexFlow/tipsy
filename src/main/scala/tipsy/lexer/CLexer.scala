@@ -71,15 +71,11 @@ object CLexer extends RegexParsers {
       case x => OPERATOR(ParseBinaryOp(Prio4(x)))
     }
 
-    val preUnaryOp = """[+]{2}|-{2}|!|&""".r ^^ {
-      case x => OPERATOR(PreUnaryOp(x))
+    val unaryOp = """[+]{2}|-{2}""".r ^^ {
+      case x => OPERATOR(UnaryOp(x))
     }
 
-    val postUnaryOp = """[+]{2}|-{2}""".r ^^ {
-      case x => OPERATOR(PostUnaryOp(x))
-    }
-
-    postUnaryOp | preUnaryOp | binaryOp
+    unaryOp | binaryOp
   }
 
   def identifier: Parser[IDENT] = positioned {

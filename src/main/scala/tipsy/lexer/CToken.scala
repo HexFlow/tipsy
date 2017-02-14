@@ -45,8 +45,7 @@ sealed trait COperator extends Positional with CToken {
   val op: String
 }
 case class StatementOp(op: String) extends COperator
-case class PreUnaryOp(op: String) extends COperator
-case class PostUnaryOp(op: String) extends COperator
+case class UnaryOp(op: String) extends COperator
 case class TernaryOp(op: String) extends COperator
 case class ParseBinaryOp(prio: PriorityBinaryOperator) extends COperator {
   val op = prio.op

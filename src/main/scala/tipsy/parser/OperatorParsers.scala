@@ -10,12 +10,8 @@ import scala.util.parsing.input.{NoPosition, Position, Reader}
 trait OperatorParsers extends Parsers {
   override type Elem = CToken
 
-  def postOp: Parser[PostUnaryOp] = positioned {
-    accept("Post unary operator", { case OPERATOR(pop @ PostUnaryOp(_)) => pop })
-  }
-
-  def preOp: Parser[PreUnaryOp] = positioned {
-    accept("Pre unary operator", { case OPERATOR(pop @ PreUnaryOp(_)) => pop })
+  def unaryOp: Parser[UnaryOp] = positioned {
+    accept("Unary operator", { case OPERATOR(pop @ UnaryOp(_)) => pop })
   }
 
   def binOp: Parser[BinaryOp] = positioned {
