@@ -36,11 +36,11 @@ case class
     extends FxnDefinition
 
 // A statement. Ex: a += b * 3;
-case class
-  Statement(id: IDENT, op: StatementOp, expr: Expression) extends ParseTree
-
+sealed trait Statement extends ParseTree
 case class IfStatement(cond: ParseTree,
-  body: BlockList, elif: List[IfStatement], elsebody: BlockList) extends ParseTree
+  body: BlockList, elif: List[IfStatement], elsebody: BlockList) extends Statement
+case class ForStatement(e1: Expression, e2: Expression,
+  e3: Expression, body: BlockList) extends Statement
 
 // Expression constructs follow =>
 // ---------------------------- =>
@@ -51,5 +51,6 @@ case class LiterExpr(liter: LITER) extends Expression
 case class FxnExpr(fxnName: IDENT, exp: Expression) extends Expression
 case class PreUnaryExpr(op: PreUnaryOp, exp: Expression) extends Expression
 case class PostUnaryExpr(exp: Expression, op: PostUnaryOp) extends Expression
-case class
-  BinaryExpr(exp1: Expression, op: BinaryOp, exp2: Expression) extends Expression
+case class BinaryExpr(exp1: Expression, op: BinaryOp, exp2: Expression)
+    extends Expression
+case class AssignExpression(id: IDENT, expr: Expression) extends Expression

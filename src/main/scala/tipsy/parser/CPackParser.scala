@@ -44,13 +44,13 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
 
   lazy val blockparser: PackratParser[BlockList] = positioned {
     // A block may have definitions or statements
-    rep(statement | definition) ^^ {
+    rep(expressionStmt | statement | definition) ^^ {
       case x => BlockList(x)
     }
   }
 
   lazy val maybeWithoutBracesBlock: PackratParser[BlockList] = positioned {
-    val withoutBraces = (statement | definition) ^^ {
+    val withoutBraces = (expressionStmt | statement | definition) ^^ {
       case x => BlockList(List(x))
     }
 
@@ -76,9 +76,9 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
     val initialized = {
       typedvariable ~
       OPERATOR(StatementOp("=")) ~
-      expression ~ SEMI() ^^ {
+      expressionStmt ^^ {
 
-        case tid ~ _ ~ expr ~ _ => {
+        case tid ~ _ ~ expr => {
           Initialized(tid, expr)
         }
       }
@@ -120,14 +120,13 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
     initialized | uninitialized
   }
 
+  /**
+    * Statements, as opposed to expressions, are self sufficient
+    * entities inside a block, and include a semi colon at the end.
+    * These do not return a value.
+    */
   lazy val statement: TreeParse = positioned {
     // Returns a complete statement
-
-    lazy val stmt = {
-      identifier ~ stmtOp ~ expression ~ SEMI() ^^ {
-        case id ~ op ~ expr ~ _ => Statement(id, op, expr)
-      }
-    }
 
     lazy val ifstmt: PackratParser[IfStatement] = {
       IF() ~
@@ -152,10 +151,34 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
       }
     }
 
-    ifstmt | stmt
+    lazy val forstmt: PackratParser[ForStatement] = {
+      FOR() ~
+      BRACKET(ROUND(true)) ~
+      expressionStmt ~
+      expressionStmt ~
+      expression ~
+      BRACKET(ROUND(false)) ~
+      maybeWithoutBracesBlock ^^ {
+        case _ ~ _ ~ s1 ~ s2 ~ s3 ~ _ ~ body => {
+          ForStatement(s1, s2, s3, body)
+        }
+      }
+    }
+
+    ifstmt | forstmt
   }
 
+  /**
+    * Expression is a general construct which has a return value.
+    * It does not have a semi colon at the end.
+    */
   lazy val expression: ExprParse = positioned {
+
+    lazy val assignExpr: PackratParser[AssignExpression] = {
+      identifier ~ OPERATOR(StatementOp("=")) ~ expression ^^ {
+        case id ~ op ~ expr => AssignExpression(id, expr)
+      }
+    }
 
     lazy val identExpr: PackratParser[IdentExpr] =
       identifier ^^ { case a @ IDENT(_) => IdentExpr(a) }
@@ -245,17 +268,29 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
     }
 
     def prio5Expr: Parser[Expression] = positioned {
+      assignExpr |
       fxnExpr | bracketExpr |
       identExpr | literExpr |
       preUnaryExpr | postUnaryExpr
     }
 
+    // The final expression type definition
+    // Prio1 will fallback to other higher priority operators
     rep(getPairParser(prio1op)) ~ prio1Expr ^^ {
       case lis ~ id => getTreeFromExprList(lis, id)
     }
   }
 
-  // Helpers
+  /**
+    * Expression Statement is an expression followed by a Semi colon.
+    */
+  def expressionStmt: PackratParser[Expression] = positioned {
+    expression ~ SEMI() ^^ { case expr ~ _ => expr }
+  }
+
+  // Helper functions
+  // ================
+
   def typeparse: Parser[QualifiedType] = positioned {
     rep(typequalifiers) ~ (typename | typenameFromIdent) ^^ {
       case tql ~ ct => QualifiedType(tql.map(_.qualifier), ct)

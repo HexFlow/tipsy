@@ -69,12 +69,7 @@ trait Draw {
     }
 
     case x @ UninitializedFxn(tid, args) => {
-      RefTree.Ref(x, Seq(tid.refTree, args.refTree)).rename("Function declaration")
-    }
-
-    case x: Statement => {
-      RefTree.Ref(x, Seq(x.id.refTree, x.op.refTree, x.expr.refTree)
-      ).rename("Statement")
+      RefTree.Ref(x, Seq(tid.refTree, args.refTree)).rename("Fxn declaration")
     }
 
     case x: IfStatement => {
@@ -84,10 +79,18 @@ trait Draw {
         .rename("If")
     }
 
+    case x: ForStatement => {
+      RefTree.Ref(x,
+        Seq(x.e1.refTree, x.e2.refTree, x.e3.refTree, x.body.refTree))
+        .rename("For")
+    }
+
     case x: Expression => {
       x match {
-        case IdentExpr(id) => RefTree.Ref(x, Seq(id.refTree)).rename("IdentExpr")
-        case LiterExpr(LITER(li)) => RefTree.Ref(x, Seq()).rename("Literal(" + li + ")")
+        case IdentExpr(id) =>
+          RefTree.Ref(x, Seq(id.refTree)).rename("IdentExpr")
+        case LiterExpr(LITER(li)) =>
+          RefTree.Ref(x, Seq()).rename("Literal(" + li + ")")
         case FxnExpr(n, exp) =>
           RefTree.Ref(x, Seq(n.refTree, exp.refTree)).rename("FxnExpr")
         case PreUnaryExpr(op, exp) =>
@@ -95,7 +98,10 @@ trait Draw {
         case PostUnaryExpr(exp, op) =>
           RefTree.Ref(x, Seq(exp.refTree, op.refTree)).rename("UnaryExpr")
         case BinaryExpr(e, op, f) =>
-          RefTree.Ref(x, Seq(e.refTree, op.refTree, f.refTree)).rename("BinaryExp")
+          RefTree.Ref(x, Seq(e.refTree, op.refTree, f.refTree))
+            .rename("BinaryExp")
+        case AssignExpression(id, expr) =>
+          RefTree.Ref(x, Seq(id.refTree, expr.refTree)).rename("AssignExpr")
       }
     }
   }
