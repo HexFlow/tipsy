@@ -75,7 +75,7 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
     // Or an initialized one
     val initialized = {
       typedvariable ~
-      OPERATOR(StatementOp("=")) ~
+      OPERATOR(BinaryOp("=")) ~
       expressionStmt ^^ {
 
         case tid ~ _ ~ expr => {
@@ -131,7 +131,7 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
     lazy val ifstmt: PackratParser[IfStatement] = {
       IF() ~
       BRACKET(ROUND(true)) ~
-      opt(expression) ~
+      expression ~
       BRACKET(ROUND(false)) ~
       maybeWithoutBracesBlock ~
       opt(
@@ -142,7 +142,7 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
             case Some(_ ~ elsebody) => elsebody
             case _ => BlockList(List())
           }
-          IfStatement(cond.getOrElse(BlockList(List())), body, ebody)
+          IfStatement(cond, body, ebody)
         }
       }
     }
@@ -171,7 +171,7 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
   lazy val expression: ExprParse = positioned {
 
     lazy val assignExpr: PackratParser[AssignExpression] = {
-      identifier ~ OPERATOR(StatementOp("=")) ~ expression ^^ {
+      identifier ~ OPERATOR(BinaryOp("=")) ~ expression ^^ {
         case id ~ op ~ expr => AssignExpression(id, expr)
       }
     }
@@ -266,8 +266,8 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
     def prio5Expr: Parser[Expression] = positioned {
       assignExpr |
       fxnExpr | bracketExpr |
-      identExpr | literExpr |
-      preUnaryExpr | postUnaryExpr
+      identExpr | literExpr
+      // preUnaryExpr | postUnaryExpr
     }
 
     // The final expression type definition

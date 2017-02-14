@@ -51,7 +51,17 @@ case class TernaryOp(op: String) extends COperator
 case class ParseBinaryOp(prio: PriorityBinaryOperator) extends COperator {
   val op = prio.op
 }
-case class BinaryOp(op: String) extends COperator
+case class BinaryOp(op: String) extends COperator {
+  override val toString: String = {
+    op match {
+      case "<" => "Less than"
+      case ">" => "Greater than"
+      case "<=" => "Less than equals"
+      case ">=" => "Greater than equals"
+      case x => x
+    }
+  }
+}
 
 sealed trait PriorityBinaryOperator extends COperator with CToken
 case class Prio1(op: String) extends PriorityBinaryOperator
