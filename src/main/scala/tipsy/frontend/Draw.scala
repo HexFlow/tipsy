@@ -35,7 +35,6 @@ trait Draw {
   }
 
   implicit def treeDrawer: ToRefTree[ParseTree] = ToRefTree[ParseTree] {
-
     case x: QualifiedType => {
       RefTree.Ref(x, x.qualifiers.map(_.refTree) :+ x.name.refTree).rename("Type")
     }
@@ -74,8 +73,7 @@ trait Draw {
 
     case x: IfStatement => {
       RefTree.Ref(x,
-        x.cond.refTree :: x.body.refTree :: x.elif.map(_.refTree)
-          ++ Seq(x.elsebody.refTree))
+        Seq(x.cond.refTree, x.body.refTree, x.elsebody.refTree))
         .rename("If")
     }
 

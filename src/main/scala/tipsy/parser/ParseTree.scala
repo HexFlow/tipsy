@@ -37,8 +37,8 @@ case class
 
 // A statement. Ex: a += b * 3;
 sealed trait Statement extends ParseTree
-case class IfStatement(cond: ParseTree,
-  body: BlockList, elif: List[IfStatement], elsebody: BlockList) extends Statement
+case class IfStatement(cond: ParseTree, body: BlockList, elsebody: BlockList)
+    extends Statement
 case class ForStatement(e1: Expression, e2: Expression,
   e3: Expression, body: BlockList) extends Statement
 

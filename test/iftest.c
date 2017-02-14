@@ -5,8 +5,10 @@ int main() {
 
     if (d)
         k = 7;
-    else
+    else if (e)
         n = 4;
+    else
+        k = 1;
 
     if (a)
         if (b)

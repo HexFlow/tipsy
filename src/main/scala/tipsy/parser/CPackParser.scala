@@ -134,19 +134,15 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
       opt(expression) ~
       BRACKET(ROUND(false)) ~
       maybeWithoutBracesBlock ~
-      rep(
-        ELSE() ~ ifstmt
-      ) ~
       opt(
         ELSE() ~ maybeWithoutBracesBlock
       ) ^^ {
-        case _ ~ _ ~ cond ~ _ ~ body ~ elifs ~ elseblk => {
+        case _ ~ _ ~ cond ~ _ ~ body ~ elseblk => {
           val ebody = elseblk match {
             case Some(_ ~ elsebody) => elsebody
             case _ => BlockList(List())
           }
-          IfStatement(cond.getOrElse(BlockList(List())),
-            body, elifs.map(_._2), ebody)
+          IfStatement(cond.getOrElse(BlockList(List())), body, ebody)
         }
       }
     }
