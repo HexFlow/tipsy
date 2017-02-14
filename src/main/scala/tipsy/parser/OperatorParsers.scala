@@ -3,6 +3,7 @@ package tipsy.parser
 import tipsy.compiler.{Location, CParserError}
 import tipsy.lexer._
 
+import scala.util.parsing.combinator.PackratParsers
 import scala.util.parsing.combinator.Parsers
 import scala.util.parsing.input.{NoPosition, Position, Reader}
 
@@ -10,20 +11,16 @@ trait OperatorParsers extends Parsers {
   override type Elem = CToken
 
   def postOp: Parser[PostUnaryOp] = positioned {
-    operator ^^ { case OPERATOR(pop @ PostUnaryOp(_)) => pop }
+    accept("Post unary operator", { case OPERATOR(pop @ PostUnaryOp(_)) => pop })
   }
 
   def preOp: Parser[PreUnaryOp] = positioned {
-    operator ^^ { case OPERATOR(pop @ PreUnaryOp(_)) => pop }
+    accept("Pre unary operator", { case OPERATOR(pop @ PreUnaryOp(_)) => pop })
   }
 
   def binOp: Parser[BinaryOp] = positioned {
     // Returns an arbitrary binary operator without considering priorities
-    operator ^^ { case OPERATOR(ParseBinaryOp(x)) => BinaryOp(x.op) }
-  }
-
-  def stmtOp: Parser[StatementOp] = positioned {
-    operator ^^ { case OPERATOR(sop @ StatementOp(_)) => sop }
+    accept("Binary op", { case OPERATOR(ParseBinaryOp(x)) => BinaryOp(x.op) })
   }
 
   def prio1op: Parser[BinaryOp] = positioned {

@@ -176,8 +176,8 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
       }
     }
 
-    lazy val identExpr: PackratParser[IdentExpr] =
-      identifier ^^ { case a @ IDENT(_) => IdentExpr(a) }
+    lazy val identExpr: PackratParser[Expression] =
+      identifier ^^ { case a => IdentExpr(a) }
 
     lazy val literExpr: PackratParser[LiterExpr] =
       literal ^^ { case a @ LITER(_) => LiterExpr(a) }
@@ -266,8 +266,8 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
     def prio5Expr: Parser[Expression] = positioned {
       assignExpr |
       fxnExpr | bracketExpr |
+      preUnaryExpr | postUnaryExpr |
       identExpr | literExpr
-      // preUnaryExpr | postUnaryExpr
     }
 
     // The final expression type definition
