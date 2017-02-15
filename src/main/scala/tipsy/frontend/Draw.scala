@@ -35,61 +35,45 @@ trait Draw {
   }
 
   implicit def treeDrawer: ToRefTree[ParseTree] = ToRefTree[ParseTree] {
-    case x: QualifiedType => {
+    case x: QualifiedType =>
       RefTree.Ref(x, x.qualifiers.map(_.refTree) :+ x.name.refTree).rename("Type")
-    }
 
-    case x: TypedIdent => {
+    case x: TypedIdent =>
       RefTree.Ref(x, Seq(x.qt.refTree, x.name.refTree))
         .rename("Typed variable")
-    }
 
-    case x @ TopList(items) => {
+    case x @ TopList(items) =>
       RefTree.Ref(x, items.map(_.refTree)).rename("Global")
-    }
 
-    case x @ BlockList(items) => {
+    case x @ BlockList(items) =>
       RefTree.Ref(x, items.map(_.refTree)).rename("Block")
-    }
 
-    case x @ Initialized(ti, value) => {
-      RefTree.Ref(x, Seq(ti.refTree, value.refTree))
-        .rename("Initialization")
-    }
+    case x @ Initialized(ti, value) =>
+      RefTree.Ref(x, Seq(ti.refTree, value.refTree)).rename("Initialization")
 
-    case x @ Uninitialized(qt) => {
-      RefTree.Ref(x, Seq(qt.refTree))
-        .rename("Declaration")
-    }
+    case x @ Uninitialized(qt) =>
+      RefTree.Ref(x, Seq(qt.refTree)).rename("Declaration")
 
-    case x @ InitializedFxn(tid, args, body) => {
-      RefTree.Ref(x,
-        Seq(tid.refTree, args.refTree, body.refTree)).rename("Function")
-    }
+    case x @ InitializedFxn(tid, args, body) =>
+      RefTree.Ref(x, Seq(tid.refTree, args.refTree, body.refTree))
+        .rename("Function")
 
-    case x @ UninitializedFxn(tid, args) => {
+    case x @ UninitializedFxn(tid, args) =>
       RefTree.Ref(x, Seq(tid.refTree, args.refTree)).rename("Fxn declaration")
-    }
 
-    case x: IfStatement => {
-      RefTree.Ref(x,
-        Seq(x.cond.refTree, x.body.refTree, x.elsebody.refTree))
+    case x: IfStatement =>
+      RefTree.Ref(x, Seq(x.cond.refTree, x.body.refTree, x.elsebody.refTree))
         .rename("If")
-    }
 
-    case x: ForStatement => {
+    case x: ForStatement =>
       RefTree.Ref(x, Seq(x.e1.refTree, x.e2.refTree, x.e3.refTree, x.body.refTree))
         .rename("For")
-    }
 
-    case x: WhileStatement => {
-      RefTree.Ref(x,
-        Seq(x.cond.refTree, x.body.refTree)).rename("While")
-    }
+    case x: WhileStatement =>
+      RefTree.Ref(x, Seq(x.cond.refTree, x.body.refTree)).rename("While")
 
-    case x: DoWhileStatement => {
+    case x: DoWhileStatement =>
       RefTree.Ref(x, Seq(x.body.refTree, x.cond.refTree)).rename("Do while")
-    }
 
     case x: Expression => {
       x match {
