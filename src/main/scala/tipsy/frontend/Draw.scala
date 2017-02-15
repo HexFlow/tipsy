@@ -82,6 +82,15 @@ trait Draw {
         .rename("For")
     }
 
+    case x: WhileStatement => {
+      RefTree.Ref(x,
+        Seq(x.cond.refTree, x.body.refTree)).rename("While")
+    }
+
+    case x: DoWhileStatement => {
+      RefTree.Ref(x, Seq(x.body.refTree, x.cond.refTree)).rename("Do while")
+    }
+
     case x: Expression => {
       x match {
         case IdentExpr(id) =>

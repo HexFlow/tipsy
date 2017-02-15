@@ -41,6 +41,8 @@ case class IfStatement(cond: Expression, body: BlockList, elsebody: BlockList)
     extends Statement
 case class ForStatement(e1: Expression, e2: Expression,
   e3: Expression, body: BlockList) extends Statement
+case class WhileStatement(cond: Expression, body: BlockList) extends Statement
+case class DoWhileStatement(body: BlockList, cond: Expression) extends Statement
 
 // Expression constructs follow =>
 // ---------------------------- =>

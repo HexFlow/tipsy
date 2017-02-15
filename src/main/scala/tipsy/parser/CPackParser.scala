@@ -161,7 +161,29 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
       }
     }
 
-    ifstmt | forstmt
+    lazy val whilestatement: PackratParser[WhileStatement] = {
+      WHILE() ~
+      BRACKET(ROUND(true)) ~
+      expression ~
+      BRACKET(ROUND(false)) ~
+      maybeWithoutBracesBlock ^^ {
+        case _ ~ _ ~ cond ~ _ ~ body => WhileStatement(cond, body)
+      }
+    }
+
+    lazy val dowhilestatement: PackratParser[DoWhileStatement] = {
+      DO() ~
+      maybeWithoutBracesBlock ~
+      WHILE() ~
+      BRACKET(ROUND(true)) ~
+      expression ~
+      BRACKET(ROUND(false)) ~
+      SEMI() ^^ {
+        case _ ~ body ~ _ ~ _ ~ cond ~ _ ~ _ => DoWhileStatement(body, cond)
+      }
+    }
+
+    ifstmt | forstmt | whilestatement | dowhilestatement
   }
 
   /**
