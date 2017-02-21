@@ -7,6 +7,8 @@ sealed trait CFEnum
 case object FUNC extends CFEnum
 case class EXPR(value: Expression) extends CFEnum
 case class DECL(value: String) extends CFEnum
+case class IFCOND(value: Expression) extends CFEnum
+case class LOOPCOND(value: Expression) extends CFEnum
 
 // Used for storing types
 case class QualifiedType(qualifiers: List[String], name: CType) extends ParseTree {
@@ -33,6 +35,7 @@ case class BlockList(items: List[ParseTree]) extends ParseTree {
 sealed trait Definition extends ParseTree {
   val ti: TypedIdent
 }
+
 case class Initialized(ti: TypedIdent, value: Expression) extends Definition {
   override val compress = {
     val k1 = DECL(ti.qt.toString())
@@ -40,6 +43,7 @@ case class Initialized(ti: TypedIdent, value: Expression) extends Definition {
     List(k1, k2)
   }
 }
+
 case class Uninitialized(ti: TypedIdent) extends Definition {
   override val compress = {
     val k1 = DECL(ti.qt.toString())
@@ -52,6 +56,7 @@ sealed trait FxnDefinition extends ParseTree {
   val ti: TypedIdent
   val args: List[TypedIdent]
 }
+
 case class
   InitializedFxn(ti: TypedIdent, args: List[TypedIdent], body: BlockList)
   extends FxnDefinition {
@@ -59,18 +64,34 @@ case class
     args.map(_.qt.toString()).sortWith(_<_).map(DECL(_)) ++ body.compress
   }
 }
+
 case class
   UninitializedFxn(ti: TypedIdent, args: List[TypedIdent])
     extends FxnDefinition
 
 // A statement. Ex: a += b * 3;
 sealed trait Statement extends ParseTree
-case class IfStatement(cond: Expression, body: BlockList, elsebody: BlockList)
-    extends Statement
+case class IfStatement(cond: Expression, body: BlockList,
+  elsebody: BlockList) extends Statement {
+  override val compress = {
+    List(IFCOND(cond)) ++ body.compress ++ elsebody.compress
+  }
+}
+
 case class ForStatement(e1: Expression, e2: Expression,
-  e3: Expression, body: BlockList) extends Statement
-case class WhileStatement(cond: Expression, body: BlockList) extends Statement
-case class DoWhileStatement(body: BlockList, cond: Expression) extends Statement
+  e3: Expression, body: BlockList) extends Statement {
+    List(EXPR(e1)) ++ List(LOOPCOND(e2)) ++ body.compress ++ List(EXPR(e3))
+}
+
+case class WhileStatement(cond: Expression,
+  body: BlockList) extends Statement {
+    List(LOOPCOND(cond)) ++ body.compress
+}
+
+case class DoWhileStatement(body: BlockList,
+  cond: Expression) extends Statement {
+    List(LOOPCOND(cond)) ++ body.compress
+}
 
 // Expression constructs follow =>
 // ---------------------------- =>
@@ -80,6 +101,7 @@ sealed trait Expression extends ParseTree {
     List(EXPR(this))
   }
 }
+
 case class IdentExpr(id: IDENT) extends Expression
 case class LiterExpr(liter: LITER) extends Expression
 case class FxnExpr(fxnName: IDENT, exp: Expression) extends Expression
