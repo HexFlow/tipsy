@@ -18,9 +18,8 @@ object ParseTreeImg extends Draw {
   val renderer = Renderer(
     renderingOptions = RenderingOptions(density = 75),
     directory = Paths.get("."),
-    format = JPG
+    format = "jpg"
   )
-  import renderer._
 
   def apply(args: Array[String]): Unit = {
 
