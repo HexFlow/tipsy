@@ -14,11 +14,11 @@ import java.nio.file.Paths
   * ParseTreeImg: Frontend to display the parse tree
   * using graphviz and reftree
   */
-object ParseTreeImg extends Draw {
+object ParseTreeImg extends TreeDraw {
   val renderer = Renderer(
     renderingOptions = RenderingOptions(density = 75),
     directory = Paths.get("."),
-    format = "jpg"
+    format = "ps"
   )
 
   def apply(args: Array[String]): Unit = {

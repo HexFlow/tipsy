@@ -26,15 +26,33 @@ case class IntLiteral(i: Int) extends Literal
 case class FloatLiteral(f: Double) extends Literal
 
 sealed trait CType extends Positional
-case class INT() extends CType
-case class BYTE() extends CType
-case class CHAR() extends CType
-case class SHORT() extends CType
-case class LONG() extends CType
-case class LONGLONG() extends CType
-case class FLOAT() extends CType
-case class DOUBLE() extends CType
-case class CUSTOMTYPE(n: String) extends CType
+case class INT() extends CType {
+  override def toString = "int"
+}
+case class BYTE() extends CType {
+  override def toString = "byte"
+}
+case class CHAR() extends CType {
+  override def toString = "char"
+}
+case class SHORT() extends CType {
+  override def toString = "short"
+}
+case class LONG() extends CType {
+  override def toString = "long"
+}
+case class LONGLONG() extends CType {
+  override def toString = "long long"
+}
+case class FLOAT() extends CType {
+  override def toString = "float"
+}
+case class DOUBLE() extends CType {
+  override def toString = "double"
+}
+case class CUSTOMTYPE(n: String) extends CType {
+  override def toString = n
+}
 
 sealed trait CBracket { val open: Boolean }
 case class ROUND(open: Boolean) extends CBracket

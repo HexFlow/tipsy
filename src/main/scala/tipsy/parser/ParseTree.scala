@@ -3,16 +3,31 @@ package tipsy.parser
 import tipsy.lexer._
 import scala.util.parsing.input.Positional
 
-sealed trait CFEnum
-case object FUNC extends CFEnum
-case class EXPR(value: Expression) extends CFEnum
-case class DECL(value: String) extends CFEnum
-case class IFCOND(value: Expression) extends CFEnum
-case class LOOPCOND(value: Expression) extends CFEnum
+sealed trait CFEnum {
+  val flowName: String
+}
+case class ASSIGN(expr: Expression) extends CFEnum {
+  val flowName = "Assignment"
+}
+case class FUNC(returnType: String) extends CFEnum {
+  val flowName = "Func: " + returnType
+}
+case class EXPR(value: Expression) extends CFEnum {
+  val flowName = "Expression"
+}
+case class DECL(value: String) extends CFEnum {
+  val flowName = "Declaration: " + value
+}
+case class IFCOND(value: Expression) extends CFEnum {
+  val flowName = "If"
+}
+case class LOOPCOND(value: Expression) extends CFEnum {
+  val flowName = "Loop"
+}
 
 // Used for storing types
 case class QualifiedType(qualifiers: List[String], name: CType) extends ParseTree {
-  override def toString(): String = qualifiers.mkString(" ") + " " + name.toString()
+  override def toString(): String = (qualifiers :+ name.toString).mkString(" ")
 }
 case class TypedIdent(qt: QualifiedType, name: IDENT) extends ParseTree
 
@@ -39,15 +54,14 @@ sealed trait Definition extends ParseTree {
 case class Initialized(ti: TypedIdent, value: Expression) extends Definition {
   override val compress = {
     val k1 = DECL(ti.qt.toString())
-    val k2 = EXPR(AssignExpression(ti.name, value))
-    List(k1, k2)
+    val k2 = AssignExpression(ti.name, value).compress
+    List(k1) ++ k2
   }
 }
 
 case class Uninitialized(ti: TypedIdent) extends Definition {
   override val compress = {
-    val k1 = DECL(ti.qt.toString())
-    List(k1)
+    List(DECL(ti.qt.toString()))
   }
 }
 
@@ -61,7 +75,9 @@ case class
   InitializedFxn(ti: TypedIdent, args: List[TypedIdent], body: BlockList)
   extends FxnDefinition {
   override val compress = {
-    args.map(_.qt.toString()).sortWith(_<_).map(DECL(_)) ++ body.compress
+    FUNC(ti.qt.toString) ::
+    args.map(_.qt.toString()).sortWith(_<_).map(x => DECL("Argument " + x)) ++
+    body.compress
   }
 }
 
@@ -98,7 +114,10 @@ case class DoWhileStatement(body: BlockList,
 
 sealed trait Expression extends ParseTree {
   override val compress = {
-    List(EXPR(this))
+    this match {
+      case AssignExpression(_, _) => List(ASSIGN(this))
+      case _ => List(EXPR(this))
+    }
   }
 }
 

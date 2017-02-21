@@ -4,12 +4,11 @@ import dot.render._
 import dot.contrib._
 import dot.core._
 import dot.diagram._
-import java.nio.file.Paths
 
 import tipsy.lexer._
 import tipsy.parser._
 
-trait Draw {
+trait TreeDraw {
   implicit def idDrawer: ToRefTree[IDENT] = ToRefTree {
     case x @ IDENT(v) => RefTree.Ref(x, Seq()).rename("Identifier(" + v + ")")
   }

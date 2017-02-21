@@ -1,5 +1,5 @@
 .ensime
 .ensime_cache
 target
-parsetree.png
-parsetree.jpg
+parsetree.*
+flowgraph.*
