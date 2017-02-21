@@ -5,9 +5,9 @@ import tipsy.compiler.WorkflowCompiler
 
 import scala.util.{Try, Success, Failure}
 
-import reftree.render._
-import reftree.contrib._
-import reftree.diagram._
+import dot.render._
+import dot.contrib._
+import dot.diagram._
 import java.nio.file.Paths
 
 /**
@@ -17,10 +17,13 @@ import java.nio.file.Paths
 object ParseTreeImg extends Draw {
   val renderer = Renderer(
     renderingOptions = RenderingOptions(density = 75),
-    directory = Paths.get(".")
+    directory = Paths.get("."),
+    format = JPG
   )
+  import renderer._
 
   def apply(args: Array[String]): Unit = {
+
     args.map(x => {
       println("Compiling " + x)
       val source = Try(Source.fromFile(x).mkString)

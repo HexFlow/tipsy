@@ -1,9 +1,9 @@
 package tipsy.frontend
 
-import reftree.render._
-import reftree.contrib._
-import reftree.core._
-import reftree.diagram._
+import dot.render._
+import dot.contrib._
+import dot.core._
+import dot.diagram._
 import java.nio.file.Paths
 
 import tipsy.lexer._
@@ -32,6 +32,24 @@ trait Draw {
     case FLOAT() => IDENT("float").refTree
     case DOUBLE() => IDENT("double").refTree
     case CUSTOMTYPE(n) => IDENT(n).refTree
+  }
+
+  implicit def exprDrawer: ToRefTree[Expression] = ToRefTree[Expression] {
+    case x @ IdentExpr(id) =>
+      RefTree.Ref(x, Seq(id.refTree)).rename("IdentExpr")
+    case x @ LiterExpr(LITER(li)) =>
+      RefTree.Ref(x, Seq()).rename("Literal(" + li + ")")
+    case x @ FxnExpr(n, exp) =>
+      RefTree.Ref(x, Seq(n.refTree, exp.refTree)).rename("FxnExpr")
+    case x @ PreUnaryExpr(op, exp) =>
+      RefTree.Ref(x, Seq(op.refTree, exp.refTree)).rename("UnaryExpr")
+    case x @ PostUnaryExpr(exp, op) =>
+      RefTree.Ref(x, Seq(exp.refTree, op.refTree)).rename("UnaryExpr")
+    case x @ BinaryExpr(e, op, f) =>
+      RefTree.Ref(x, Seq(e.refTree, op.toString.refTree, f.refTree))
+        .rename("BinaryExp")
+    case x @ AssignExpression(id, expr) =>
+      RefTree.Ref(x, Seq(id.refTree, expr.refTree)).rename("AssignExpr")
   }
 
   implicit def treeDrawer: ToRefTree[ParseTree] = ToRefTree[ParseTree] {
@@ -75,24 +93,6 @@ trait Draw {
     case x: DoWhileStatement =>
       RefTree.Ref(x, Seq(x.body.refTree, x.cond.refTree)).rename("Do while")
 
-    case x: Expression => {
-      x match {
-        case IdentExpr(id) =>
-          RefTree.Ref(x, Seq(id.refTree)).rename("IdentExpr")
-        case LiterExpr(LITER(li)) =>
-          RefTree.Ref(x, Seq()).rename("Literal(" + li + ")")
-        case FxnExpr(n, exp) =>
-          RefTree.Ref(x, Seq(n.refTree, exp.refTree)).rename("FxnExpr")
-        case PreUnaryExpr(op, exp) =>
-          RefTree.Ref(x, Seq(op.refTree, exp.refTree)).rename("UnaryExpr")
-        case PostUnaryExpr(exp, op) =>
-          RefTree.Ref(x, Seq(exp.refTree, op.refTree)).rename("UnaryExpr")
-        case BinaryExpr(e, op, f) =>
-          RefTree.Ref(x, Seq(e.refTree, op.toString.refTree, f.refTree))
-            .rename("BinaryExp")
-        case AssignExpression(id, expr) =>
-          RefTree.Ref(x, Seq(id.refTree, expr.refTree)).rename("AssignExpr")
-      }
-    }
+    case x: Expression => x.refTree
   }
 }
