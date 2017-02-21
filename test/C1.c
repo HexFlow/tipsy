@@ -1,6 +1,8 @@
 /*
  * This is my test file :)
  */
+int cool() { static const int b; }
+
 int main() {
     static int k = 0;
     int b;

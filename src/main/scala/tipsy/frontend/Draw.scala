@@ -34,6 +34,14 @@ trait Draw {
     case CUSTOMTYPE(n) => IDENT(n).refTree
   }
 
+  implicit def listDrawer = ToRefTree[List[ParseTree]] {
+    case x => RefTree.Ref(x, x.map(_.refTree)).rename("List")
+  }
+
+  implicit def stringListDrawer = ToRefTree[List[String]] {
+    case x => RefTree.Ref(x, x.map(_.refTree)).rename("List")
+  }
+
   implicit def exprDrawer: ToRefTree[Expression] = ToRefTree[Expression] {
     case x @ IdentExpr(id) =>
       RefTree.Ref(x, Seq(id.refTree)).rename("IdentExpr")
