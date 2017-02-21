@@ -3,25 +3,49 @@ package tipsy.parser
 import tipsy.lexer._
 import scala.util.parsing.input.Positional
 
+sealed trait CFEnum
+case object FUNC extends CFEnum
+case class EXPR(value: Expression) extends CFEnum
+case class DECL(value: String) extends CFEnum
+
 // Used for storing types
-case class QualifiedType(qualifiers: List[String], name: CType) extends ParseTree
+case class QualifiedType(qualifiers: List[String], name: CType) extends ParseTree {
+  override def toString(): String = qualifiers.mkString(" ") + " " + name.toString()
+}
 case class TypedIdent(qt: QualifiedType, name: IDENT) extends ParseTree
 
 // All other ParseTree constructs derive from this
-sealed trait ParseTree extends Positional
+sealed trait ParseTree extends Positional {
+  val compress: List[CFEnum] = List()
+}
 
 // ParseTree constructs follow =>
 // --------------------------- =>
 
-case class TopList(items: List[ParseTree]) extends ParseTree
-case class BlockList(items: List[ParseTree]) extends ParseTree
+case class TopList(items: List[ParseTree]) extends ParseTree {
+  override val compress = items.flatMap(_.compress)
+}
+case class BlockList(items: List[ParseTree]) extends ParseTree {
+  override val compress = items.flatMap(_.compress)
+}
 
 // Definitions. Ex: int a = b + 2;
 sealed trait Definition extends ParseTree {
   val ti: TypedIdent
 }
-case class Initialized(ti: TypedIdent, value: ParseTree) extends Definition
-case class Uninitialized(ti: TypedIdent) extends Definition
+case class Initialized(ti: TypedIdent, value: Expression) extends Definition {
+  override val compress = {
+    val k1 = DECL(ti.qt.toString())
+    val k2 = EXPR(AssignExpression(ti.name, value))
+    List(k1, k2)
+  }
+}
+case class Uninitialized(ti: TypedIdent) extends Definition {
+  override val compress = {
+    val k1 = DECL(ti.qt.toString())
+    List(k1)
+  }
+}
 
 // A function with type and definition
 sealed trait FxnDefinition extends ParseTree {
@@ -30,7 +54,11 @@ sealed trait FxnDefinition extends ParseTree {
 }
 case class
   InitializedFxn(ti: TypedIdent, args: List[TypedIdent], body: BlockList)
-    extends FxnDefinition
+  extends FxnDefinition {
+  override val compress = {
+    args.map(_.qt.toString()).sortWith(_<_).map(DECL(_)) ++ body.compress
+  }
+}
 case class
   UninitializedFxn(ti: TypedIdent, args: List[TypedIdent])
     extends FxnDefinition
@@ -47,7 +75,11 @@ case class DoWhileStatement(body: BlockList, cond: Expression) extends Statement
 // Expression constructs follow =>
 // ---------------------------- =>
 
-sealed trait Expression extends ParseTree
+sealed trait Expression extends ParseTree {
+  override val compress = {
+    List(EXPR(this))
+  }
+}
 case class IdentExpr(id: IDENT) extends Expression
 case class LiterExpr(liter: LITER) extends Expression
 case class FxnExpr(fxnName: IDENT, exp: Expression) extends Expression
