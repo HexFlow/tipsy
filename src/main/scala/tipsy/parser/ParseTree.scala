@@ -25,6 +25,14 @@ case class LOOPCOND(value: Expression) extends CFEnum {
   val flowName = "Loop"
 }
 
+case object BLOCKOPEN extends CFEnum {
+  val flowName = "Block Open"
+}
+
+case object BLOCKCLOSE extends CFEnum {
+  val flowName = "Block Close"
+}
+
 // Used for storing types
 case class QualifiedType(qualifiers: List[String], name: CType) extends ParseTree {
   override def toString(): String = (qualifiers :+ name.toString).mkString(" ")
@@ -43,47 +51,33 @@ case class TopList(items: List[ParseTree]) extends ParseTree {
   override val compress = items.flatMap(_.compress)
 }
 case class BlockList(items: List[ParseTree]) extends ParseTree {
-  override val compress = items.flatMap(_.compress)
+  override val compress =
+    BLOCKOPEN :: items.flatMap(_.compress) ++ List(BLOCKCLOSE)
 }
 
 // Definitions. Ex: int a = b + 2;
-sealed trait Definition extends ParseTree {
-  val ti: TypedIdent
-}
-
-case class Initialized(ti: TypedIdent, value: Expression) extends Definition {
+case class Definition(ti: TypedIdent, value: Option[Expression])
+    extends ParseTree {
   override val compress = {
-    val k1 = DECL(ti.qt.toString())
-    val k2 = AssignExpression(ti.name, value).compress
-    List(k1) ++ k2
-  }
-}
-
-case class Uninitialized(ti: TypedIdent) extends Definition {
-  override val compress = {
-    List(DECL(ti.qt.toString()))
+    DECL(ti.qt.toString()) :: value.map { expr =>
+      AssignExpression(ti.name, expr).compress
+    }.getOrElse(List())
   }
 }
 
 // A function with type and definition
-sealed trait FxnDefinition extends ParseTree {
-  val ti: TypedIdent
-  val args: List[TypedIdent]
-}
-
-case class
-  InitializedFxn(ti: TypedIdent, args: List[TypedIdent], body: BlockList)
-  extends FxnDefinition {
+case class FxnDefinition(
+  ti: TypedIdent,
+  args: List[TypedIdent],
+  body: Option[BlockList]
+) extends ParseTree {
+  // If body is None, it won't show BlockOpen and BlockClose
   override val compress = {
     FUNC(ti.qt.toString) ::
     args.map(_.qt.toString()).sortWith(_<_).map(x => DECL("Argument " + x)) ++
-    body.compress
+    body.map(_.compress).getOrElse(List())
   }
 }
-
-case class
-  UninitializedFxn(ti: TypedIdent, args: List[TypedIdent])
-    extends FxnDefinition
 
 // A statement. Ex: a += b * 3;
 sealed trait Statement extends ParseTree

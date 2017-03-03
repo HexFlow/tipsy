@@ -67,7 +67,7 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
     val uninitialized = {
       typedvariable ~ SEMI() ^^ {
         case tid ~ _ => {
-          Uninitialized(tid)
+          Definition(tid, None)
         }
       }
     }
@@ -79,7 +79,7 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
       expressionStmt ^^ {
 
         case tid ~ _ ~ expr => {
-          Initialized(tid, expr)
+          Definition(tid, Some(expr))
         }
       }
     }
@@ -99,7 +99,7 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
       BRACKET(CURLY(false)) ^^ {
 
         case tid ~ _ ~ args ~_ ~ _ ~ block ~ _ => {
-          InitializedFxn(tid, args, block)
+          FxnDefinition(tid, args, Some(block))
         }
       }
     }
@@ -112,7 +112,7 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
       BRACKET(ROUND(false)) ~ SEMI() ^^ {
 
         case tid ~ _ ~ args ~_ ~ _ => {
-          UninitializedFxn(tid, args.map(_._1))
+          FxnDefinition(tid, args.map(_._1), None)
         }
       }
     }

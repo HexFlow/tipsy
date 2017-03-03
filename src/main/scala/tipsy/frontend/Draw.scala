@@ -73,18 +73,25 @@ trait TreeDraw {
     case x @ BlockList(items) =>
       RefTree.Ref(x, items.map(_.refTree)).rename("Block")
 
-    case x @ Initialized(ti, value) =>
-      RefTree.Ref(x, Seq(ti.refTree, value.refTree)).rename("Initialization")
+    case x @ Definition(ti, value) => {
+      val name = value match {
+        case None => "Declaration"
+        case _ => "Definition"
+      }
+      RefTree.Ref(
+        x, Seq(ti.refTree) ++
+          value.map(y => List(y.refTree)).getOrElse(Seq())
+      ).rename(name)
+    }
 
-    case x @ Uninitialized(qt) =>
-      RefTree.Ref(x, Seq(qt.refTree)).rename("Declaration")
-
-    case x @ InitializedFxn(tid, args, body) =>
-      RefTree.Ref(x, Seq(tid.refTree, args.refTree, body.refTree))
-        .rename("Function")
-
-    case x @ UninitializedFxn(tid, args) =>
-      RefTree.Ref(x, Seq(tid.refTree, args.refTree)).rename("Fxn declaration")
+    case x @ FxnDefinition(tid, args, body) => {
+      val name = body match {
+        case None => "Function declaration"
+        case _ => "Function definition"
+      }
+      RefTree.Ref(x, Seq(tid.refTree, args.refTree) ++ body.toList.map(_.refTree))
+        .rename(name)
+    }
 
     case x: IfStatement =>
       RefTree.Ref(x, Seq(x.cond.refTree, x.body.refTree, x.elsebody.refTree))
