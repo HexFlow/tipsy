@@ -1,7 +1,8 @@
 package tipsy.frontend
 
 import scala.io.Source
-import tipsy.compiler.WorkflowCompiler
+import tipsy.compiler._
+import tipsy.compare._
 
 import scala.util.{Try, Success, Failure}
 
@@ -13,14 +14,27 @@ import scala.util.{Try, Success, Failure}
   */
 object CLI {
   def apply(args: Array[String]): Unit = {
-    args.map(x => {
-      println("Compiling " + x)
-      val source = Try(Source.fromFile(x).mkString)
-
-      source match {
-        case Success(c) => println(WorkflowCompiler(c))
-        case Failure(e) => println(e)
+    val trees = args.zipWithIndex.map{
+      case (file, count) => {
+        println(s"[${count+1} of ${args.length}] Compiling " + file)
+        Try(Source.fromFile(file).mkString) match {
+          case Success(c) => {
+            WorkflowCompiler(c) match {
+              case Right(tree) => Some(tree)
+              case Left(err) => {
+                println("Compilation error =>")
+                println(err)
+                None
+              }
+            }
+          }
+          case Failure(e) => {
+            println(e)
+            None
+          }
+        }
       }
-    })
+    }.toList
+    LeastEdit(trees.flatMap(x => x))
   }
 }
