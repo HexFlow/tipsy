@@ -6,6 +6,9 @@ import scalaz._
 
 object LeastEdit {
   def apply(trees: List[ParseTree]) {
+    if (trees.length < 2) {
+      println("[Warning] Least Edit mode requires at least 2 trees")
+    }
     trees.combinations(2).map {
       case Seq(t1, t2) => {
         println("Starting 2 new trees")
