@@ -59,7 +59,9 @@ case class BlockList(items: List[ParseTree]) extends ParseTree {
 case class Definition(ti: TypedIdent, value: Option[Expression])
     extends ParseTree {
   override val compress = {
-    DECL(ti.qt.toString()) :: value.map { expr =>
+    // Note: Removed declarations from flow graph
+    // DECL(ti.qt.toString()) ::
+    value.map { expr =>
       AssignExpression(ti.name, expr).compress
     }.getOrElse(List())
   }
@@ -84,23 +86,23 @@ sealed trait Statement extends ParseTree
 case class IfStatement(cond: Expression, body: BlockList,
   elsebody: BlockList) extends Statement {
   override val compress = {
-    List(IFCOND(cond)) ++ body.compress ++ elsebody.compress
+    IFCOND(cond) :: body.compress ++ elsebody.compress
   }
 }
 
 case class ForStatement(e1: Expression, e2: Expression,
   e3: Expression, body: BlockList) extends Statement {
-    List(EXPR(e1)) ++ List(LOOPCOND(e2)) ++ body.compress ++ List(EXPR(e3))
+  EXPR(e1) :: LOOPCOND(e2) :: List(body.copy(items = body.items :+ e3))
 }
 
 case class WhileStatement(cond: Expression,
   body: BlockList) extends Statement {
-    List(LOOPCOND(cond)) ++ body.compress
+    LOOPCOND(cond) :: body.compress
 }
 
 case class DoWhileStatement(body: BlockList,
   cond: Expression) extends Statement {
-    List(LOOPCOND(cond)) ++ body.compress
+    LOOPCOND(cond) :: body.compress
 }
 
 // Expression constructs follow =>
