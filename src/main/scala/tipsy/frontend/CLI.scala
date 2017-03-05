@@ -21,11 +21,7 @@ case object DRAWFLOW extends CLIMode
 case object PRINTFLOW extends CLIMode
 
 trait FlowDraw {
-  implicit def strDrawer: ToRefTree[String] = ToRefTree {
-    case x => RefTree.Ref(x, Seq()).rename(x)
-  }
-
-  implicit def listDrawer: ToRefTree[List[CFEnum]] = ToRefTree[List[CFEnum]] {
+  implicit def cfListDrawer: ToRefTree[List[CFEnum]] = ToRefTree[List[CFEnum]] {
     case x::xs => RefTree.Ref(x, Seq(xs.refTree)).rename(x.flowName)
     case Nil => RefTree.Ref("", Seq()).rename("End")
   }
@@ -36,7 +32,7 @@ trait FlowDraw {
   * There may be more frontends later, for instance
   * a web based one.
   */
-object CLI {
+object CLI extends TreeDraw with FlowDraw {
   val renderer = Renderer(
     renderingOptions = RenderingOptions(density = 75),
     directory = Paths.get("."),
