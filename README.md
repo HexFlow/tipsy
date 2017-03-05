@@ -22,5 +22,3 @@ This will generate an image `parsetree.png` in your project folder, for the file
 
 ## Notes
 Code for Undergraduate project by [Pallav Agarwal](https://github.com/pallavagarwal07) and [Saksham Sharma](https://github.com/sakshamsharma).
-
-Contains the source code of [reftree](https://github.com/stanch/reftree/) temporarily to provide JPG outputs.

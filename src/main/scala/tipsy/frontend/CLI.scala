@@ -5,10 +5,10 @@ import tipsy.compiler._
 import tipsy.compare._
 import tipsy.parser._
 
-import dot.render._
-import dot.contrib._
-import dot.diagram._
-import dot.core._
+import reftree.render._
+import reftree.contrib._
+import reftree.diagram._
+import reftree.core._
 import java.nio.file.Paths
 
 import scala.util.{Try, Success, Failure}

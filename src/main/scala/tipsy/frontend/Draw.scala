@@ -1,9 +1,9 @@
 package tipsy.frontend
 
-import dot.render._
-import dot.contrib._
-import dot.core._
-import dot.diagram._
+import reftree.render._
+import reftree.contrib._
+import reftree.core._
+import reftree.diagram._
 
 import tipsy.lexer._
 import tipsy.parser._
