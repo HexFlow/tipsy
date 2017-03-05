@@ -5,20 +5,22 @@ import tipsy.parser._
 import scalaz._
 
 object LeastEdit {
-  def apply(trees: List[ParseTree]) {
+  def apply(trees: List[ParseTree]): List[(Int, Int, Double)] = {
     if (trees.length < 2) {
       println("[Warning] Least Edit mode requires at least 2 trees")
     }
-    trees.combinations(2).map {
+    val k = trees.zipWithIndex.combinations(2).map {
       case Seq(t1, t2) => {
-        println("Starting 2 new trees")
-        val v1 = t1.compress.toVector
-        val v2 = t2.compress.toVector
-        println(editDist(v1, v2, v1.length, v2.length))
-        println("Done")
+        println("Starting 2 new trees " + t1._2 + " " + t2._2)
+        val v1 = t1._1.compress.toVector
+        val v2 = t2._1.compress.toVector
+        val k = (editDist(v1, v2, v1.length, v2.length))
+        println(k)
+        (t1._2, t2._2, 1/(k.toDouble))
       }
-      case x => println(x)
+      case _ => ???
     }.toList
+    k
   }
 
   def editDistRecur(
@@ -27,7 +29,7 @@ object LeastEdit {
     if (m == 0) n
     else if (n == 0) m
     else if (s1(m-1) == s2(n-1))
-        editDist(s1, s2, m-1, n-1)
+      editDist(s1, s2, m-1, n-1)
     else
       1 + List(
         editDist(s1, s2, m, n-1),

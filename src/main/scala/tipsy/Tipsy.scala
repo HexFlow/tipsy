@@ -21,7 +21,7 @@ object Tipsy {
       case unknown => println("[Warning] Ignoring unknown argument: " + unknown)
     }
 
-    // Kung-fu to convert mutable to immutable
+    // Scala-fu to convert mutable to immutable
     CLI(files, Set(optset.toList: _*))
   }
 }

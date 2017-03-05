@@ -69,6 +69,9 @@ object CLI extends TreeDraw with FlowDraw {
         }
       }
     }.toList
-    if (modes contains LEASTEDIT) LeastEdit(trees.flatMap(x => x))
+    if (modes contains LEASTEDIT) {
+      val validTrees = trees.flatMap(x => x)
+      DistanceDraw(LeastEdit(validTrees), validTrees.length)
+    }
   }
 }
