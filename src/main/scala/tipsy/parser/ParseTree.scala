@@ -25,6 +25,10 @@ case class LOOPCOND(value: Expression) extends CFEnum {
   val flowName = "Loop"
 }
 
+case object RETURN extends CFEnum {
+  val flowName = "Return"
+}
+
 case object BLOCKOPEN extends CFEnum {
   val flowName = "Block Open"
 }
@@ -92,17 +96,22 @@ case class IfStatement(cond: Expression, body: BlockList,
 
 case class ForStatement(e1: Expression, e2: Expression,
   e3: Expression, body: BlockList) extends Statement {
-  EXPR(e1) :: LOOPCOND(e2) :: List(body.copy(items = body.items :+ e3))
+  override val compress =
+    EXPR(e1) :: LOOPCOND(e2) :: body.copy(items = body.items :+ e3).compress
 }
 
 case class WhileStatement(cond: Expression,
   body: BlockList) extends Statement {
-    LOOPCOND(cond) :: body.compress
+  override val compress = LOOPCOND(cond) :: body.compress
 }
 
 case class DoWhileStatement(body: BlockList,
   cond: Expression) extends Statement {
-    LOOPCOND(cond) :: body.compress
+  override val compress = LOOPCOND(cond) :: body.compress
+}
+
+case class ReturnStatement(code: Expression) extends Statement {
+  override val compress = RETURN :: code.compress
 }
 
 // Expression constructs follow =>

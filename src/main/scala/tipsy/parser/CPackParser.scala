@@ -183,7 +183,14 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
       }
     }
 
-    ifstmt | forstmt | whilestatement | dowhilestatement
+    lazy val returnstatement: PackratParser[ReturnStatement] = {
+      KEYWORD("return") ~ expression.? ~ SEMI() ^^ {
+        case _ ~ e ~ _ =>
+          ReturnStatement(e.getOrElse(LiterExpr(LITER(IntLiteral(0)))))
+      }
+    }
+
+    returnstatement | ifstmt | forstmt | whilestatement | dowhilestatement
   }
 
   /**

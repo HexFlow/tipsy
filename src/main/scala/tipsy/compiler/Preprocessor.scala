@@ -23,7 +23,6 @@ object Preprocessor {
       println(err)
       Left(CPreError(err))
     } else {
-
       var flag = false
       // Contains the part of user code from GCC output
       val result = out.split("\n").collect {
@@ -34,7 +33,6 @@ object Preprocessor {
           None
         }
       }.collect{ case Some(x) => x }.reduceLeft(_ + "\n" + _)
-
       Right(result)
     }
   }

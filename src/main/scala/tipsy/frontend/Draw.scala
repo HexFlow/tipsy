@@ -109,6 +109,9 @@ trait TreeDraw {
     case x: DoWhileStatement =>
       RefTree.Ref(x, Seq(x.body.refTree, x.cond.refTree)).rename("Do while")
 
+    case x: ReturnStatement =>
+      RefTree.Ref(x, Seq(x.code.refTree)).rename("Return")
+
     case x: Expression => x.refTree
   }
 }

@@ -32,9 +32,9 @@ object CLexer extends RegexParsers {
   }
 
   def keyword: Parser[KEYWORD] = positioned {
-    ("auto|break|case|continue|default|enum|extern" |
-      "goto|register|return|sizeof" |
-      "struct|switch|typedef|union") ^^ {
+    ("auto|break|case|continue|default|enum|extern".r |
+      "goto|return|register|sizeof".r |
+      "struct|switch|typedef|union".r) ^^ {
       KEYWORD(_)
     }
   }
@@ -62,11 +62,11 @@ object CLexer extends RegexParsers {
   }
 
   def operator: Parser[OPERATOR] = positioned {
-    val binaryOp = """[+*/-]|>=|>|<=|<|==|!=|[|]{1,2}|&{1,2}|\+=|\*=|=""".r ^^ {
+    val binaryOp = """[+*/-]|>=|>|<=|<|==|!=|[|]{1,2}|&{1,2}|\+=|\*=|=|%""".r ^^ {
       case x @ ("=") => OPERATOR(BinaryOp("="))
       case x @ (">=" | "<=" | ">" | "<" | "!=" | "==") =>
         OPERATOR(ParseBinaryOp(Prio1(x)))
-      case x @ ("*" | "/") => OPERATOR(ParseBinaryOp(Prio2(x)))
+      case x @ ("*" | "/" | "%") => OPERATOR(ParseBinaryOp(Prio2(x)))
       case x @ ("+" | "-") => OPERATOR(ParseBinaryOp(Prio3(x)))
       case x => OPERATOR(ParseBinaryOp(Prio4(x)))
     }
