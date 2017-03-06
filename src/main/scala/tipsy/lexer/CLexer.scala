@@ -83,7 +83,7 @@ object CLexer extends RegexParsers {
   }
 
   def literal: Parser[LITER] = positioned {
-    (iliteral | fliteral | sliteral) ^^ { LITER(_) }
+    (fliteral | iliteral | sliteral) ^^ { LITER(_) }
   }
 
   def semi: Parser[SEMI] = positioned { ";".r ^^ { _ => SEMI() } }
@@ -108,9 +108,9 @@ object CLexer extends RegexParsers {
   }
 
   def fliteral: Parser[FloatLiteral] = positioned {
-    (integer ~ "." ~ integer) ^^ {
+    (integer.? ~ "." ~ integer) ^^ {
       case (x ~ "." ~ y) =>
-        FloatLiteral((x.toString ++ "." ++ y.toString).toDouble)
+        FloatLiteral((x.getOrElse(0).toString ++ "." ++ y.toString).toDouble)
     }
   }
 

@@ -220,8 +220,8 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
 
     lazy val fxnExpr: PackratParser[Expression] = {
       identifier ~ BRACKET(ROUND(true)) ~
-      expression ~ BRACKET(ROUND(false)) ^^ {
-        case ident ~ _ ~ exp ~ _ => FxnExpr(ident, exp)
+      repsep(expression, COMMA()) ~ BRACKET(ROUND(false)) ^^ {
+        case ident ~ _ ~ exprs ~ _ => FxnExpr(ident, exprs)
       }
     }
 
