@@ -48,6 +48,8 @@ trait TreeDraw {
       RefTree.Ref(x, Seq()).rename("Literal(" + li + ")")
     case x @ FxnExpr(n, exp) =>
       RefTree.Ref(x, Seq(n.refTree, exp.refTree)).rename("FxnExpr")
+    case x @ ArrayExpr(n, index) =>
+      RefTree.Ref(x, Seq(n.refTree, index.refTree)).rename("ArrayExpr")
     case x @ PreUnaryExpr(op, exp) =>
       RefTree.Ref(x, Seq(op.refTree, exp.refTree)).rename("UnaryExpr")
     case x @ PostUnaryExpr(exp, op) =>

@@ -204,13 +204,19 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
     lazy val literExpr: PackratParser[LiterExpr] =
       literal ^^ { case a @ LITER(_) => LiterExpr(a) }
 
-    lazy val preUnaryExpr: PackratParser[Expression] = unaryOp ~ identExpr ^^ {
+    lazy val preUnaryExpr: PackratParser[Expression] = preUnaryOp ~ identExpr ^^ {
       case pop ~ e2 => PreUnaryExpr(pop, e2)
     }
 
-    lazy val postUnaryExpr: PackratParser[Expression] = identExpr ~ unaryOp ^^ {
-      case e1 ~ pop => PostUnaryExpr(e1, pop)
-    }
+    lazy val postUnaryExpr: PackratParser[Expression] =
+      identExpr ~ postUnaryOp ^^ {
+        case e1 ~ pop => PostUnaryExpr(e1, pop)
+      }
+
+    lazy val arrayExpr: PackratParser[Expression] =
+      identifier ~ BRACKET(SQUARE(true)) ~ expression ~ BRACKET(SQUARE(false)) ^^ {
+        case ident ~ _ ~ index ~ _ => ArrayExpr(ident, index)
+      }
 
     lazy val fxnExpr: PackratParser[Expression] = {
       identifier ~ BRACKET(ROUND(true)) ~
@@ -286,8 +292,8 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
     }
 
     def prio5Expr: Parser[Expression] = positioned {
-      assignExpr |
-      fxnExpr | bracketExpr |
+      assignExpr | fxnExpr |
+      bracketExpr | arrayExpr |
       preUnaryExpr | postUnaryExpr |
       identExpr | literExpr
     }

@@ -80,7 +80,9 @@ case class BinaryOp(op: String) extends COperator {
   }
 }
 
-sealed trait PriorityBinaryOperator extends COperator with CToken
+sealed trait PriorityBinaryOperator extends COperator with CToken {
+  val op: String
+}
 case class Prio1(op: String) extends PriorityBinaryOperator
 case class Prio2(op: String) extends PriorityBinaryOperator
 case class Prio3(op: String) extends PriorityBinaryOperator
