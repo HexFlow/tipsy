@@ -4,8 +4,9 @@ import tipsy.lexer._
 import tipsy.parser._
 
 object WorkflowCompiler {
-  def apply(code: String): Either[CCompilationError, ParseTree] = {
+  def apply(filename: String): Either[CCompilationError, ParseTree] = {
     for {
+      code <- Preprocessor(filename).right
       tokens <- CLexer(code).right
       parseTree <- CPackParser(tokens).right
     } yield parseTree

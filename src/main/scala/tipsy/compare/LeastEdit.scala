@@ -9,7 +9,7 @@ object LeastEdit {
     if (trees.length < 2) {
       println("[Warning] Least Edit mode requires at least 2 trees")
     }
-    val k = trees.zipWithIndex.combinations(2).map {
+    trees.zipWithIndex.combinations(2).map {
       case Seq(t1, t2) => {
         println("Starting 2 new trees " + t1._2 + " " + t2._2)
         val v1 = t1._1.compress.toVector
@@ -20,7 +20,6 @@ object LeastEdit {
       }
       case _ => ???
     }.toList
-    k
   }
 
   def editDistRecur(

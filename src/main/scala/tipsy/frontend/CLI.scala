@@ -43,27 +43,19 @@ object CLI extends TreeDraw with FlowDraw {
     val trees = files.zipWithIndex.map{
       case (file, count) => {
         println(s"[${count+1} of ${files.length}] Compiling " + file)
-        Try(Source.fromFile(file).mkString) match {
-          case Success(c) => {
-            WorkflowCompiler(c) match {
-              case Right(tree) => {
-                if (modes contains PRINTPARSE) println(tree)
-                if (modes contains PRINTFLOW) println(tree.compress)
-                if (modes contains DRAWPARSE)
-                  renderer.render(s"parsetree-$count", Diagram(tree))
-                if (modes contains DRAWFLOW)
-                  renderer.render(s"flowgraph-$count", Diagram(tree.compress))
-                Some(tree)
-              }
-              case Left(err) => {
-                println("Compilation error =>")
-                println(err)
-                None
-              }
-            }
+        WorkflowCompiler(file) match {
+          case Right(tree) => {
+            if (modes contains PRINTPARSE) println(tree)
+            if (modes contains PRINTFLOW) println(tree.compress)
+            if (modes contains DRAWPARSE)
+              renderer.render(s"parsetree-$count", Diagram(tree))
+            if (modes contains DRAWFLOW)
+              renderer.render(s"flowgraph-$count", Diagram(tree.compress))
+            Some(tree)
           }
-          case Failure(e) => {
-            println(e)
+          case Left(err) => {
+            println("Compilation error =>")
+            println(err)
             None
           }
         }

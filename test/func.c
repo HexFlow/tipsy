@@ -1,3 +1,4 @@
+#include <stdio.h>
 int myfunc(int a) {
     int k = 0;
     k++;
