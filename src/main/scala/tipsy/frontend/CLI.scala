@@ -10,6 +10,7 @@ import reftree.contrib._
 import reftree.diagram._
 import reftree.core._
 import java.nio.file.Paths
+import java.io.File
 
 import scala.util.{Try, Success, Failure}
 
@@ -39,7 +40,17 @@ object CLI extends TreeDraw with FlowDraw {
     format = "ps"
   )
 
-  def apply(files: Array[String], modes: Set[CLIMode]): Unit = {
+  def expandDir(name: String): List[String] = {
+    val fl = new File(name)
+    if (fl.isDirectory()) {
+      fl.listFiles.filter(_.isFile).toList.map(x => x.getPath()).filter(_.endsWith(".c"))
+    } else {
+      List(name)
+    }
+  }
+
+  def apply(filesOrig: Array[String], modes: Set[CLIMode]): Unit = {
+    val files = filesOrig.map(expandDir).flatten
     val trees = files.zipWithIndex.map{
       case (file, count) => {
         println(s"[${count+1} of ${files.length}] Compiling " + file)

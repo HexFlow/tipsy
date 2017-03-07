@@ -16,7 +16,7 @@ object LeastEdit {
         val v2 = t2._1.compress.toVector
         val k = (editDist(v1, v2, v1.length, v2.length))
         println(k)
-        (t1._2, t2._2, 1/(k.toDouble))
+        (t1._2, t2._2, 1/(k.toDouble+0.1))
       }
       case _ => ???
     }.toList
