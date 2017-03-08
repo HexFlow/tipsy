@@ -16,13 +16,13 @@ import forcelayout.renderer._
 import forcelayout.{ Node, Edge, SpringGraph }
 
 object DistanceDraw {
-  def apply(network: List[(Int, Int, Double)], length: Int) {
+  def apply(network: List[(Int, Int, Double)], length: Int, names: List[String]) {
     println(network)
     val avg = network.map(_._3).sum/network.size
     println(avg)
-    val nodes = (1 to length).map(x => Node(""+x, "Node "+x))
+    val nodes = (0 to length-1).map(x => Node(""+names(x), "Node "+names(x)))
     val edges = network.map{
-      case (a, b, c) => Edge(nodes(a), nodes(b), c-avg/4)
+      case (a, b, c) => Edge(nodes(a), nodes(b), c)
     }
 
     val graph = new SpringGraph(nodes, edges)

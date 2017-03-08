@@ -62,19 +62,20 @@ object CLI extends TreeDraw with FlowDraw {
               renderer.render(s"parsetree-$count", Diagram(tree))
             if (modes contains DRAWFLOW)
               renderer.render(s"flowgraph-$count", Diagram(tree.compress))
-            Some(tree)
+            (Some(tree), file)
           }
           case Left(err) => {
             println("Compilation error =>")
             println(err)
-            None
+            (None, file)
           }
         }
       }
     }.toList
     if (modes contains LEASTEDIT) {
-      val validTrees = trees.flatMap(x => x)
-      DistanceDraw(LeastEdit(validTrees), validTrees.length)
+      val validTrees = trees.collect { case (Some(x), y) => (x, y) }
+      DistanceDraw(LeastEdit(validTrees.map(_._1)),
+        validTrees.length, validTrees.map(_._2))
     }
   }
 }
