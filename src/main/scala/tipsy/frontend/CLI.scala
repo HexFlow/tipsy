@@ -9,6 +9,8 @@ import reftree.render._
 import reftree.contrib._
 import reftree.diagram._
 import reftree.core._
+import reftree.contrib.SimplifiedInstances.list
+
 import java.nio.file.Paths
 import java.io.File
 
@@ -22,9 +24,13 @@ case object DRAWFLOW extends CLIMode
 case object PRINTFLOW extends CLIMode
 
 trait FlowDraw {
-  implicit def cfListDrawer: ToRefTree[List[CFEnum]] = ToRefTree[List[CFEnum]] {
-    case x::xs => RefTree.Ref(x, Seq(xs.refTree)).rename(x.flowName)
-    case Nil => RefTree.Ref("", Seq()).rename("End")
+  // implicit def cfListDrawer = ToRefTree[List[CFEnum]] {
+  //   case x::xs => RefTree.Ref(x, Seq(xs.refTree)).rename(x.flowName)
+  //   case Nil => RefTree.Ref("", Seq()).rename("End")
+  // }
+
+  implicit def cfDrawer: ToRefTree[CFEnum] = ToRefTree[CFEnum] {
+    case x => RefTree.Ref(x, Seq()).rename(x.flowName)
   }
 }
 
