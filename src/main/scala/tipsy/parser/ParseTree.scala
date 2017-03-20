@@ -3,17 +3,6 @@ package tipsy.parser
 import tipsy.lexer._
 import scala.util.parsing.input.Positional
 
-object Util {
-  def listCompress(items: List[ParseTree], varCnt: Option[Int]):
-      (List[CFEnum], Option[Int]) = {
-    val compressed: List[(List[CFEnum], Option[Int])] =
-      items.scanLeft((List(): List[CFEnum], varCnt)) {
-        (res, cur) => cur.compress(res._2)
-      }
-    (compressed.map(_._1).flatten, compressed.last._2)
-  }
-}
-
 sealed trait CFEnum {
   val flowName: String
 }
@@ -56,36 +45,29 @@ case class TypedIdent(qt: QualifiedType, name: IDENT) extends ParseTree
 
 // All other ParseTree constructs derive from this
 sealed trait ParseTree extends Positional {
-  def compress(varCnt: Option[Int] = None): (List[CFEnum], Option[Int]) =
-    (List(), None)
+  val compress: List[CFEnum] = List()
 }
 
 // ParseTree constructs follow =>
 // --------------------------- =>
 
 case class TopList(items: List[ParseTree]) extends ParseTree {
-  override def compress(varCnt: Option[Int]) = {
-    Util.listCompress(items, varCnt)
-  }
+  override val compress = items.flatMap(_.compress)
 }
 case class BlockList(items: List[ParseTree]) extends ParseTree {
-  override def compress(varCnt: Option[Int]) = {
-    val listCompr = Util.listCompress(items, varCnt)
-    (BLOCKOPEN :: listCompr._1 ++ List(BLOCKCLOSE), listCompr._2)
-  }
+  override val compress =
+    BLOCKOPEN :: items.flatMap(_.compress) ++ List(BLOCKCLOSE)
 }
 
 // Definitions. Ex: int a = b + 2;
 case class Definition(ti: TypedIdent, value: Option[Expression])
     extends ParseTree {
-  override def compress(varCnt: Option[Int]) = {
+  override val compress = {
     // Note: Removed declarations from flow graph
     // DECL(ti.qt.toString()) ::
-
-    // TODO: There can be multiple declarations here
-    (value.map { expr =>
-      AssignExpression(ti.name, expr).compress()
-    }.getOrElse(List()))
+    value.map { expr =>
+      AssignExpression(ti.name, expr).compress
+    }.getOrElse(List())
   }
 }
 
@@ -96,10 +78,10 @@ case class FxnDefinition(
   body: Option[BlockList]
 ) extends ParseTree {
   // If body is None, it won't show BlockOpen and BlockClose
-  override def compress(varCnt: Option[Int]) = {
+  override val compress = {
     FUNC(ti.qt.toString) ::
     args.map(_.qt.toString()).sortWith(_<_).map(x => DECL("Argument " + x)) ++
-    body.map(_.compress()).getOrElse(List())
+    body.map(_.compress).getOrElse(List())
   }
 }
 
@@ -107,36 +89,36 @@ case class FxnDefinition(
 sealed trait Statement extends ParseTree
 case class IfStatement(cond: Expression, body: BlockList,
   elsebody: BlockList) extends Statement {
-  override def compress(varCnt: Option[Int]) = {
-    IFCOND(cond) :: body.compress() ++ elsebody.compress()
+  override val compress = {
+    IFCOND(cond) :: body.compress ++ elsebody.compress
   }
 }
 
 case class ForStatement(e1: Expression, e2: Expression,
   e3: Expression, body: BlockList) extends Statement {
-  override def compress(varCnt: Option[Int]) =
-    EXPR(e1) :: LOOPCOND(e2) :: body.copy(items = body.items :+ e3).compress()
+  override val compress =
+    EXPR(e1) :: LOOPCOND(e2) :: body.copy(items = body.items :+ e3).compress
 }
 
 case class WhileStatement(cond: Expression,
   body: BlockList) extends Statement {
-  override def compress(varCnt: Option[Int]) = LOOPCOND(cond) :: body.compress()
+  override val compress = LOOPCOND(cond) :: body.compress
 }
 
 case class DoWhileStatement(body: BlockList,
   cond: Expression) extends Statement {
-  override def compress(varCnt: Option[Int]) = LOOPCOND(cond) :: body.compress()
+  override val compress = LOOPCOND(cond) :: body.compress
 }
 
 case class ReturnStatement(code: Expression) extends Statement {
-  override def compress(varCnt: Option[Int]) = RETURN :: code.compress()
+  override val compress = RETURN :: code.compress
 }
 
 // Expression constructs follow =>
 // ---------------------------- =>
 
 sealed trait Expression extends ParseTree {
-  override def compress(varCnt: Option[Int]) = {
+  override val compress = {
     this match {
       case AssignExpression(_, _) => List(ASSIGN(this))
       case _ => List(EXPR(this))
