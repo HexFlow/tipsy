@@ -110,6 +110,21 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
       }
     }
 
+    val main = {
+      IDENT("main") ~
+      BRACKET(ROUND(true)) ~
+      repsep(typedvariable, COMMA()) ~
+      BRACKET(ROUND(false)) ~
+      BRACKET(CURLY(true)) ~
+      blockparser ~
+      BRACKET(CURLY(false)) ^^ {
+        case _ ~ _ ~ args ~_ ~ _ ~ block ~ _ => {
+          FxnDefinition(TypedIdent(QualifiedType(List(), INT()), IDENT("main")),
+            args, Some(block))
+        }
+      }
+    }
+
     // Or just declared here
     val uninitialized = {
       typedvariable ~
@@ -123,7 +138,7 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
       }
     }
 
-    initialized | uninitialized
+    main | initialized | uninitialized
   }
 
   /**
