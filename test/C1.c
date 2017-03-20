@@ -1,7 +1,10 @@
 /*
  * This is my test file :)
  */
-int cool() { static const int b; }
+int cool() {
+    static int b;
+    b = 2;
+}
 
 int main() {
     static int k = 0;

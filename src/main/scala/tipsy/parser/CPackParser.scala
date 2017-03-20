@@ -62,6 +62,7 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
     withoutBraces | withBraces
   }
 
+  // TODO: Does not support: int a, b = 0;
   lazy val definition: PackratParser[Definition] = positioned {
     // A definition may be for an uninitialized object
     val uninitialized = {

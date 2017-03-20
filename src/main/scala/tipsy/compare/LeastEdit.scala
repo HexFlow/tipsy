@@ -12,8 +12,8 @@ object LeastEdit {
     trees.zipWithIndex.combinations(2).map {
       case Seq(t1, t2) => {
         println("Starting 2 new trees " + t1._2 + " " + t2._2)
-        val v1 = t1._1.compress.toVector
-        val v2 = t2._1.compress.toVector
+        val v1 = t1._1.compress(Some(0)).toVector
+        val v2 = t2._1.compress(Some(0)).toVector
         val k = (editDist(v1, v2, v1.length, v2.length))
         println(k)
         (t1._2, t2._2, 1/(k.toDouble+0.1))

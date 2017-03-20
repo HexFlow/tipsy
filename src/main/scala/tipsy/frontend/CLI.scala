@@ -59,11 +59,11 @@ object CLI extends TreeDraw with FlowDraw {
         WorkflowCompiler(file) match {
           case Right(tree) => {
             if (modes contains PRINTPARSE) println(tree)
-            if (modes contains PRINTFLOW) println(tree.compress)
+            if (modes contains PRINTFLOW) println(tree.compress())
             if (modes contains DRAWPARSE)
               renderer.render(s"parsetree-$count", Diagram(tree))
             if (modes contains DRAWFLOW)
-              renderer.render(s"flowgraph-$count", Diagram(tree.compress))
+              renderer.render(s"flowgraph-$count", Diagram(tree.compress()))
             (Some(tree), file)
           }
           case Left(err) => {
