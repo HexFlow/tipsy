@@ -75,15 +75,19 @@ trait TreeDraw {
     case x @ BlockList(items) =>
       RefTree.Ref(x, items.map(_.refTree)).rename("Block")
 
-    case x @ Definition(ti, value) => {
+    case x @ Definition(ty, id, value) => {
       val name = value match {
         case None => "Declaration"
         case _ => "Definition"
       }
       RefTree.Ref(
-        x, Seq(ti.refTree) ++
+        x, Seq(ty.refTree) ++ Seq(id.refTree) ++
           value.map(y => List(y.refTree)).getOrElse(Seq())
       ).rename(name)
+    }
+
+    case x @ Definitions(defs) => {
+      RefTree.Ref(x, defs.map(y => y.refTree)).rename("Definitions")
     }
 
     case x @ FxnDefinition(tid, args, body) => {

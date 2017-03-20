@@ -37,21 +37,22 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
 
   lazy val programparser: PackratParser[TopList] = positioned {
     // Program may have functions or other definitions/declarations
-    rep1(functionDefinition | definition) ^^ {
-      case x => TopList(x)
+    rep1(functionDefinition | definitions) ^^ {
+      case x => TopList(customFlatten(x))
     }
   }
 
   lazy val blockparser: PackratParser[BlockList] = positioned {
+
     // A block may have definitions or statements
-    rep(expressionStmt | statement | definition) ^^ {
-      case x => BlockList(x)
+    rep(expressionStmt | statement | definitions) ^^ {
+      case x => BlockList(customFlatten(x))
     }
   }
 
   lazy val maybeWithoutBracesBlock: PackratParser[BlockList] = positioned {
-    val withoutBraces = (expressionStmt | statement | definition) ^^ {
-      case x => BlockList(List(x))
+    val withoutBraces = (expressionStmt | statement | definitions) ^^ {
+      case x => BlockList(customFlatten(List(x)))
     }
 
     val withBraces =
@@ -63,29 +64,33 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
   }
 
   // TODO: Does not support: int a, b = 0;
-  lazy val definition: PackratParser[Definition] = positioned {
+  lazy val definitions: PackratParser[Definitions] = positioned {
     // A definition may be for an uninitialized object
     val uninitialized = {
-      typedvariable ~ SEMI() ^^ {
-        case tid ~ _ => {
-          Definition(tid, None)
+      identifier ^^ {
+        case id => {
+          (id, None)
         }
       }
     }
 
     // Or an initialized one
     val initialized = {
-      typedvariable ~
+      identifier ~
       OPERATOR(BinaryOp("=")) ~
-      expressionStmt ^^ {
+      expression ^^ {
 
-        case tid ~ _ ~ expr => {
-          Definition(tid, Some(expr))
+        case id ~ _ ~ expr => {
+          (id, Some(expr))
         }
       }
     }
 
-    uninitialized | initialized
+    typeparse ~ repsep((initialized | uninitialized), COMMA()) ~ SEMI() ^^ {
+      case ty ~ defs ~ _ => {
+        Definitions(defs.map { defi => Definition(ty, defi._1, defi._2) })
+      }
+    }
   }
 
   lazy val functionDefinition: PackratParser[FxnDefinition] = positioned {
@@ -355,5 +360,18 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
 
   private def typequalifiers: Parser[TYPEQ] = {
     accept("type qualifier", { case tyq @ TYPEQ(quals) => tyq })
+  }
+
+  // Useful when definitions have to be condensed into a list of individual defs
+  private def customFlatten(k: List[ParseTree]): List[ParseTree] = {
+    k match {
+      case Nil => List()
+      case x :: xs => {
+        x match {
+          case Definitions(defs) => defs ++ customFlatten(xs)
+          case y => y :: customFlatten(xs)
+        }
+      }
+    }
   }
 }

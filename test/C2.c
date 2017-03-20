@@ -1,5 +1,5 @@
 int main(int a, int b) {
-    static int a = a * b;
+    static int a = a * b, newvar;
     int a = a / b + c * d * e;
     customtype b = c;
 

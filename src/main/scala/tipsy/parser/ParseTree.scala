@@ -59,14 +59,21 @@ case class BlockList(items: List[ParseTree]) extends ParseTree {
     BLOCKOPEN :: items.flatMap(_.compress) ++ List(BLOCKCLOSE)
 }
 
+case class Definitions(defs: List[Definition]) extends ParseTree {
+  // Does not exist in the final AST, courtesy customFlatten
+  override val compress = {
+    defs.flatMap(_.compress)
+  }
+}
+
 // Definitions. Ex: int a = b + 2;
-case class Definition(ti: TypedIdent, value: Option[Expression])
+case class Definition(ty: QualifiedType, id: IDENT, value: Option[Expression])
     extends ParseTree {
   override val compress = {
     // Note: Removed declarations from flow graph
-    // DECL(ti.qt.toString()) ::
+    // DECL(ty.toString()) ::
     value.map { expr =>
-      AssignExpression(ti.name, expr).compress
+      AssignExpression(id, expr).compress
     }.getOrElse(List())
   }
 }
