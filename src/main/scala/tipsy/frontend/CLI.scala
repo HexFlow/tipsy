@@ -24,13 +24,9 @@ case object DRAWFLOW extends CLIMode
 case object PRINTFLOW extends CLIMode
 
 trait FlowDraw {
-  // implicit def cfListDrawer = ToRefTree[List[CFEnum]] {
-  //   case x::xs => RefTree.Ref(x, Seq(xs.refTree)).rename(x.flowName)
-  //   case Nil => RefTree.Ref("", Seq()).rename("End")
-  // }
-
-  implicit def cfDrawer: ToRefTree[CFEnum] = ToRefTree[CFEnum] {
-    case x => RefTree.Ref(x, Seq()).rename(x.flowName)
+  implicit def cfListDrawer = ToRefTree[List[CFEnum]] {
+    case x::xs => RefTree.Ref(x, Seq(xs.refTree)).rename(x.flowName)
+    case Nil => RefTree.Ref("", Seq()).rename("End")
   }
 }
 
