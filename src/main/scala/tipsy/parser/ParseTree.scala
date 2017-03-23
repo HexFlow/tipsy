@@ -67,13 +67,14 @@ case class Definitions(defs: List[Definition]) extends ParseTree {
 }
 
 // Definitions. Ex: int a = b + 2;
-case class Definition(ty: QualifiedType, id: IDENT, value: Option[Expression])
-    extends ParseTree {
+case class Definition(ty: QualifiedType, id: Expression,
+  value: Option[Expression]) extends ParseTree {
+
   override val compress = {
     // Note: Removed declarations from flow graph
     // DECL(ty.toString()) ::
     value.map { expr =>
-      AssignExpr(IdentExpr(id), expr).compress
+      AssignExpr(id, expr).compress
     }.getOrElse(List())
   }
 }

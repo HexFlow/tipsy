@@ -3,4 +3,6 @@
 int main() {
     printf("%s", "Hello world");
     a = func(2, 3, 4, 0.2);
+    a = 2;
+    a = b;
 }
