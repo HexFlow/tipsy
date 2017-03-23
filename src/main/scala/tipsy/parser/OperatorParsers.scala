@@ -27,6 +27,10 @@ trait OperatorParsers extends Parsers {
     accept("Binary op", { case OPERATOR(ParseBinaryOp(x)) => BinaryOp(x.op) })
   }
 
+  def prio0op: Parser[BinaryOp] = positioned {
+    accept("prio0op", { case OPERATOR(BinaryOp("=")) => BinaryOp("=") })
+  }
+
   def prio1op: Parser[BinaryOp] = positioned {
     accept("prio1op", { case OPERATOR(ParseBinaryOp(Prio1(x))) => BinaryOp(x) })
   }

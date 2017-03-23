@@ -73,7 +73,7 @@ case class Definition(ty: QualifiedType, id: IDENT, value: Option[Expression])
     // Note: Removed declarations from flow graph
     // DECL(ty.toString()) ::
     value.map { expr =>
-      AssignExpr(id, expr).compress
+      AssignExpr(IdentExpr(id), expr).compress
     }.getOrElse(List())
   }
 }
@@ -141,5 +141,5 @@ case class PreUnaryExpr(op: UnaryOp, exp: Expression) extends Expression
 case class PostUnaryExpr(exp: Expression, op: UnaryOp) extends Expression
 case class BinaryExpr(exp1: Expression, op: BinaryOp, exp2: Expression)
     extends Expression
-case class AssignExpr(id: IDENT, expr: Expression) extends Expression
+case class AssignExpr(id: Expression, expr: Expression) extends Expression
 case class CompoundExpr(exprs: List[Expression]) extends Expression

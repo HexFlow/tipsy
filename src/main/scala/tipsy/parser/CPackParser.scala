@@ -3,8 +3,8 @@ package tipsy.parser
 import tipsy.compiler.{Location, CParserError}
 import tipsy.lexer._
 
-import scala.util.parsing.combinator.PackratParsers
 import scala.util.parsing.combinator.Parsers
+import scala.util.parsing.combinator.PackratParsers
 import scala.util.parsing.input.{NoPosition, Position, Reader}
 
 object CPackParser extends PackratParsers with Parsers with OperatorParsers {
@@ -220,18 +220,6 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
     */
   lazy val expression: ExprParse = positioned {
 
-    lazy val assignExpr: PackratParser[AssignExpr] = {
-      identifier ~ OPERATOR(BinaryOp("=")) ~ expression ^^ {
-        case id ~ op ~ expr => AssignExpr(id, expr)
-      }
-    }
-
-    lazy val exprList: ExprParse = {
-      repsep(expression, COMMA()) ^^ {
-        case exprs => CompoundExpr(exprs)
-      }
-    }
-
     lazy val identExpr: PackratParser[Expression] =
       identifier ^^ { case a => IdentExpr(a) }
 
@@ -272,8 +260,9 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
       * Returns a parser which parses an expression followed
       * by that binary operator
       */
-    def getPairParser(opP: => Parser[BinaryOp]): Parser[ExprOp] = {
-      expression ~ opP ^^ {
+    def getPairParser(opP: => Parser[BinaryOp],
+      ex: ExprParse = expression): Parser[ExprOp] = {
+      ex ~ opP ^^ {
         case expr ~ op => (expr, op)
       }
     }
@@ -299,44 +288,56 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
       })._1
     }
 
-    def prio1Expr: Parser[Expression] = positioned {
+    lazy val prio1Expr: ExprParse = positioned {
       rep(getPairParser(prio1op | prio2op | prio3op | prio4op)) ~
       (prio2Expr | prio3Expr | prio4Expr | prio5Expr) ^^ {
         case lis ~ id => getTreeFromExprList(lis, id)
       }
     }
 
-    def prio2Expr: Parser[Expression] = positioned {
+    lazy val prio2Expr: ExprParse = positioned {
       rep(getPairParser(
         prio2op | prio3op | prio4op)) ~ (prio3Expr | prio4Expr | prio5Expr) ^^ {
         case lis ~ id => getTreeFromExprList(lis, id)
       }
     }
 
-    def prio3Expr: Parser[Expression] = positioned {
+    lazy val prio3Expr: ExprParse = positioned {
       rep(getPairParser(prio3op | prio4op)) ~ (prio4Expr | prio5Expr) ^^ {
         case lis ~ id => getTreeFromExprList(lis, id)
       }
     }
 
-    def prio4Expr: Parser[Expression] = positioned {
+    lazy val prio4Expr: ExprParse = positioned {
       rep(getPairParser(prio4op)) ~ prio5Expr ^^ {
         case lis ~ id => getTreeFromExprList(lis, id)
       }
     }
 
-    def prio5Expr: Parser[Expression] = positioned {
-      assignExpr | fxnExpr |
+    lazy val prio5Expr: ExprParse = positioned {
+      fxnExpr |
       bracketExpr | arrayExpr |
       preUnaryExpr | postUnaryExpr |
       identExpr | literExpr
     }
 
-    // The final expression type definition
-    // Prio1 will fallback to other higher priority operators
-    rep(getPairParser(prio1op)) ~ prio1Expr ^^ {
-      case lis ~ id => getTreeFromExprList(lis, id)
+    lazy val assignExpr: PackratParser[AssignExpr] = {
+      (preUnaryExpr | postUnaryExpr | arrayExpr | identExpr) ~
+      OPERATOR(BinaryOp("=")) ~ simpleExpr ^^ {
+        case eid ~ op ~ expr => AssignExpr(eid, expr)
+      }
     }
+
+    lazy val simpleExpr: ExprParse = assignExpr | prio1Expr
+
+    lazy val compoundExpr: ExprParse = {
+      repsep(simpleExpr, COMMA()) ^^ {
+        case expr :: Nil => expr
+        case exprs => CompoundExpr(exprs)
+      }
+    }
+
+    log(compoundExpr)("Logger")
   }
 
   /**
