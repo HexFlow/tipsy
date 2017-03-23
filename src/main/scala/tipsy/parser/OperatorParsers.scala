@@ -13,8 +13,8 @@ trait OperatorParsers extends Parsers {
   def preUnaryOp: Parser[UnaryOp] = positioned {
     accept("Pre Unary operator", {
       case OPERATOR(pop @ UnaryOp(_)) => pop
-      case OPERATOR(pbo @ ParseBinaryOp(_)) if pbo.op == "*" || pbo.op == "&" =>
-        UnaryOp(pbo.op)
+      case OPERATOR(ParseBinaryOp(x, _)) if x == "*" || x == "&" =>
+        UnaryOp(x)
     })
   }
 
@@ -24,27 +24,23 @@ trait OperatorParsers extends Parsers {
 
   def binOp: Parser[BinaryOp] = positioned {
     // Returns an arbitrary binary operator without considering priorities
-    accept("Binary op", { case OPERATOR(ParseBinaryOp(x)) => BinaryOp(x.op) })
+    accept("Binary op", { case OPERATOR(ParseBinaryOp(x, _)) => BinaryOp(x) })
   }
 
-  def prio0op: Parser[BinaryOp] = positioned {
-    accept("prio0op", { case OPERATOR(BinaryOp("=")) => BinaryOp("=") })
+  def prioOp(prio: Int): Parser[BinaryOp] = positioned {
+    accept(s"Operator ${prio}", {
+      case OPERATOR(ParseBinaryOp(x, prio2)) if prio2 == prio => BinaryOp(x)
+    })
   }
 
-  def prio1op: Parser[BinaryOp] = positioned {
-    accept("prio1op", { case OPERATOR(ParseBinaryOp(Prio1(x))) => BinaryOp(x) })
+  def rangePrioOp(min: Int, max: Int): Parser[BinaryOp] = positioned {
+    accept(s"Operator ${min} to ${max}", {
+      case OPERATOR(ParseBinaryOp(x, p)) if p >= min && p <= max => BinaryOp(x)
+    })
   }
 
-  def prio2op: Parser[BinaryOp] = positioned {
-    accept("prio2op", { case OPERATOR(ParseBinaryOp(Prio2(x))) => BinaryOp(x) })
-  }
-
-  def prio3op: Parser[BinaryOp] = positioned {
-    accept("prio3op", { case OPERATOR(ParseBinaryOp(Prio3(x))) => BinaryOp(x) })
-  }
-
-  def prio4op: Parser[BinaryOp] = positioned {
-    accept("prio4op", { case OPERATOR(ParseBinaryOp(Prio4(x))) => BinaryOp(x) })
+  def comma: Parser[BinaryOp] = positioned {
+    accept("comma", { case OPERATOR(ParseBinaryOp(",", _)) => BinaryOp(",") })
   }
 
   def operator: Parser[OPERATOR] = positioned {

@@ -38,7 +38,7 @@ trait ExprParse extends PackratParsers with Parsers
 
   lazy val fxnExpr: PackratParser[Expression] = {
     identifier ~ BRACKET(ROUND(true)) ~
-    repsep(expression, COMMA()) ~ BRACKET(ROUND(false)) ^^ {
+    repsep(expression, comma) ~ BRACKET(ROUND(false)) ^^ {
       case ident ~ _ ~ exprs ~ _ => FxnExpr(ident, exprs)
     }
   }
@@ -49,88 +49,42 @@ trait ExprParse extends PackratParsers with Parsers
     }
   }
 
-  type ExprOp = (Expression, BinaryOp)
+  def prioExprGenerator(prio: Int): ExprParse = positioned {
+    lazy val item = {
+      if (prio == CLexer.maxLevel) {
+        fxnExpr | bracketExpr | arrayExpr |
+        preUnaryExpr | postUnaryExpr |
+        identExpr | literExpr
+      } else {
+        chainl1(
+          prioExprGenerator(prio+1),
+          (prioOp(prio) ^^ {
+            case x: BinaryOp => { (a: Expression, b: Expression) =>
+              BinaryExpr(a, x, b)
+            }
+          })
+        )
+      }
+    }
+    item
+  }
 
-  /**
-    * Takes a binary operator parser.
-    * Returns a parser which parses an expression followed
-    * by that binary operator
-    */
-  def getPairParser(opP: => Parser[BinaryOp],
-    ex: ExprParse = expression): Parser[ExprOp] = {
-    ex ~ opP ^^ {
-      case expr ~ op => (expr, op)
+  def condenser(ex: Expression): List[Expression] = {
+    ex match {
+      case BinaryExpr(e1, BinaryOp(","), e2) => e1 :: condenser(e2)
+      case e => List(e)
     }
   }
 
-  /**
-    * Takes a list of (expression, binary operator), and a
-    * final expression (of lower priority) after the list.
-    *
-    * Returns a left recursive parse tree of the above
-    */
-  def getTreeFromExprList(lis: List[ExprOp], id: Expression) = {
-    val parseList: List[ExprOp] = lis :+ (id, BinaryOp("*"))
-
-    (parseList match {
-      case x :: xs => {
-        xs.foldLeft (x) {
-          (prevRes: ExprOp, nEO: ExprOp) => {
-            (BinaryExpr(prevRes._1, prevRes._2, nEO._1), nEO._2)
-          }
+  lazy val expression: ExprParse = positioned {
+    prioExprGenerator(1) ^^ {
+      case ex => {
+        val condensed = condenser(ex)
+        condensed match {
+          case x::Nil => x
+          case x => CompoundExpr(x)
         }
       }
-      case _ => ???
-    })._1
-  }
-
-  lazy val prio1Expr: ExprParse = positioned {
-    rep(getPairParser(prio1op | prio2op | prio3op | prio4op)) ~
-    (prio2Expr | prio3Expr | prio4Expr | prio5Expr) ^^ {
-      case lis ~ id => getTreeFromExprList(lis, id)
     }
   }
-
-  lazy val prio2Expr: ExprParse = positioned {
-    rep(getPairParser(
-      prio2op | prio3op | prio4op)) ~ (prio3Expr | prio4Expr | prio5Expr) ^^ {
-      case lis ~ id => getTreeFromExprList(lis, id)
-    }
-  }
-
-  lazy val prio3Expr: ExprParse = positioned {
-    rep(getPairParser(prio3op | prio4op)) ~ (prio4Expr | prio5Expr) ^^ {
-      case lis ~ id => getTreeFromExprList(lis, id)
-    }
-  }
-
-  lazy val prio4Expr: ExprParse = positioned {
-    rep(getPairParser(prio4op)) ~ prio5Expr ^^ {
-      case lis ~ id => getTreeFromExprList(lis, id)
-    }
-  }
-
-  lazy val prio5Expr: ExprParse = positioned {
-    fxnExpr | bracketExpr | arrayExpr |
-    preUnaryExpr | postUnaryExpr |
-    identExpr | literExpr
-  }
-
-  lazy val assignExpr: PackratParser[AssignExpr] = {
-    (preUnaryExpr | postUnaryExpr | arrayExpr | identExpr) ~
-    OPERATOR(BinaryOp("=")) ~ simpleExpr ^^ {
-      case eid ~ op ~ expr => AssignExpr(eid, expr)
-    }
-  }
-
-  lazy val simpleExpr: ExprParse = positioned { assignExpr | prio1Expr }
-
-  lazy val compoundExpr: ExprParse = {
-    repsep(simpleExpr, COMMA()) ^^ {
-      case expr :: Nil => expr
-      case exprs => CompoundExpr(exprs)
-    }
-  }
-
-  lazy val expression: ExprParse = positioned { compoundExpr }
 }

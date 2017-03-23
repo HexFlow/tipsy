@@ -1,1 +1,1 @@
-int main() { k = a + b + c + d; }
+int main() { k = a / b + c / d; }

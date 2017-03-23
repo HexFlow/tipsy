@@ -25,7 +25,7 @@ object CLexer extends RegexParsers {
         keyword | ctype |
         elsef | iff |
         forf | whilef | dof |
-        ctypequalifier | semi | comma | bracket |
+        ctypequalifier | semi | bracket |
         identifier | literal | operator
       }
     }
@@ -61,14 +61,40 @@ object CLexer extends RegexParsers {
     }
   }
 
+  val maxLevel = 15
   def operator: Parser[OPERATOR] = positioned {
-    val binaryOp = """[+*/-]|>=|>|<=|<|==|!=|[|]{1,2}|&{1,2}|\+=|\*=|=|%""".r ^^ {
-      case x @ ("=") => OPERATOR(BinaryOp("="))
-      case x @ (">=" | "<=" | ">" | "<" | "!=" | "==") =>
-        OPERATOR(ParseBinaryOp(Prio1(x)))
-      case x @ ("*" | "/" | "%") => OPERATOR(ParseBinaryOp(Prio2(x)))
-      case x @ ("+" | "-") => OPERATOR(ParseBinaryOp(Prio3(x)))
-      case x => OPERATOR(ParseBinaryOp(Prio4(x)))
+    def op(x: String, level: Int) = OPERATOR(ParseBinaryOp(x, level))
+
+    val binaryOp =
+      """[+*/-]|\,|<<=|>>=|>=|>|<=|<|==|!=|\+=|\*=|\-=|\/=|\%=|\&=|\^=|\|=|=|%|[|]{1,2}|&{1,2}|\^""".r ^^ {
+        case x @ "," => op(x, 1)
+
+        case x @ ("=" | "+=" | "-=" | "*=" | "/=" | "%=" | "&=" | "^=" | "|=" |
+            "<<=" | ">>=") => op(x, 2)
+
+        case x @ "?:" => op(x, 3)
+
+        case x @ "||" => op(x, 4)
+
+        case x @ "&&" => op(x, 5)
+
+        case x @ "|" => op(x, 6)
+
+        case x @ "^" => op(x, 7)
+
+        case x @ "&" => op(x, 8)
+
+        case x @ ("==" | "!=") => op(x, 9)
+
+        case x @ ("<=" | "<" | ">=" | ">") => op(x, 10)
+
+        case x @ ("<<" | ">>") => op(x, 11)
+
+        case x @ ("+" | "-") => op(x, 12)
+
+        case x @ ("*" | "%") => op(x, 13)
+
+        case x => op(x, 14)
     }
 
     val unaryOp = """[+]{2}|-{2}""".r ^^ {
@@ -88,7 +114,7 @@ object CLexer extends RegexParsers {
 
   def semi: Parser[SEMI] = positioned { ";".r ^^ { _ => SEMI() } }
 
-  def comma: Parser[COMMA] = positioned { ",".r ^^ { _ => COMMA() } }
+  // def comma: Parser[COMMA] = positioned { ",".r ^^ { _ => COMMA() } }
 
   def iff: Parser[IF] = positioned { "if".r ^^ { _ => IF() } }
   def elsef: Parser[ELSE] = positioned { "else".r ^^ { _ => ELSE() } }

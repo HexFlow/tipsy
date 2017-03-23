@@ -57,8 +57,6 @@ trait TreeDraw {
     case x @ BinaryExpr(e, op, f) =>
       RefTree.Ref(x, Seq(e.refTree, op.toString.refTree, f.refTree))
         .rename("BinaryExp")
-    case x @ AssignExpr(id, expr) =>
-      RefTree.Ref(x, Seq(id.refTree, expr.refTree)).rename("AssignExpr")
     case x @ CompoundExpr(exprs) =>
       RefTree.Ref(x, exprs.map(_.refTree)).rename("CompoundExpr")
   }

@@ -59,14 +59,21 @@ object CPackParser extends PackratParsers with Parsers
     withoutBraces | withBraces
   }
 
-  // TODO: Does not support: int a, b = 0;
   lazy val definitions: PackratParser[Definitions] = positioned {
     typeparse ~ expression ~ SEMI() ^^ {
       case ty ~ defs ~ _ => {
-        Definitions(List(defs).collect {
-          case AssignExpr(id, value) => Definition(ty, id, Some(value))
-          case id @ (_: IdentExpr | _: PreUnaryExpr | _: ArrayExpr) =>
-            Definition(ty, id, None)
+
+        val defList = defs match {
+          case CompoundExpr(defList) => defList
+          case defn => List(defn)
+        }
+
+        Definitions(
+          defList.collect {
+            case BinaryExpr(id, BinaryOp("="), value) =>
+              Definition(ty, id, Some(value))
+            case id @ (_: IdentExpr | _: PreUnaryExpr | _: ArrayExpr) =>
+              Definition(ty, id, None)
         })
       }
     }
@@ -75,7 +82,7 @@ object CPackParser extends PackratParsers with Parsers
   lazy val functionDefinition: PackratParser[FxnDefinition] = positioned {
     val signature = {
       BRACKET(ROUND(true)) ~
-      repsep(typedvariable, COMMA()) ~
+      repsep(typedvariable, comma) ~
       BRACKET(ROUND(false)) ^^ {
         case _ ~ b ~ _ => b
       }

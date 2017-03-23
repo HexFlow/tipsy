@@ -6,9 +6,6 @@ import scala.util.parsing.input.Positional
 sealed trait CFEnum {
   val flowName: String
 }
-case class ASSIGN(expr: Expression) extends CFEnum {
-  val flowName = "Assignment"
-}
 case class FUNC(returnType: String) extends CFEnum {
   val flowName = "Func: " + returnType
 }
@@ -74,7 +71,7 @@ case class Definition(ty: QualifiedType, id: Expression,
     // Note: Removed declarations from flow graph
     // DECL(ty.toString()) ::
     value.map { expr =>
-      AssignExpr(id, expr).compress
+      BinaryExpr(id, BinaryOp("="), expr).compress
     }.getOrElse(List())
   }
 }
@@ -126,12 +123,7 @@ case class ReturnStatement(code: Expression) extends Statement {
 // ---------------------------- =>
 
 sealed trait Expression extends ParseTree {
-  override val compress = {
-    this match {
-      case AssignExpr(_, _) => List(ASSIGN(this))
-      case _ => List(EXPR(this))
-    }
-  }
+  override val compress = List(EXPR(this))
 }
 
 case class IdentExpr(id: IDENT) extends Expression
@@ -142,5 +134,4 @@ case class PreUnaryExpr(op: UnaryOp, exp: Expression) extends Expression
 case class PostUnaryExpr(exp: Expression, op: UnaryOp) extends Expression
 case class BinaryExpr(exp1: Expression, op: BinaryOp, exp2: Expression)
     extends Expression
-case class AssignExpr(id: Expression, expr: Expression) extends Expression
 case class CompoundExpr(exprs: List[Expression]) extends Expression

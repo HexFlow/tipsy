@@ -5,5 +5,5 @@ int myfunc(int a) {
 }
 int main() {
     int dh = k[323];
-    int a = *b + 4;
+    int a = *b + 4, kk = 2;
 }

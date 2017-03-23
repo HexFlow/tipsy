@@ -14,7 +14,7 @@ case class IDENT(str: String) extends CToken {
 case class LITER(l: Literal) extends CToken
 case class OPERATOR(op: COperator) extends CToken
 case class SEMI() extends CToken
-case class COMMA() extends CToken
+//case class COMMA() extends CToken
 
 case class IF() extends CToken
 case class ELSE() extends CToken
@@ -67,9 +67,8 @@ sealed trait COperator extends Positional with CToken {
 case class StatementOp(op: String) extends COperator
 case class UnaryOp(op: String) extends COperator
 case class TernaryOp(op: String) extends COperator
-case class ParseBinaryOp(prio: PriorityBinaryOperator) extends COperator {
-  val op = prio.op
-}
+case class ParseBinaryOp(op: String, priority: Int) extends COperator
+
 case class BinaryOp(op: String) extends COperator {
   override val toString: String = {
     op match {
@@ -81,11 +80,3 @@ case class BinaryOp(op: String) extends COperator {
     }
   }
 }
-
-sealed trait PriorityBinaryOperator extends COperator with CToken {
-  val op: String
-}
-case class Prio1(op: String) extends PriorityBinaryOperator
-case class Prio2(op: String) extends PriorityBinaryOperator
-case class Prio3(op: String) extends PriorityBinaryOperator
-case class Prio4(op: String) extends PriorityBinaryOperator
