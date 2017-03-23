@@ -134,7 +134,7 @@ sealed trait Expression extends ParseTree {
 }
 
 case class IdentExpr(id: IDENT) extends Expression
-case class LiterExpr(liter: LITER) extends Expression
+case class LiterExpr(liter: Literal) extends Expression
 case class ArrayExpr(name: IDENT, index: Expression) extends Expression
 case class FxnExpr(fxnName: IDENT, exp: List[Expression]) extends Expression
 case class PreUnaryExpr(op: UnaryOp, exp: Expression) extends Expression

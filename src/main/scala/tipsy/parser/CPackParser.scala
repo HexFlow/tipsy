@@ -207,7 +207,7 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
     lazy val returnstatement: PackratParser[ReturnStatement] = {
       KEYWORD("return") ~ expression.? ~ SEMI() ^^ {
         case _ ~ e ~ _ =>
-          ReturnStatement(e.getOrElse(LiterExpr(LITER(IntLiteral(0)))))
+          ReturnStatement(e.getOrElse(LiterExpr(IntLiteral(0))))
       }
     }
 
@@ -236,7 +236,7 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
       identifier ^^ { case a => IdentExpr(a) }
 
     lazy val literExpr: PackratParser[LiterExpr] =
-      literal ^^ { case a @ LITER(_) => LiterExpr(a) }
+      literal ^^ { case LITER(a) => LiterExpr(a) }
 
     lazy val preUnaryExpr: PackratParser[Expression] = preUnaryOp ~ identExpr ^^ {
       case pop ~ e2 => PreUnaryExpr(pop, e2)

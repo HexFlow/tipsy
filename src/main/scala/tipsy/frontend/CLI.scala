@@ -28,6 +28,10 @@ trait FlowDraw {
     case x::xs => RefTree.Ref(x, xs.map(_.refTree)).rename(x.flowName)
     case Nil => RefTree.Ref("", Seq()).rename("End")
   }
+
+  implicit def cfDrawer: ToRefTree[CFEnum] = ToRefTree[CFEnum] {
+    case x => RefTree.Ref(x, Seq()).rename(x.flowName)
+  }
 }
 
 /**

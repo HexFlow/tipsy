@@ -8,7 +8,9 @@ case class KEYWORD(str: String) extends CToken
 case class TYPE(t: CType) extends CToken
 case class TYPEQ(qualifier: String) extends CToken
 case class BRACKET(t: CBracket) extends CToken
-case class IDENT(str: String) extends CToken
+case class IDENT(str: String) extends CToken {
+  override def toString(): String = str
+}
 case class LITER(l: Literal) extends CToken
 case class OPERATOR(op: COperator) extends CToken
 case class SEMI() extends CToken

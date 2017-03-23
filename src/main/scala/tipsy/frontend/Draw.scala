@@ -44,7 +44,7 @@ trait TreeDraw {
   implicit def exprDrawer: ToRefTree[Expression] = ToRefTree[Expression] {
     case x @ IdentExpr(id) =>
       RefTree.Ref(x, Seq(id.refTree)).rename("IdentExpr")
-    case x @ LiterExpr(LITER(li)) =>
+    case x @ LiterExpr(li) =>
       RefTree.Ref(x, Seq()).rename("Literal(" + li + ")")
     case x @ FxnExpr(n, exp) =>
       RefTree.Ref(x, Seq(n.refTree, exp.refTree)).rename("FxnExpr")
