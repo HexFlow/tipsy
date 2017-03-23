@@ -73,7 +73,7 @@ case class Definition(ty: QualifiedType, id: IDENT, value: Option[Expression])
     // Note: Removed declarations from flow graph
     // DECL(ty.toString()) ::
     value.map { expr =>
-      AssignExpression(id, expr).compress
+      AssignExpr(id, expr).compress
     }.getOrElse(List())
   }
 }
@@ -127,7 +127,7 @@ case class ReturnStatement(code: Expression) extends Statement {
 sealed trait Expression extends ParseTree {
   override val compress = {
     this match {
-      case AssignExpression(_, _) => List(ASSIGN(this))
+      case AssignExpr(_, _) => List(ASSIGN(this))
       case _ => List(EXPR(this))
     }
   }
@@ -141,4 +141,5 @@ case class PreUnaryExpr(op: UnaryOp, exp: Expression) extends Expression
 case class PostUnaryExpr(exp: Expression, op: UnaryOp) extends Expression
 case class BinaryExpr(exp1: Expression, op: BinaryOp, exp2: Expression)
     extends Expression
-case class AssignExpression(id: IDENT, expr: Expression) extends Expression
+case class AssignExpr(id: IDENT, expr: Expression) extends Expression
+case class CompoundExpr(exprs: List[Expression]) extends Expression

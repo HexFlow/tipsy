@@ -220,9 +220,15 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
     */
   lazy val expression: ExprParse = positioned {
 
-    lazy val assignExpr: PackratParser[AssignExpression] = {
+    lazy val assignExpr: PackratParser[AssignExpr] = {
       identifier ~ OPERATOR(BinaryOp("=")) ~ expression ^^ {
-        case id ~ op ~ expr => AssignExpression(id, expr)
+        case id ~ op ~ expr => AssignExpr(id, expr)
+      }
+    }
+
+    lazy val exprList: ExprParse = {
+      repsep(expression, COMMA()) ^^ {
+        case exprs => CompoundExpr(exprs)
       }
     }
 
