@@ -86,11 +86,11 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
       }
     }
 
-    typeparse ~ repsep((initialized | uninitialized), COMMA()) ~ SEMI() ^^ {
+    log(typeparse ~ repsep(initialized, COMMA()) ~ SEMI() ^^ {
       case ty ~ defs ~ _ => {
         Definitions(defs.map { defi => Definition(ty, defi._1, defi._2) })
       }
-    }
+    })("DEFINITION LOG")
   }
 
   lazy val functionDefinition: PackratParser[FxnDefinition] = positioned {
@@ -315,8 +315,7 @@ object CPackParser extends PackratParsers with Parsers with OperatorParsers {
     }
 
     lazy val prio5Expr: ExprParse = positioned {
-      fxnExpr |
-      bracketExpr | arrayExpr |
+      fxnExpr | bracketExpr | arrayExpr |
       preUnaryExpr | postUnaryExpr |
       identExpr | literExpr
     }
