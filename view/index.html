@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="">
+    <head>
+        <title>Tipsy Program Submission Admin Panel</title>
+
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <base href="/">
+
+        <!-- Bootstrap -->
+        <link rel="stylesheet" type="text/css" href="node_modules/bootstrap/dist/css/bootstrap.css">
+
+        <!-- Bootstrap Material Design -->
+        <link rel="stylesheet" type="text/css" href="node_modules/bootstrap-material-design/dist/css/bootstrap-material-design.css">
+        <link rel="stylesheet" type="text/css" href="node_modules/bootstrap-material-design/dist/css/ripples.min.css">
+    <body>
+        <div class="jumbotron text-center" style="background-color:transparent !important;">
+            <h1>Tipsy Admin Panel</h1>
+            <p>Prutor</p>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                <div class="jumbotron">
+                <center>
+                    <h1> Submit a program </h1>
+                    <div id="editor" style="width: 90%; min-height: 300px;"> </div>
+                    <div class="row">
+                        <button class="btn btn-success" onclick="addToDB()">
+                            Save to database
+                        </button>
+                        <button class="btn btn-info" onclick="findCorr()">
+                            Find corrections
+                        </button>
+                    </div>
+                </center>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ace Editor -->
+        <script src="node_modules/jquery/dist/jquery.min.js"></script>
+        <script src="node_modules/ace-builds/src-min-noconflict/ace.js"></script>
+        <script src="custom.js"></script>
+    </head>
+
+    </body>
+</html>
