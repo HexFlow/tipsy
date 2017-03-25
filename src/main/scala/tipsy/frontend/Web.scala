@@ -4,19 +4,16 @@ import tipsy.compiler._
 import tipsy.compare._
 import tipsy.parser._
 import tipsy.db._
+import tipsy.db.schema._
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
-import akka.Done
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.model.StatusCodes
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.server.directives.FileAndResourceDirectives
 
-import spray.json.DefaultJsonProtocol
 import spray.json._
 
 import scala.io.StdIn
@@ -25,11 +22,6 @@ import scala.concurrent.duration.Duration
 
 import slick.driver.PostgresDriver.api._
 import slick.backend.DatabasePublisher
-
-// collect your json format instances into a support trait:
-trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
-  implicit val progFormat = jsonFormat3(Program)
-}
 
 /**
   * Web: Frontend to talk to external services
@@ -53,7 +45,7 @@ object Web extends JsonSupport with Ops with FileAndResourceDirectives {
 
         post {
           path("submit") {
-            entity(as[Program]) { prog =>
+            entity(as[Requests.Program]) { prog =>
               val tupProg = (
                 0,
                 prog.userId,
@@ -62,8 +54,11 @@ object Web extends JsonSupport with Ops with FileAndResourceDirectives {
                 prog.code,
                 "0"
               )
-              insert(tupProg, progTable)
-              complete("Inserted".toJson)
+              val id = insert(tupProg, progTable)
+              complete(Map(
+                "success" -> true.toJson,
+                "id" -> id.toJson
+              ))
             }
           }
         } ~ get {

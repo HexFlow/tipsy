@@ -1,16 +1,10 @@
-package tipsy.db
+package tipsy.db.schema
 
 import slick.driver.PostgresDriver.api._
-import slick.lifted.{ProvenShape, ForeignKeyQuery}
+import slick.lifted.{ProvenShape}
 
-case class Program(
-  userId: String,
-  quesId: String,
-  code: String
-)
-
-class Programs(tag: Tag)
-    extends Table[(Int, String, String, String, String, String)](tag, "PROGRAMS") {
+class Programs(tag: Tag) extends
+    Table[(Int, String, String, String, String, String)](tag, "PROGRAMS") {
 
   type Fields = (Int, String, String, String, String, String)
 
