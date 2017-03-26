@@ -45,8 +45,8 @@ object Web extends JsonSupport with Ops with FileAndResourceDirectives {
 
         post {
           path("submit") {
-            entity(as[Requests.Program]) { prog =>
-              val tupProg = (
+            entity(as[Requests.ProgramInsertReq]) { prog =>
+              val tupProg = Program(
                 0,
                 prog.userId,
                 System.currentTimeMillis().toString(),
@@ -79,6 +79,13 @@ object Web extends JsonSupport with Ops with FileAndResourceDirectives {
               "Available programs" -> progs.toJson,
               "Count" -> progs.length.toJson
             ).toJson)
+          } ~ path ("getId" / IntNumber) { id =>
+            val prog: Option[Program] = driver.runDB {
+              progTable.filter(_.id === id).result
+            }.headOption
+
+            complete("Found")
+
           } ~ path ("corrections") {
             complete("No corrections")
           }

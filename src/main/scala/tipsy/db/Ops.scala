@@ -21,26 +21,26 @@ trait Ops {
       case e: Throwable => println(e)
     }
 
-  def insert[F, T <: Table[F]: WithPrimaryKey]
+  def insert[F, T <: Table[F] with WithPrimaryKey]
     (item: F, table: TableQuery[T]): Int = {
 
     /** InsertQuery needed to obtain the ID assigned to the new entry
-      *
-      * Read this article to understand typeclasses
-      * http://danielwestheide.com/blog/2013/02/06
-      * /the-neophytes-guide-to-scala-part-12-type-classes.html
-      *
-      * Basically, this insert will work only on those types
-      * which have a primary key (getId function) defined on them
       *
       * Source:
       * http://stackoverflow.com/questions/31443505/
       **/
     val insertQuery =
-      (table returning table.map(implicitly[WithPrimaryKey[T]].getId(_))
-        into ((_, id) => id))
+      (table returning table.map(_.id) into ((_, id) => id))
 
     driver.runDB(insertQuery += item)
+  }
+
+  def getById[F, T<:Table[F] with WithPrimaryKey]
+    (id: Int, table: TableQuery[T]): Option[F] = {
+
+    driver.runDB {
+      table.filter(_.id === id).result
+    }.headOption
   }
 
   def create[T <: Table[_]](table: TableQuery[T]): Unit = {

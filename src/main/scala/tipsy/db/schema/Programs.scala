@@ -1,12 +1,20 @@
 package tipsy.db.schema
 
+import tipsy.db.Constraints._
+
 import slick.driver.PostgresDriver.api._
-import slick.lifted.{ProvenShape}
+
+case class Program (
+  id: Int,
+  userId: String,
+  time: String,
+  quesId: String,
+  code: String,
+  score: String
+)
 
 class Programs(tag: Tag) extends
-    Table[(Int, String, String, String, String, String)](tag, "PROGRAMS") {
-
-  type Fields = (Int, String, String, String, String, String)
+    Table[Program](tag, "PROGRAMS") with WithPrimaryKey {
 
   def id: Rep[Int] = column[Int]("SUB_ID", O.PrimaryKey, O.AutoInc)
   def userId: Rep[String] = column[String]("USER_ID")
@@ -16,6 +24,8 @@ class Programs(tag: Tag) extends
   def score: Rep[String] = column[String]("SCORE")
 
 
-  def * : ProvenShape[Fields] =
-    (id, userId, time, quesId, code, score)
+  def * = (
+    (id, userId, time, quesId, code, score) <>
+      ((Program.apply _).tupled, Program.unapply)
+  )
 }

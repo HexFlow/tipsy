@@ -9,14 +9,14 @@ import spray.json._
   */
 trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   import Requests._
-  implicit val progFormat = jsonFormat3(Program)
+  implicit val progFormat = jsonFormat3(ProgramInsertReq)
 }
 
 /**
   * Includes case classes for expected data bodies in web requests
   */
 object Requests {
-  case class Program(
+  case class ProgramInsertReq (
     userId: String,
     quesId: String,
     code: String
