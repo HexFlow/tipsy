@@ -2,9 +2,11 @@ package tipsy.db
 
 import scala.concurrent.{Future, Await}
 import scala.concurrent.duration.Duration
+import scala.concurrent.ExecutionContext
 
 import slick.driver.PostgresDriver.api._
 import slick.backend.DatabasePublisher
+import scala.util.{ Success, Failure }
 
 import scala.reflect._
 
@@ -13,6 +15,7 @@ trait Ops {
   import schema._
 
   implicit val driver: Driver
+  implicit val executionContext: ExecutionContext
 
   def handleError(cmds: () => Unit) =
     try {
@@ -41,6 +44,20 @@ trait Ops {
     driver.runDB {
       table.filter(_.id === id).result
     }.headOption
+  }
+
+  def deleteById[T<:Table[_] with WithPrimaryKey]
+    (id: Int, table: TableQuery[T]): Boolean = {
+
+    driver.runDB {
+      table.filter(_.id === id).delete.asTry.map {
+        case Failure(ex) => {
+          println(s"Error: ${ex.getMessage}")
+          false
+        }
+        case Success(_) => true
+      }
+    }
   }
 
   def create[T <: Table[_]](table: TableQuery[T]): Unit = {

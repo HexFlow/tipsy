@@ -11,7 +11,7 @@ import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.server.directives.FileAndResourceDirectives
 
 import spray.json._
@@ -45,6 +45,8 @@ object Web extends JsonSupport with Ops with FileAndResourceDirectives {
 
         post {
           path("submit") {
+            // Insert program into table
+
             entity(as[Requests.ProgramInsertReq]) { prog =>
               val tupProg = Program(
                 0,
@@ -63,12 +65,19 @@ object Web extends JsonSupport with Ops with FileAndResourceDirectives {
           }
         } ~ get {
           path ("createSchema") {
+            // Create the postgres schema
+
             create(progTable)
             complete("Created schemas")
+
           } ~ path ("dropSchema") {
+            // Drop the table schema
+
             drop(progTable)
             complete("Deleted schemas")
+
           } ~ path ("progCount") {
+            // Get list of program IDs
 
             val myQuery: Query[Rep[Int], Int, Seq] =
               progTable.map(_.id)
@@ -79,16 +88,31 @@ object Web extends JsonSupport with Ops with FileAndResourceDirectives {
               "Available programs" -> progs.toJson,
               "Count" -> progs.length.toJson
             ).toJson)
+
           } ~ path ("getId" / IntNumber) { id =>
+            // Retreive a program given the ID
+
             val prog: Option[Program] = driver.runDB {
               progTable.filter(_.id === id).result
             }.headOption
 
-            complete("Found")
+            prog match {
+              case Some(x) => complete(x.toJson)
+              case None => complete((NotFound, "Program not found"))
+            }
 
           } ~ path ("corrections") {
             complete("No corrections")
           }
+        } ~ delete {
+
+          path (IntNumber) { id =>
+            deleteById(id, progTable) match {
+              case false => complete((NotFound, "Program ID does not exist"))
+              case true => complete("Success")
+            }
+          }
+
         }
 
       } ~ path ("health") {
