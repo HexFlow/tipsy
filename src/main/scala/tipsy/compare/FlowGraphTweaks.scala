@@ -42,9 +42,15 @@ object FlowGraphTweaks {
     def renameRecur(e: Expression): Expression = {
       e match {
         case IdentExpr(IDENT(i)) => IdentExpr(IDENT(renameIdent(i)))
-        case x @ LiterExpr(_) => x
         case ArrayExpr(IDENT(i), index) =>
           ArrayExpr(IDENT(renameIdent(i)), renameIdentsInExpr(index))
+        case FxnExpr(IDENT(i), exps) =>
+          FxnExpr(IDENT(renameIdent(i)), exps.map(renameRecur(_)))
+        case PreUnaryExpr(op, exp) => PreUnaryExpr(op, renameRecur(exp))
+        case PostUnaryExpr(exp, op) => PostUnaryExpr(renameRecur(exp), op)
+        case BinaryExpr(e1, op, e2) =>
+          BinaryExpr(renameRecur(e1), op, renameRecur(e2))
+        case CompoundExpr(exprs) => CompoundExpr(exprs.map(renameRecur(_)))
         case x => x
       }
     }
