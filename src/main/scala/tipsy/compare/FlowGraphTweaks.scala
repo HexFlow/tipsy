@@ -15,6 +15,7 @@ object FlowGraphTweaks {
       case x :: xs => {
         val res = x match {
           case DECL(_) => List()
+          case EXPR(x) => List(POSTEXPR(renameIdentsInExpr(x)))
           case x => List(x)
         }
 
@@ -23,7 +24,7 @@ object FlowGraphTweaks {
     }
   }
 
-  def renameIdentsInExpr(e: Expression): Expression = {
+  def renameIdentsInExpr(e: Expression): List[String] = {
     var gcnt = 0
     var varsUsed: Map[String, Int] = Map()
 
@@ -39,22 +40,24 @@ object FlowGraphTweaks {
     }
 
     // Main recursive routine to rename expressions
-    def renameRecur(e: Expression): Expression = {
+    def renameRecur(e: Expression): List[String] = {
       e match {
-        case IdentExpr(IDENT(i)) => IdentExpr(IDENT(renameIdent(i)))
+        case IdentExpr(IDENT(i)) => List(renameIdent(i))
         case ArrayExpr(IDENT(i), index) =>
-          ArrayExpr(IDENT(renameIdent(i)), renameIdentsInExpr(index))
+          List(renameIdent(i))
         case FxnExpr(IDENT(i), exps) =>
-          FxnExpr(IDENT(renameIdent(i)), exps.map(renameRecur(_)))
-        case PreUnaryExpr(op, exp) => PreUnaryExpr(op, renameRecur(exp))
-        case PostUnaryExpr(exp, op) => PostUnaryExpr(renameRecur(exp), op)
+          exps.flatMap(renameRecur(_)) ++ List(i.toString)
+        case PreUnaryExpr(op, exp) => renameRecur(exp) ++ List(op.toString)
+        case PostUnaryExpr(exp, op) => renameRecur(exp) ++ List(op.toString)
         case BinaryExpr(e1, op, e2) =>
-          BinaryExpr(renameRecur(e1), op, renameRecur(e2))
-        case CompoundExpr(exprs) => CompoundExpr(exprs.map(renameRecur(_)))
-        case x => x
+          renameRecur(e1) ++ renameRecur(e2) ++ List(op.toString)
+        case CompoundExpr(exprs) => exprs.flatMap(renameRecur(_))
+        case LiterExpr(x) => List(x.toString)
+        //case x => x
       }
     }
-
-    renameRecur(e)
+    var j = renameRecur(e)
+    println(j)
+    j.filter(_ != ",")
   }
 }

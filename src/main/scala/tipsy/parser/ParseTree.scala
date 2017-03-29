@@ -21,18 +21,24 @@ case class IFCOND(value: Expression) extends CFEnum {
 case class LOOPCOND(value: Expression) extends CFEnum {
   val flowName = "Loop"
 }
-
+case class POSTEXPR(value: List[String]) extends CFEnum {
+  val flowName = "PostscriptExpr"
+}
 case object RETURN extends CFEnum {
   val flowName = "Return"
 }
-
 case object BLOCKOPEN extends CFEnum {
   val flowName = "Block Open"
 }
-
 case object BLOCKCLOSE extends CFEnum {
   val flowName = "Block Close"
 }
+//case class OPER(value: COperator) extends CFEnum {
+  //val flowName = "Operator"
+//}
+//case class IDENT(value: COperator) extends CFEnum {
+  //val flowName = "Operator"
+//}
 
 // Used for storing types
 case class QualifiedType(qualifiers: List[String], name: CType) extends ParseTree {

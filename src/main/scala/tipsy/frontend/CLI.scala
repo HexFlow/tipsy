@@ -80,8 +80,7 @@ object CLI extends TreeDraw with FlowDraw {
     }.toList
     if (modes contains LEASTEDIT) {
       val validTrees = trees.collect { case (Some(x), y) => (x, y) }
-      DistanceDraw(LeastEdit(validTrees.map(_._1)),
-        validTrees.length, validTrees.map(_._2))
+      DistanceDraw(LeastEdit(validTrees.map(_._1)), validTrees.length, validTrees.map(_._2))
     }
   }
 }
