@@ -1,11 +1,9 @@
 package tipsy.parser
 
-import tipsy.compiler.{Location, CParserError}
 import tipsy.lexer._
 
 import scala.util.parsing.combinator.Parsers
 import scala.util.parsing.combinator.PackratParsers
-import scala.util.parsing.input.{NoPosition, Position, Reader}
 
   /**
     * Expression is a general construct which has a return value.
@@ -38,8 +36,9 @@ trait ExprParse extends PackratParsers with Parsers
 
   lazy val fxnExpr: PackratParser[Expression] = {
     identifier ~ BRACKET(ROUND(true)) ~
-    repsep(expression, comma) ~ BRACKET(ROUND(false)) ^^ {
-      case ident ~ _ ~ exprs ~ _ => FxnExpr(ident, exprs)
+    expression ~ BRACKET(ROUND(false)) ^^ {
+      case ident ~ _ ~ CompoundExpr(elist) ~ _ => FxnExpr(ident, elist)
+      case ident ~ _ ~ expr ~ _ => FxnExpr(ident, List(expr))
     }
   }
 
@@ -71,7 +70,7 @@ trait ExprParse extends PackratParsers with Parsers
 
   def condenser(ex: Expression): List[Expression] = {
     ex match {
-      case BinaryExpr(e1, BinaryOp(","), e2) => e1 :: condenser(e2)
+      case BinaryExpr(e1, BinaryOp(","), e2) => condenser(e1) ++ condenser(e2)
       case e => List(e)
     }
   }
@@ -81,7 +80,7 @@ trait ExprParse extends PackratParsers with Parsers
       case ex => {
         val condensed = condenser(ex)
         condensed match {
-          case x::Nil => x
+          case x :: Nil => x
           case x => CompoundExpr(x)
         }
       }

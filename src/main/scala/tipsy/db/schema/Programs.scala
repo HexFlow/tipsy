@@ -10,7 +10,8 @@ case class Program (
   time: String,
   quesId: String,
   code: String,
-  score: String
+  score: String,
+  correct: Boolean
 )
 
 class Programs(tag: Tag) extends
@@ -22,10 +23,11 @@ class Programs(tag: Tag) extends
   def quesId: Rep[String] = column[String]("QUES_ID")
   def code: Rep[String] = column[String]("CODE")
   def score: Rep[String] = column[String]("SCORE")
+  def correct: Rep[Boolean] = column[Boolean]("CORRECT")
 
 
   def * = (
-    (id, userId, time, quesId, code, score) <>
+    (id, userId, time, quesId, code, score, correct) <>
       ((Program.apply _).tupled, Program.unapply)
   )
 }

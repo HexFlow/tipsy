@@ -54,7 +54,8 @@ object Web extends JsonSupport with Ops with FileAndResourceDirectives {
                 System.currentTimeMillis().toString(),
                 prog.quesId,
                 prog.code,
-                "0"
+                "0",
+                prog.correct
               )
               val id = insert(tupProg, progTable)
               complete(Map(
