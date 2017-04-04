@@ -35,7 +35,7 @@ object CPackParser extends PackratParsers with Parsers
   lazy val program: TreeParse = positioned {
     // Program may have functions or other definitions/declarations
     phrase(rep1(functionDefinition | definitions) ^^ {
-      case x => TopList(customFlatten(x))
+      case x => TopList(sortFunctionsInUseOrder(customFlatten(x)))
     })
   }
 

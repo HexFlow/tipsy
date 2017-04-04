@@ -15,10 +15,10 @@ case class EXPR(value: Expression) extends CFEnum {
 case class DECL(value: String) extends CFEnum {
   val flowName = "Declaration: " + value
 }
-case class IFCOND(value: Expression) extends CFEnum {
+case object IFCOND extends CFEnum {
   val flowName = "If"
 }
-case class LOOPCOND(value: Expression) extends CFEnum {
+case object LOOPCOND extends CFEnum {
   val flowName = "Loop"
 }
 case class POSTEXPR(value: List[String]) extends CFEnum {
@@ -101,24 +101,25 @@ sealed trait Statement extends ParseTree
 case class IfStatement(cond: Expression, body: BlockList,
   elsebody: BlockList) extends Statement {
   override val compress = {
-    IFCOND(cond) :: body.compress ++ elsebody.compress
+    IFCOND :: EXPR(cond) :: body.compress ++ elsebody.compress
   }
 }
 
 case class ForStatement(e1: Expression, e2: Expression,
   e3: Expression, body: BlockList) extends Statement {
   override val compress =
-    EXPR(e1) :: LOOPCOND(e2) :: body.copy(items = body.items :+ e3).compress
+    EXPR(e1) :: LOOPCOND :: EXPR(e2) ::
+  body.copy(items = body.items :+ e3).compress
 }
 
 case class WhileStatement(cond: Expression,
   body: BlockList) extends Statement {
-  override val compress = LOOPCOND(cond) :: body.compress
+  override val compress = LOOPCOND :: EXPR(cond) :: body.compress
 }
 
 case class DoWhileStatement(body: BlockList,
   cond: Expression) extends Statement {
-  override val compress = LOOPCOND(cond) :: body.compress
+  override val compress = LOOPCOND :: EXPR(cond) :: body.compress
 }
 
 case class ReturnStatement(code: Expression) extends Statement {
@@ -130,6 +131,19 @@ case class ReturnStatement(code: Expression) extends Statement {
 
 sealed trait Expression extends ParseTree {
   override val compress = List(EXPR(this))
+
+  // Provide list of functions used in this expression in order of use
+  val getFxns: List[String] = {
+    this match {
+      case ArrayExpr(_, index) => index.getFxns
+      case FxnExpr(name, _) => List(name.str)
+      case PreUnaryExpr(_, e) => e.getFxns
+      case PostUnaryExpr(e, _) => e.getFxns
+      case BinaryExpr(e1, _, e2) => e1.getFxns ++ e2.getFxns
+      case CompoundExpr(e) => e.flatMap(_.getFxns)
+      case _ => List()
+    }
+  }
 }
 
 case class IdentExpr(id: IDENT) extends Expression

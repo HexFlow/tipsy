@@ -1,11 +1,10 @@
 package tipsy.parser
 
-import tipsy.compiler.{Location, CParserError}
 import tipsy.lexer._
 
 import scala.util.parsing.combinator.Parsers
 import scala.util.parsing.combinator.PackratParsers
-import scala.util.parsing.input.{NoPosition, Position, Reader}
+import scala.collection.mutable.{ Set => mSet }
 
 trait Helpers extends PackratParsers with Parsers {
 
@@ -43,7 +42,11 @@ trait Helpers extends PackratParsers with Parsers {
     accept("type qualifier", { case tyq @ TYPEQ(quals) => tyq })
   }
 
-  // Useful when definitions have to be condensed into a list of individual defs
+  /**
+    * Takes a list of block entries (definitions etc). Out of those,
+    * condenses the Definitions construct (eg: int a, b = 2;) into
+    * a list of individual definitions
+    */
   def customFlatten(k: List[ParseTree]): List[ParseTree] = {
     k match {
       case Nil => List()
@@ -55,4 +58,42 @@ trait Helpers extends PackratParsers with Parsers {
       }
     }
   }
+
+  /**
+    * Takes a list of top level declarations (functions etc).
+    * Sorts the function definitions in order of first use and returns
+    * all the top level definitions followed by the sorted list of function
+    * definitions.
+    * Removes functions without bodies
+    */
+  def sortFunctionsInUseOrder(lis: List[ParseTree]): List[ParseTree] = {
+    val defs = lis.collect { case x @ Definition(_, _, _) => x }
+    val fdefs = lis
+      .collect { case x @ FxnDefinition(ti, _, Some(_)) => ti.name.str -> x }
+      .toMap
+
+    val usedFxns: mSet[String] = mSet()
+
+    // Takes a function name and provides bodies of functions called by it
+    // Takes care not to return functions which have been already returned
+    def processFxn(name: String): List[ParseTree] = {
+      if (usedFxns contains name) {
+        List()
+      } else {
+        usedFxns add name
+
+        (fdefs get name) match {
+          case None => List()
+          case Some(fxn @ FxnDefinition(_, _, Some(body))) => {
+            val fxns = body.compress.collect { case EXPR(e) => e }.flatMap(_.getFxns)
+            fxn :: fxns.flatMap(processFxn(_))
+          }
+          case _ => ???
+        }
+      }
+    }
+
+    defs ++ processFxn("main")
+  }
+
 }
