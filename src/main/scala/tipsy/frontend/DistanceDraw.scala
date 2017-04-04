@@ -20,7 +20,7 @@ object DistanceDraw {
     println(network)
     val avg = network.map(_._3).sum/network.size
     println(avg)
-    val nodes = (0 to length-1).map(x => Node(""+names(x), "Node "+names(x)))
+    val nodes = (0 to length-1).map(x => Node(""+names(x), "Node "+names(x), group=3))
     val edges = network.map{
       case (a, b, c) => Edge(nodes(a), nodes(b), c)
     }

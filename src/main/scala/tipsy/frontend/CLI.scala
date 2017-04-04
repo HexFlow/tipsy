@@ -18,6 +18,7 @@ import scala.util.{Try, Success, Failure}
 
 sealed trait CLIMode
 case object LEASTEDIT extends CLIMode
+case object LEASTEDITLIMIT extends CLIMode
 case object DRAWPARSE extends CLIMode
 case object PRINTPARSE extends CLIMode
 case object DRAWFLOW extends CLIMode
@@ -55,11 +56,18 @@ object CLI extends TreeDraw with FlowDraw {
     }
   }
 
-  def apply(filesOrig: Array[String], modes: Set[CLIMode]): Unit = {
-    val files = filesOrig.map(expandDir).flatten
-    val trees = files.zipWithIndex.map{
-      case (file, count) => {
-        println(s"[${count+1} of ${files.length}] Compiling " + file)
+  def apply(filesOrig: Array[String], modes: Map[CLIMode, String]): Unit = {
+    val files = 
+      if (modes contains LEASTEDITLIMIT) {
+        println("Value is " + Integer.parseInt(modes(LEASTEDITLIMIT)))
+        filesOrig.map(expandDir).flatten.take(Integer.parseInt(modes(LEASTEDITLIMIT)))
+      } else {
+        filesOrig.map(expandDir).flatten
+      }
+
+      val trees = files.zipWithIndex.map{
+        case (file, count) => {
+          println(s"[${count+1} of ${files.length}] Compiling " + file)
         WorkflowCompiler(file) match {
           case Right(tree) => {
             if (modes contains PRINTPARSE) println(tree)

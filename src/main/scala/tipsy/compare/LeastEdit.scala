@@ -36,7 +36,6 @@ object LeastEdit {
           s2(n-1) match {
             case POSTEXPR(z) => {
               d = editDist(y.toVector, z.toVector, y.length, z.length)/Math.max(y.length, z.length)
-              println("Distance is: " + d)
             }
             case _ =>
           }
@@ -48,9 +47,9 @@ object LeastEdit {
         editDist(s1, s2, m-1, n),
         editDist(s1, s2, m-1, n-1)
       ).reduceLeft(_ min _), d + editDist(s1, s2, m-1, n-1))
-      if(m!=0 && n!=0)
-      println("Now comparing " + s1(m-1) + " " + s2(n-1))
-      println("Reuturning: " + ret)
+      //if(m!=0 && n!=0)
+      //println("Now comparing " + s1(m-1) + " " + s2(n-1))
+      //println("Reuturning: " + ret)
       ret
     }
   }
