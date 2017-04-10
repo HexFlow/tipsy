@@ -2,7 +2,8 @@ package tipsy.db.schema
 
 import tipsy.db.Constraints._
 
-import slick.driver.PostgresDriver.api._
+import tipsy.db.TipsyPostgresProfile.api._
+import spray.json._
 
 case class Program (
   id: Int,
@@ -11,7 +12,8 @@ case class Program (
   quesId: String,
   code: String,
   score: String,
-  correct: Boolean
+  correct: Boolean,
+  props: JsValue
 )
 
 class Programs(tag: Tag) extends
@@ -24,10 +26,10 @@ class Programs(tag: Tag) extends
   def code: Rep[String] = column[String]("CODE")
   def score: Rep[String] = column[String]("SCORE")
   def correct: Rep[Boolean] = column[Boolean]("CORRECT")
-
+  def props: Rep[JsValue] = column[JsValue]("PROPS")
 
   def * = (
-    (id, userId, time, quesId, code, score, correct) <>
+    (id, userId, time, quesId, code, score, correct, props) <>
       ((Program.apply _).tupled, Program.unapply)
   )
 }

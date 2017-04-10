@@ -6,7 +6,9 @@ scalaVersion := "2.11.8"
 
 resolvers ++= Seq(
   Resolver.bintrayRepo("stanch", "maven"),
-  Resolver.bintrayRepo("drdozer", "maven")
+  Resolver.bintrayRepo("drdozer", "maven"),
+  Resolver.bintrayRepo("Typesafe Releases",
+    "http://repo.typesafe.com/typesafe/releases")
 )
 
 libraryDependencies ++= Seq(
@@ -19,6 +21,9 @@ libraryDependencies ++= Seq(
   "com.typesafe.slick"      %% "slick"                    % "3.2.0",
   "org.slf4j"               % "slf4j-nop"                 % "1.6.4",
   "com.typesafe.slick"      %% "slick-hikaricp"           % "3.2.0",
-  "org.postgresql"          % "postgresql"                % "9.4.1212",
-  "org.scalaz"              %% "scalaz-core"              % "7.2.10"
+  "org.postgresql"          % "postgresql"                % "42.0.0",
+  "org.scalaz"              %% "scalaz-core"              % "7.2.10",
+  "com.github.tminglei"     %% "slick-pg"                 % "0.15.0-RC",
+  "com.github.tminglei"     %% "slick-pg_spray-json"      % "0.15.0-RC",
+  "com.typesafe.akka"       %% "akka-actor"               % "2.4.17"
 )

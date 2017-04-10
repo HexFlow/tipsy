@@ -1,6 +1,6 @@
 package tipsy.db
 
-import slick.driver.PostgresDriver.api._
+import tipsy.db.TipsyPostgresProfile.api._
 import org.postgresql.ds.PGSimpleDataSource
 import scala.concurrent.{Future, Await}
 import scala.concurrent.duration.Duration
@@ -20,7 +20,10 @@ case class Driver(
 }
 
 object TipsySlick {
-  val db = Database.forConfig("tipsydb")
+  // val db = Database.forConfig("tipsydb")
+  val db = Database.forURL(
+    url = "jdbc:postgresql://localhost/TIPSY?user=saksham&password=saksham",
+    driver = "org.postgresql.Driver")
 
   def apply(): Driver = {
     Driver(db)

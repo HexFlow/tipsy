@@ -19,17 +19,18 @@ import spray.json._
 import scala.io.StdIn
 import scala.concurrent.{Future, Await}
 import scala.concurrent.duration.Duration
+import scala.util.{Success, Failure}
 
-import slick.driver.PostgresDriver.api._
+import tipsy.db.TipsyPostgresProfile.api._
 import slick.backend.DatabasePublisher
 
-/**
-  * Web: Frontend to talk to external services
-  * store programs in database, and provide
-  * information/corrections
-  */
-object Web extends JsonSupport with Ops with FileAndResourceDirectives {
+import tipsy.actors._
+import akka.actor.Props
+import akka.pattern.ask
+import akka.util.Timeout
+import scala.concurrent.duration._
 
+trait TipsyDriver {
   implicit val system = ActorSystem("web-tipsy")
   implicit val materializer = ActorMaterializer()
   implicit val executionContext = system.dispatcher
@@ -37,6 +38,19 @@ object Web extends JsonSupport with Ops with FileAndResourceDirectives {
   implicit val driver: Driver = TipsySlick()
 
   val progTable: TableQuery[Programs] = TableQuery[Programs]
+}
+
+/**
+  * Web: Frontend to talk to external services
+  * store programs in database, and provide
+  * information/corrections
+  */
+object Web extends JsonSupport with Ops
+    with FileAndResourceDirectives with TipsyDriver {
+
+  implicit val timeout = Timeout(2.second)
+
+  val insertActor = system.actorOf(Props[InsertActor], "insert")
 
   // modes is currently not used
   def apply(modes: Set[CLIMode]): Unit = {
@@ -48,20 +62,35 @@ object Web extends JsonSupport with Ops with FileAndResourceDirectives {
             // Insert program into table
 
             entity(as[Requests.ProgramInsertReq]) { prog =>
-              val tupProg = Program(
-                0,
-                prog.userId,
-                System.currentTimeMillis().toString(),
-                prog.quesId,
-                prog.code,
-                "0",
-                prog.correct
-              )
-              val id = insert(tupProg, progTable)
-              complete(Map(
-                "success" -> true.toJson,
-                "id" -> id.toJson
-              ))
+
+              complete {
+                (insertActor ? (0, prog)).map {
+                  case err: String => Map("success" -> false.toJson,
+                    "message" -> err.toJson)
+                  case id: Int => Map("success" -> true.toJson,
+                    "id" -> id.toJson)
+                }
+              }
+
+            }
+          }
+
+        } ~ patch {
+
+          path (IntNumber) { id =>
+            // Insert program into table
+
+            entity(as[Requests.ProgramInsertReq]) { prog =>
+
+              complete {
+                (insertActor ? (id, prog)).map {
+                  case err: String => Map("success" -> false.toJson,
+                    "message" -> err.toJson)
+                  case id: Int => Map("success" -> true.toJson,
+                    "id" -> id.toJson)
+                }
+              }
+
             }
           }
         } ~ get {
@@ -121,13 +150,12 @@ object Web extends JsonSupport with Ops with FileAndResourceDirectives {
       } ~ getFromDirectory("view")
 
     val bindingFuture = Http().bindAndHandle(route, "0.0.0.0", 8070)
-    println(s"Server online at http://localhost:8070/\nPress RETURN to stop...")
-    StdIn.readLine()
-    bindingFuture
-      .flatMap(_.unbind())
-      .onComplete(_ => {
-        driver.close()
-        system.terminate()
-      })
+    println(s"Server online at http://localhost:8070/")
+
+    sys.addShutdownHook {
+      driver.close()
+      system.terminate()
+      ()
+    }
   }
 }

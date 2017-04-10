@@ -57,7 +57,7 @@ object CLI extends TreeDraw with FlowDraw {
   }
 
   def apply(filesOrig: Array[String], modes: Map[CLIMode, String]): Unit = {
-    val files = 
+    val files =
       if (modes contains LEASTEDITLIMIT) {
         println("Value is " + Integer.parseInt(modes(LEASTEDITLIMIT)))
         filesOrig.map(expandDir).flatten.take(Integer.parseInt(modes(LEASTEDITLIMIT)))

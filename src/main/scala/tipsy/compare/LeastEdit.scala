@@ -1,6 +1,5 @@
 package tipsy.compare
 
-import tipsy.lexer._
 import tipsy.parser._
 import scalaz._
 
@@ -35,7 +34,8 @@ object LeastEdit {
         case POSTEXPR(y) => {
           s2(n-1) match {
             case POSTEXPR(z) => {
-              d = editDist(y.toVector, z.toVector, y.length, z.length)/Math.max(y.length, z.length)
+              d = editDist(y.toVector, z.toVector,
+                y.length, z.length)/Math.max(y.length, z.length)
             }
             case _ =>
           }

@@ -56,8 +56,6 @@ object FlowGraphTweaks {
         //case x => x
       }
     }
-    var j = renameRecur(e)
-    println(j)
-    j.filter(_ != ",")
+    renameRecur(e)
   }
 }

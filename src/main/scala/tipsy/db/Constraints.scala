@@ -1,6 +1,6 @@
 package tipsy.db
 
-import slick.driver.PostgresDriver.api._
+import tipsy.db.TipsyPostgresProfile.api._
 import schema._
 
 /**

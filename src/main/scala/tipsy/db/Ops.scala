@@ -4,7 +4,7 @@ import scala.concurrent.{Future, Await}
 import scala.concurrent.duration.Duration
 import scala.concurrent.ExecutionContext
 
-import slick.driver.PostgresDriver.api._
+import tipsy.db.TipsyPostgresProfile.api._
 import slick.backend.DatabasePublisher
 import scala.util.{ Success, Failure }
 

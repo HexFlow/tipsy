@@ -33,12 +33,6 @@ case object BLOCKOPEN extends CFEnum {
 case object BLOCKCLOSE extends CFEnum {
   val flowName = "Block Close"
 }
-//case class OPER(value: COperator) extends CFEnum {
-  //val flowName = "Operator"
-//}
-//case class IDENT(value: COperator) extends CFEnum {
-  //val flowName = "Operator"
-//}
 
 // Used for storing types
 case class QualifiedType(qualifiers: List[String], name: CType) extends ParseTree {
