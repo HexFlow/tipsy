@@ -24,13 +24,13 @@ object LeastEdit {
   def compareWithTrees(
     prog: ParseTree,
     trees: List[ParseTree]
-  ): List[(Int, Double)] = {
+  ): List[(ParseTree, Double)] = {
 
-    trees.zipWithIndex.map { case (tree, id) =>
+    trees.map { case tree =>
       val v1 = FlowGraphTweaks(prog.compress).toVector
       val v2 = FlowGraphTweaks(tree.compress).toVector
       val k = (editDist(v1, v2, v1.length, v2.length))
-      (id, 1/(k.toDouble+0.1))
+      (tree, 1/(k.toDouble+0.1))
     }.toList
   }
 

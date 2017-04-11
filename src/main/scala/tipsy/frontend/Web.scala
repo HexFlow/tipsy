@@ -155,21 +155,41 @@ object Web extends JsonSupport with Ops
 
           } ~ path ("corrections" / IntNumber) { id =>
 
-            complete {
+            val progopt: Option[Program] = driver.runDB {
+              progTable.filter(_.id === id).result
+            }.headOption
 
-              for {
-                SimilarCheckResp(progs) <- (similarActor ? SimilarCheck(id))
-              } yield {
+            progopt match {
+              case None => complete ((NotFound, "Program not found"))
 
-                val trees = progs.map(x => Compiler(x.code)).collect {
-                  case Right(tree) => tree
+              case Some(prog) =>
+                val res = Compiler(prog.code) match {
+                  case Right(mainTree: ParseTree) =>
+                    for {
+                      SimilarCheckResp(progs) <- (similarActor ? SimilarCheck(id))
+                    } yield {
+
+                      val trees = progs.map { x => Compiler(x.code) }.collect {
+                        case Right(tree) => tree
+                      }
+
+                      val distances =
+                        LeastEdit.compareWithTrees(mainTree, trees)
+                          .sortWith(_._2 > _._2)
+
+                      val corrections = distances collect {
+                        case (correctorTree, dist) if dist > 5 =>
+                          Correct(mainTree, correctorTree)
+                      }
+
+                      Map("success" -> true.toJson,
+                        "corrections" -> distances.toString.toJson,
+                        "count" -> trees.length.toJson)
+                    }
+                  case Left(_) => ???
                 }
-                Map("success" -> true.toJson,
-                  "corrections" ->
-                    LeastEdit.compareWithTrees(trees(0), trees).toJson,
-                  "count" -> trees.length.toJson)
-              }
 
+                complete(res)
             }
           }
         } ~ delete {
