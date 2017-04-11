@@ -21,6 +21,19 @@ object LeastEdit {
     }.toList
   }
 
+  def compareWithTrees(
+    prog: ParseTree,
+    trees: List[ParseTree]
+  ): List[(Int, Double)] = {
+
+    trees.zipWithIndex.map { case (tree, id) =>
+      val v1 = FlowGraphTweaks(prog.compress).toVector
+      val v2 = FlowGraphTweaks(tree.compress).toVector
+      val k = (editDist(v1, v2, v1.length, v2.length))
+      (id, 1/(k.toDouble+0.1))
+    }.toList
+  }
+
   def editDistRecur[T](
     s1: Vector[T], s2: Vector[T], m: Int, n: Int
   ): Int = {

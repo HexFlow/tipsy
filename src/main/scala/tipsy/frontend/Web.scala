@@ -25,6 +25,8 @@ import tipsy.db.TipsyPostgresProfile.api._
 import slick.backend.DatabasePublisher
 
 import tipsy.actors._
+import tipsy.actors.Messages._
+
 import akka.actor.Props
 import akka.pattern.ask
 import akka.util.Timeout
@@ -52,7 +54,7 @@ object Web extends JsonSupport with Ops
 
   val insertActor = system.actorOf(Props[InsertActor], "insert")
   val compileActor = system.actorOf(Props[CompileActor], "compile")
-  val similarActor = system.actorOf(Props[CompileActor], "similar")
+  val similarActor = system.actorOf(Props[SimilarActor], "similar")
 
   // modes is currently not used
   def apply(modes: Set[CLIMode]): Unit = {
@@ -66,7 +68,7 @@ object Web extends JsonSupport with Ops
             entity(as[Requests.ProgramInsertReq]) { prog =>
 
               complete {
-                (compileActor ? prog) flatMap {
+                (compileActor ? CompileWithStats(prog)) flatMap {
                   case err: String => Future(
                     Map("success" -> false.toJson,
                       "message" -> err.toJson))
@@ -118,14 +120,52 @@ object Web extends JsonSupport with Ops
               case None => complete((NotFound, "Program not found"))
             }
 
+          } ~ path ("getCompiled" / IntNumber) { id =>
+            // Retreive a parse tree given the ID
+
+            val prog: Option[Program] = driver.runDB {
+              progTable.filter(_.id === id).result
+            }.headOption
+
+            prog match {
+              case Some(p) => complete {
+                (compileActor ? CompileAndGetTree(p)) map {
+                  case Left(err) =>
+                    Map("success" -> false.toJson,
+                      "message" -> err.toString.toJson)
+                  case Right(tree: ParseTree) =>
+                    Map("success" -> true.toJson,
+                      "tree" -> tree.toString.toJson,
+                      "flow" -> tree.compress.toString.toJson)
+                }
+              }
+
+              case None => complete((NotFound, "Program not found"))
+            }
+
+          } ~ path ("similar" / IntNumber) { id =>
+
+            complete {
+              (similarActor ? SimilarCheck(id)) map {
+                case SimilarCheckResp(progs) =>
+                  Map("success" -> true.toJson, "similar" -> progs.toString.toJson)
+              }
+            }
+
           } ~ path ("corrections" / IntNumber) { id =>
 
             complete {
-              (similarActor ? id) map {
-                case Corrections(x) =>
-                  Map("success" -> true.toJson, "corrections" -> x.toJson)
+              (similarActor ? SimilarCheck(id)) flatMap {
+                case SimilarCheckResp(progs) =>
+                  (compileActor ? CompileAndGetTrees(progs)) map {
+                    case CompileAndGetTreesResp(trees) => {
+                      Map("success" -> true.toJson,
+                        "corrections" ->
+                          LeastEdit.compareWithTrees(trees(0), trees).toJson)
+                    }
+                  }
                 case err: String =>
-                  Map("success" -> false.toJson, "error" -> err.toJson)
+                  Future(Map("success" -> false.toJson, "error" -> err.toJson))
               }
             }
           }

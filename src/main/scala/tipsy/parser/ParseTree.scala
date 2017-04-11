@@ -144,8 +144,12 @@ sealed trait Expression extends ParseTree {
   }
 }
 
-case class IdentExpr(id: IDENT) extends Expression
-case class LiterExpr(liter: Literal) extends Expression
+case class IdentExpr(id: IDENT) extends Expression {
+  override def toString() = id.toString
+}
+case class LiterExpr(liter: Literal) extends Expression {
+  override def toString() = liter.toString
+}
 case class ArrayExpr(name: IDENT, index: Expression) extends Expression
 case class FxnExpr(fxnName: IDENT, exp: List[Expression]) extends Expression
 case class PreUnaryExpr(op: UnaryOp, exp: Expression) extends Expression
