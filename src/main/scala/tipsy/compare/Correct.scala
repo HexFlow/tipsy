@@ -2,6 +2,8 @@ package tipsy.compare
 
 import tipsy.parser._
 
+case class Corrections(line: Int)
+
 object Correct {
   type CorrError = String
 

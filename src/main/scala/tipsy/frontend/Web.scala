@@ -52,6 +52,7 @@ object Web extends JsonSupport with Ops
 
   val insertActor = system.actorOf(Props[InsertActor], "insert")
   val compileActor = system.actorOf(Props[CompileActor], "compile")
+  val similarActor = system.actorOf(Props[CompileActor], "similar")
 
   // modes is currently not used
   def apply(modes: Set[CLIMode]): Unit = {
@@ -117,8 +118,16 @@ object Web extends JsonSupport with Ops
               case None => complete((NotFound, "Program not found"))
             }
 
-          } ~ path ("corrections") {
-            complete("No corrections")
+          } ~ path ("corrections" / IntNumber) { id =>
+
+            complete {
+              (similarActor ? id) map {
+                case Corrections(x) =>
+                  Map("success" -> true.toJson, "corrections" -> x.toJson)
+                case err: String =>
+                  Map("success" -> false.toJson, "error" -> err.toJson)
+              }
+            }
           }
         } ~ delete {
 
