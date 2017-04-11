@@ -6,8 +6,11 @@ import scala.util.parsing.input.Positional
 sealed trait CFEnum {
   val flowName: String
 }
-case class FUNC(returnType: String) extends CFEnum {
-  val flowName = "Func: " + returnType
+case object FUNC extends CFEnum {
+  val flowName = "Func"
+}
+case class RETTYPE(ret: String) extends CFEnum {
+  val flowName = "Returns " + ret
 }
 case class EXPR(value: Expression) extends CFEnum {
   val flowName = "Expression"
@@ -84,7 +87,8 @@ case class FxnDefinition(
 ) extends ParseTree {
   // If body is None, it won't show BlockOpen and BlockClose
   override val compress = {
-    FUNC(ti.qt.toString) ::
+    FUNC ::
+    RETTYPE(ti.qt.toString) ::
     args.map(_.qt.toString()).sortWith(_<_).map(x => DECL("Argument " + x)) ++
     body.map(_.compress).getOrElse(List())
   }

@@ -11,8 +11,9 @@ import tipsy.db.schema._
   */
 trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   import Requests._
-  implicit val progReqFormat = jsonFormat3(ProgramInsertReq)
+  implicit val progReqFormat = jsonFormat4(ProgramInsertReq)
   implicit val progRespFormat = jsonFormat8(Program)
+  implicit val statsFormat = jsonFormat4(Stats)
 }
 
 /**
@@ -20,6 +21,7 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   */
 object Requests {
   case class ProgramInsertReq (
+    id: Option[Int],
     userId: String,
     quesId: String,
     code: String

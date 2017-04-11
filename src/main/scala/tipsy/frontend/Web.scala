@@ -17,7 +17,7 @@ import akka.http.scaladsl.server.directives.FileAndResourceDirectives
 import spray.json._
 
 import scala.io.StdIn
-import scala.concurrent.{Future, Await}
+import scala.concurrent.{Future, Await, ExecutionContext}
 import scala.concurrent.duration.Duration
 import scala.util.{Success, Failure}
 
@@ -37,6 +37,8 @@ trait TipsyDriver {
 
   implicit val driver: Driver = TipsySlick()
 
+  implicit val timeout = Timeout(3.second)
+
   val progTable: TableQuery[Programs] = TableQuery[Programs]
 }
 
@@ -48,9 +50,8 @@ trait TipsyDriver {
 object Web extends JsonSupport with Ops
     with FileAndResourceDirectives with TipsyDriver {
 
-  implicit val timeout = Timeout(2.second)
-
   val insertActor = system.actorOf(Props[InsertActor], "insert")
+  val compileActor = system.actorOf(Props[CompileActor], "compile")
 
   // modes is currently not used
   def apply(modes: Set[CLIMode]): Unit = {
@@ -64,30 +65,15 @@ object Web extends JsonSupport with Ops
             entity(as[Requests.ProgramInsertReq]) { prog =>
 
               complete {
-                (insertActor ? (0, prog)).map {
-                  case err: String => Map("success" -> false.toJson,
-                    "message" -> err.toJson)
-                  case id: Int => Map("success" -> true.toJson,
-                    "id" -> id.toJson)
-                }
-              }
-
-            }
-          }
-
-        } ~ patch {
-
-          path (IntNumber) { id =>
-            // Insert program into table
-
-            entity(as[Requests.ProgramInsertReq]) { prog =>
-
-              complete {
-                (insertActor ? (id, prog)).map {
-                  case err: String => Map("success" -> false.toJson,
-                    "message" -> err.toJson)
-                  case id: Int => Map("success" -> true.toJson,
-                    "id" -> id.toJson)
+                (compileActor ? prog) flatMap {
+                  case err: String => Future(
+                    Map("success" -> false.toJson,
+                      "message" -> err.toJson))
+                  case progCompiled: Program =>
+                    (insertActor ? progCompiled) map {
+                      case id: Int => Map("success" -> true.toJson,
+                        "id" -> id.toJson)
+                    }
                 }
               }
 
