@@ -13,4 +13,7 @@ object Messages {
 
   case class SimilarCheck(id: Int)
   case class SimilarCheckResp(progs: List[Program])
+
+  case class InsertReq(prog: Program)
+  case class InsertResp(id: Int)
 }

@@ -53,7 +53,6 @@ object Web extends JsonSupport with Ops
     with FileAndResourceDirectives with TipsyDriver {
 
   val insertActor = system.actorOf(Props[InsertActor], "insert")
-  val compileActor = system.actorOf(Props[CompileActor], "compile")
   val similarActor = system.actorOf(Props[SimilarActor], "similar")
 
   // modes is currently not used
@@ -68,18 +67,17 @@ object Web extends JsonSupport with Ops
             entity(as[Requests.ProgramInsertReq]) { prog =>
 
               complete {
-                (compileActor ? CompileWithStats(prog)) flatMap {
-                  case err: String => Future(
-                    Map("success" -> false.toJson,
-                      "message" -> err.toJson))
-                  case progCompiled: Program =>
-                    (insertActor ? progCompiled) map {
-                      case id: Int => Map("success" -> true.toJson,
-                        "id" -> id.toJson)
-                    }
+                Compiler.compileWithStats(prog) match {
+                  case Right(compiledProg) =>
+                    // Compiled fine, index it
+                    for {
+                      InsertResp(id) <- (insertActor ? InsertReq(compiledProg))
+                    } yield Map("success" -> true.toJson, "id" -> id.toJson)
+                  case Left(err) =>
+                    // Didn't compile
+                    Map("success" -> false.toJson, "error" -> err.toString.toJson)
                 }
               }
-
             }
           }
         } ~ get {
@@ -127,46 +125,51 @@ object Web extends JsonSupport with Ops
               progTable.filter(_.id === id).result
             }.headOption
 
-            prog match {
-              case Some(p) => complete {
-                (compileActor ? CompileAndGetTree(p)) map {
-                  case Left(err) =>
-                    Map("success" -> false.toJson,
-                      "message" -> err.toString.toJson)
-                  case Right(tree: ParseTree) =>
-                    Map("success" -> true.toJson,
-                      "tree" -> tree.toString.toJson,
-                      "flow" -> tree.compress.toString.toJson)
+            complete {
+              prog match {
+                case Some(p: Program) => {
+                  Compiler(p.code) match {
+                    case Left(err) =>
+                      Map("success" -> false.toJson,
+                        "message" -> err.toString.toJson)
+                    case Right(tree: ParseTree) =>
+                      Map("success" -> true.toJson,
+                        "tree" -> tree.toString.toJson,
+                        "flow" -> tree.compress.toString.toJson)
+                  }
                 }
-              }
 
-              case None => complete((NotFound, "Program not found"))
+                case None => ((NotFound, "Program not found"))
+              }
             }
 
           } ~ path ("similar" / IntNumber) { id =>
 
             complete {
-              (similarActor ? SimilarCheck(id)) map {
-                case SimilarCheckResp(progs) =>
-                  Map("success" -> true.toJson, "similar" -> progs.toString.toJson)
-              }
+              for {
+                SimilarCheckResp(progs) <-(similarActor ? SimilarCheck(id))
+              } yield Map("success" -> true.toJson,
+                "similar" -> progs.toString.toJson,
+                "count" -> progs.length.toJson)
             }
 
           } ~ path ("corrections" / IntNumber) { id =>
 
             complete {
-              (similarActor ? SimilarCheck(id)) flatMap {
-                case SimilarCheckResp(progs) =>
-                  (compileActor ? CompileAndGetTrees(progs)) map {
-                    case CompileAndGetTreesResp(trees) => {
-                      Map("success" -> true.toJson,
-                        "corrections" ->
-                          LeastEdit.compareWithTrees(trees(0), trees).toJson)
-                    }
-                  }
-                case err: String =>
-                  Future(Map("success" -> false.toJson, "error" -> err.toJson))
+
+              for {
+                SimilarCheckResp(progs) <- (similarActor ? SimilarCheck(id))
+              } yield {
+
+                val trees = progs.map(x => Compiler(x.code)).collect {
+                  case Right(tree) => tree
+                }
+                Map("success" -> true.toJson,
+                  "corrections" ->
+                    LeastEdit.compareWithTrees(trees(0), trees).toJson,
+                  "count" -> trees.length.toJson)
               }
+
             }
           }
         } ~ delete {

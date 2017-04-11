@@ -14,11 +14,12 @@ import tipsy.frontend._
 import tipsy.frontend.Requests._
 
 class InsertActor extends Actor with Ops with JsonSupport with TipsyDriver {
+  import Messages._
 
   val log = Logging(context.system, this)
 
   def receive = {
-    case prog: Program => {
+    case InsertReq(prog) => {
 
       // Operation depends on whether an ID was provided
       val id: Int = prog.id match {
@@ -35,7 +36,7 @@ class InsertActor extends Actor with Ops with JsonSupport with TipsyDriver {
 
       // Return the ID to sender parent
       log.debug("Saved as id: " + id.toString)
-      sender ! id
+      sender ! InsertResp(id)
     }
   }
 }
