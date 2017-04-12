@@ -183,8 +183,8 @@ object Web extends JsonSupport with Ops
                       }
 
                       Map("success" -> true.toJson,
-                        "corrections" -> distances.toString.toJson,
-                        "count" -> trees.length.toJson)
+                        "corrections" -> corrections.toString.toJson,
+                        "count" -> corrections.length.toJson)
                     }
                   case Left(_) => ???
                 }

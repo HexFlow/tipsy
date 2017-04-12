@@ -28,10 +28,10 @@ object ProgStats {
     }
 
     Stats(
-      ifs = counts get IFCOND getOrElse 0,
-      loops = counts get LOOPCOND getOrElse 0,
-      fxns = counts get FUNC getOrElse 0,
-      depth = maxdepth
+      ifs = Some(counts get IFCOND getOrElse 0),
+      loops = Some(counts get LOOPCOND getOrElse 0),
+      fxns = Some(counts get FUNC getOrElse 0),
+      depth = Some(maxdepth)
     )
   }
 }

@@ -30,6 +30,7 @@ class SimilarActor extends Actor with Ops with JsonSupport with TipsyDriver {
         case None => sender ! "Not found"
         case Some(p) => {
           val props = p.props.convertTo[Stats]
+
           val similarProgs: List[Program] = driver.runDB {
             progTable.filter { row =>
               row.quesId === p.quesId
@@ -39,11 +40,33 @@ class SimilarActor extends Actor with Ops with JsonSupport with TipsyDriver {
           }.toList
 
           val similar = similarProgs.filter { elem =>
-            val stats = elem.props.convertTo[Stats]
+            try {
+              val stats = elem.props.convertTo[Stats]
+              val sat = for {
+                f1 <- stats.fxns
+                f2 <- props.fxns
+                r1 <- Some(math.abs(f1 - f2))
+                if (r1 <= 1)
 
-            math.abs(stats.fxns - props.fxns) <= 1 &&
-            math.abs(stats.ifs - props.ifs) <= 1 &&
-            math.abs(stats.loops - props.loops) <= 1
+                i1 <- stats.ifs
+                i2 <- props.ifs
+                r2 <- Some(math.abs(i1 - i2))
+                if (r2 <= 1)
+
+                l1 <- stats.loops
+                l2 <- stats.loops
+                r3 <- Some(math.abs(l1 - l2))
+                if (r3 <= 1)
+
+              } yield ()
+
+              sat match {
+                case Some(_) => true
+                case _ => false
+              }
+            } catch {
+              case e: Throwable => false
+            }
           }
 
           sender ! SimilarCheckResp(similar)

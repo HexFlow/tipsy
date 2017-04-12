@@ -1,8 +1,8 @@
 package tipsy.db.schema
 
 case class Stats (
-  ifs: Int,
-  loops: Int,
-  fxns: Int,
-  depth: Int
+  ifs: Option[Int],
+  loops: Option[Int],
+  fxns: Option[Int],
+  depth: Option[Int]
 )
