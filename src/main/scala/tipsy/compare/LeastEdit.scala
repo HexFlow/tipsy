@@ -12,12 +12,19 @@ case class Diff (
   entry: CFEnum
 )
 
-case class EditRet (
-  diffs: List[Diff],
-  dist: Int
-) {
+case class EditRet (diffs: List[Diff], dist: Int) {
   def correct(d: Diff, dis: Int): EditRet = {
     this.copy(diffs = d :: diffs, dist = dis + dist)
+  }
+  def /(v: Int) = {
+    this match {
+      case EditRet(x, y) => {
+        EditRet(x, y/v)
+      }
+    }
+  }
+  def apply(a: EditRet) {
+    this.copy(diffs = a.diffs, dist = a.dist)
   }
 }
 
@@ -52,51 +59,72 @@ object LeastEdit {
     }.toList
   }
 
-  def editDistRecur(
-    s1: Vector[CFEnum], s2: Vector[CFEnum], m: Int, n: Int
-  ): EditRet = {
-    if (m == 0) (???, n*20)
-    else if (n == 0) (???, m*20)
-    else if (s1(m-1) == s2(n-1))
-      editDist(s1, s2, m-1, n-1)
-    else {
-      var d = 100000000
 
-      (s1(m-1), s2(n-1)) match {
-        case (POSTEXPR(y), POSTEXPR(z)) => {
-          d = editDist(y.toVector, z.toVector,
-            y.length, z.length)/Math.max(y.length, z.length)
-        }
-        case _ =>
-      }
-
-      val opt1 = editDist(s1, s2, m, n-1)
-        .correct(Diff(ADD_d, s2(n-1)), 20)
-
-      val opt2 = editDist(s1, s2, m-1, n)
-        .correct(Diff(DEL_d, s1(m-1)), 20)
-
-      val opt3 = editDist(s1, s2, m-1, n-1)
-        .correct(Diff(ADD_d, s2(n-1)), 20)
-        .correct(Diff(DEL_d, s1(m-1)), 20)
-
-      val opt4 = editDist(s1, s2, m-1, n-1)
-        .correct(Diff(ADD_d, s2(n-1)), d/2)
-        .correct(Diff(DEL_d, s1(m-1)), d/2)
-
-      val ret = List(
-        opt1,
-        opt2,
-        opt3,
-        opt4
-      ).reduceLeft(_.dist min _.dist)
-
-      //if(m!=0 && n!=0)
-      //println("Now comparing " + s1(m-1) + " " + s2(n-1))
-      //println("Reuturning: " + ret)
-      ret
-    }
+def editDistRecurExpr( s1: Vector[String], s2: Vector[String], m: Int, n: Int): Int = {
+  if (m == 0) n*20
+  else if (n == 0) m*20
+  else if (s1(m-1) == s2(n-1))
+    editDistExpr(s1, s2, m-1, n-1)
+  else {
+    val ret = 20 + List(
+      editDistExpr(s1, s2, m, n-1),
+      editDistExpr(s1, s2, m-1, n),
+      editDistExpr(s1, s2, m-1, n-1)
+    ).reduceLeft(_ min _)
+    ret
   }
+}
 
-  val editDist = Memo.mutableHashMapMemo { (editDistRecur _).tupled }
+
+def editDistRecur(s1: Vector[CFEnum], s2: Vector[CFEnum], m: Int, n: Int):
+EditRet = {
+  if (m == 0) EditRet(s2.map(Diff(ADD_d, _)).toList, n*20)
+  else if (n == 0) EditRet(s1.map(Diff(DEL_d, _)).toList, m*20)
+  else if (s1(m-1) == s2(n-1))
+    editDist(s1, s2, m-1, n-1)
+  else {
+    var d = 100000000
+
+    (s1(m-1), s2(n-1)) match {
+      case (POSTEXPR(y), POSTEXPR(z)) => {
+        val p = editDistExpr((y.toVector, z.toVector, y.length, z.length))
+        val c = p / Math.max(y.length, z.length)
+        d = c
+      }
+      case _ =>
+    }
+
+    val opt1 = editDist((s1, s2, m, n-1))
+      .correct(Diff(ADD_d, s2(n-1)), 20)
+
+    val opt2 = editDist((s1, s2, m-1, n))
+      .correct(Diff(DEL_d, s1(m-1)), 20)
+
+    val opt3 = editDist((s1, s2, m-1, n-1))
+      .correct(Diff(ADD_d, s2(n-1)), 20)
+      .correct(Diff(DEL_d, s1(m-1)), 20)
+
+    val opt4 = editDist((s1, s2, m-1, n-1))
+      .correct(Diff(ADD_d, s2(n-1)), d/2)
+      .correct(Diff(DEL_d, s1(m-1)), d/2)
+
+    val ret: EditRet = List(
+      opt1, opt2, opt3, opt4
+    ).reduceLeft( (a:EditRet, b:EditRet) => {
+      (a,b) match {
+        case (EditRet(a,b), EditRet(c,d)) => {
+          if(b<d)
+            EditRet(a,b)
+          else
+            EditRet(c,d)
+        }
+        case _ => EditRet(List(), 100000000)
+      }
+    })
+    ret
+  }
+}
+
+val editDist = Memo.mutableHashMapMemo { (editDistRecur _).tupled }
+val editDistExpr = Memo.mutableHashMapMemo { (editDistRecurExpr _).tupled }
 }
