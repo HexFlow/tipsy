@@ -178,12 +178,12 @@ object Web extends JsonSupport with Ops
                           .sortWith(_._2 > _._2)
 
                       val corrections = distances collect {
-                        case (correctorTree, dist) if dist > 5 =>
+                        case (correctorTree, dist) =>
                           Correct(mainTree, correctorTree)
                       }
 
                       Map("success" -> true.toJson,
-                        "corrections" -> corrections.toString.toJson,
+                        "corrections" -> corrections.toJson,
                         "count" -> corrections.length.toJson)
                     }
                   case Left(_) => ???

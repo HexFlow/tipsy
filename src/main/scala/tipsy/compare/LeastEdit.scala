@@ -14,7 +14,7 @@ case class Diff (
 
 case class EditRet (diffs: List[Diff], dist: Int) {
   def correct(d: Diff, dis: Int): EditRet = {
-    this.copy(diffs = d :: diffs, dist = dis + dist)
+    this.copy(diffs = diffs ++ List(d), dist = dis + dist)
   }
   def /(v: Int) = {
     this match {
@@ -59,6 +59,12 @@ object LeastEdit {
     }.toList
   }
 
+  def compareTwoTrees(tree1: ParseTree, tree2: ParseTree): EditRet = {
+    val v1 = FlowGraphTweaks(tree1.compress).toVector
+    val v2 = FlowGraphTweaks(tree2.compress).toVector
+    editDist(v1, v2, v1.length, v2.length)
+  }
+
 
 def editDistRecurExpr( s1: Vector[String], s2: Vector[String], m: Int, n: Int): Int = {
   if (m == 0) n*20
@@ -76,12 +82,15 @@ def editDistRecurExpr( s1: Vector[String], s2: Vector[String], m: Int, n: Int): 
 }
 
 
-def editDistRecur(s1: Vector[CFEnum], s2: Vector[CFEnum], m: Int, n: Int):
-EditRet = {
-  if (m == 0) EditRet(s2.map(Diff(ADD_d, _)).toList, n*20)
+  def editDistRecur(s1: Vector[CFEnum], s2: Vector[CFEnum],
+    m: Int, n: Int): EditRet = {
+
+  if (m == 0) EditRet(List(), n*20)
+
   else if (n == 0) EditRet(s1.map(Diff(DEL_d, _)).toList, m*20)
-  else if (s1(m-1) == s2(n-1))
-    editDist(s1, s2, m-1, n-1)
+
+  else if (s1(m-1) == s2(n-1)) editDist(s1, s2, m-1, n-1)
+
   else {
     var d = 100000000
 
@@ -100,16 +109,16 @@ EditRet = {
     val opt2 = editDist((s1, s2, m-1, n))
       .correct(Diff(DEL_d, s1(m-1)), 20)
 
-    val opt3 = editDist((s1, s2, m-1, n-1))
-      .correct(Diff(ADD_d, s2(n-1)), 20)
-      .correct(Diff(DEL_d, s1(m-1)), 20)
+    // val opt3 = editDist((s1, s2, m-1, n-1))
+    //   .correct(Diff(ADD_d, s2(n-1)), 20)
+    //   .correct(Diff(DEL_d, s1(m-1)), 20)
 
     val opt4 = editDist((s1, s2, m-1, n-1))
       .correct(Diff(ADD_d, s2(n-1)), d/2)
       .correct(Diff(DEL_d, s1(m-1)), d/2)
 
     val ret: EditRet = List(
-      opt1, opt2, opt3, opt4
+      opt1, opt2, opt4
     ).reduceLeft( (a:EditRet, b:EditRet) => {
       (a,b) match {
         case (EditRet(a,b), EditRet(c,d)) => {

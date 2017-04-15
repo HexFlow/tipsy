@@ -34,6 +34,7 @@ class SimilarActor extends Actor with Ops with JsonSupport with TipsyDriver {
           val similarProgs: List[Program] = driver.runDB {
             progTable.filter { row =>
               row.quesId === p.quesId
+              row.id =!= id
               // row.correct === true &&
               // row.userId =!= p.userId
             }.result
