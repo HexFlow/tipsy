@@ -28,8 +28,8 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
 
   object DiffChangeFormat extends RootJsonFormat[DiffChange] {
     def write(a: DiffChange) = a match {
-      case ADD_d => "Diff+".toJson
-      case DEL_d => "Diff-".toJson
+      case ADD_d => "Add+".toJson
+      case DEL_d => "Remove-".toJson
     }
     def read(va: JsValue) = ???
   }

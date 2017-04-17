@@ -85,7 +85,8 @@ trait Helpers extends PackratParsers with Parsers {
         (fdefs get name) match {
           case None => List()
           case Some(fxn @ FxnDefinition(_, _, Some(body))) => {
-            val fxns = body.compress.collect { case EXPR(e) => e }.flatMap(_.getFxns)
+            val fxns =
+              body.compress.collect { case EXPR(e) => e }.flatMap(_.getFxns)
             fxn :: fxns.flatMap(processFxn(_))
           }
           case _ => ???

@@ -182,9 +182,18 @@ object Web extends JsonSupport with Ops
                           Correct(mainTree, correctorTree)
                       }
 
-                      Map("success" -> true.toJson,
-                        "corrections" -> corrections.toJson,
-                        "count" -> corrections.length.toJson)
+                      corrections.map {
+                        case Left(err) =>
+                          Map("success" -> false.toJson, "error" -> err.toJson)
+                        case Right(corrs) =>
+                          Map("success" -> true.toJson,
+                            "corrections" -> corrs.map { x =>
+                              Map("name" -> x._1.toJson,
+                                "change" -> x._2.toJson)
+                            }.toJson,
+                            "count" -> corrections.length.toJson)
+                      }
+
                     }
                   case Left(_) => ???
                 }
