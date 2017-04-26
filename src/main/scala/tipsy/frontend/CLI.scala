@@ -70,7 +70,7 @@ object CLI extends TreeDraw with FlowDraw {
           println(s"[${count+1} of ${files.length}] Compiling " + file)
         WorkflowCompiler(file) match {
           case Right(tree) => {
-            if (modes contains PRINTPARSE) println(tree)
+            if (modes contains PRINTPARSE) println(WorkflowCompiler(file))
             if (modes contains PRINTFLOW) println(FlowGraphTweaks(tree.compress))
             if (modes contains DRAWPARSE)
               renderer.render(s"parsetree-$count", Diagram(tree))

@@ -12,8 +12,9 @@ object WorkflowCompiler {
     } yield parseTree
   }
 
-  def getTokens(code: String): Either[CCompilationError, List[CToken]] = {
+  def getTokens(filename: String): Either[CCompilationError, List[CToken]] = {
     for {
+      code <- Preprocessor(filename).right
       tokens <- CLexer(code).right
     } yield tokens
   }

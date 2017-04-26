@@ -46,14 +46,14 @@ object CLexer extends RegexParsers {
   }
 
   def ctype: Parser[TYPE] = positioned {
-    ("int|char|byte|short|long|long long|float|double|void".r) ^^ {
+    ("(int|char|byte|short|long long|long|float|double|void)\\b".r) ^^ {
         _ match {
           case "int" => TYPE(INT())
           case "byte" => TYPE(BYTE())
           case "char" => TYPE(CHAR())
           case "short" => TYPE(SHORT())
-          case "long" => TYPE(LONG())
           case "long long" => TYPE(LONGLONG())
+          case "long" => TYPE(LONG())
           case "float" => TYPE(FLOAT())
           case "double" => TYPE(DOUBLE())
           case x => TYPE(CUSTOMTYPE(x))

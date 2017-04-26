@@ -48,9 +48,17 @@ trait ExprParse extends PackratParsers with Parsers
     }
   }
 
+  lazy val castExpr: PackratParser[Expression] = {
+    BRACKET(ROUND(true)) ~ typename ~ BRACKET(ROUND(false)) ~
+    expression ^^ {
+      case _ ~ t ~ _ ~ e => FxnExpr(IDENT(t.toString), List(e))
+    }
+  }
+
   def prioExprGenerator(prio: Int): ExprParse = positioned {
     lazy val item = {
       if (prio == CLexer.maxLevel) {
+        castExpr |
         fxnExpr | bracketExpr | arrayExpr |
         preUnaryExpr | postUnaryExpr |
         identExpr | literExpr

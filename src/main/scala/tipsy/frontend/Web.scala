@@ -81,7 +81,15 @@ object Web extends JsonSupport with Ops
             }
           }
         } ~ get {
-          path ("createSchema") {
+          path ("draw_graph" / Segment) { quesId =>
+            val progs = driver.runDB {
+              progTable.filter(_.quesId === quesId).result
+            }.take(50)
+            val validTrees = progs.map(prog => (Compiler(prog.code), (prog.id.toString + "-" + prog.userId))).collect { case (Right(x), y) => (x, y) }.toList
+            DistanceDraw(LeastEdit(validTrees.map(_._1)), validTrees.length, validTrees.map(_._2))
+
+            complete { "OK" }
+          } ~ path ("createSchema") {
             // Create the postgres schema
 
             create(progTable)
@@ -173,16 +181,15 @@ object Web extends JsonSupport with Ops
                         case Right(tree) => tree
                       }
 
-                      val distances =
-                        LeastEdit.compareWithTrees(mainTree, trees)
-                          .sortWith(_._2 > _._2)
-
-                      val corrections = distances collect {
+                      val corrections = LeastEdit.compareWithTrees(mainTree, trees).map {
                         case (correctorTree, dist) =>
-                          Correct(mainTree, correctorTree)
+                          (Correct(mainTree, correctorTree), dist)
+                      }.reduce { (x, y) =>
+                        if (x._2 > y._2) x
+                        else y
                       }
 
-                      corrections.map {
+                      corrections._1 match {
                         case Left(err) =>
                           Map("success" -> false.toJson, "error" -> err.toJson)
                         case Right(corrs) =>
@@ -191,7 +198,7 @@ object Web extends JsonSupport with Ops
                               Map("name" -> x._1.toJson,
                                 "change" -> x._2.toJson)
                             }.toJson,
-                            "count" -> corrections.length.toJson)
+                            "dist" -> corrections._2.toJson)
                       }
 
                     }
