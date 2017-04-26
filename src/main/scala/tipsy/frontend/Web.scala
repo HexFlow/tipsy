@@ -101,8 +101,20 @@ object Web extends JsonSupport with Ops
             drop(progTable)
             complete("Deleted schemas")
 
+          } ~ path ("dropQuestion" / Segment) { quesId =>
+            val myQuery = progTable.filter(_.quesId === quesId).delete.asTry.map {
+              case Failure(ex) => {
+                println(s"Error: ${ex.getMessage}")
+                false
+              }
+              case Success(_) => true
+            }
+            val result = driver.runDB(myQuery)
+            complete(Map(
+              "success" -> result.toJson
+            ).toJson)
           } ~ path ("progCount") {
-            // Get list of program IDs
+                // Get list of program IDs
 
             val myQuery: Query[Rep[Int], Int, Seq] =
               progTable.map(_.id)
