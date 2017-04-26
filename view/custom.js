@@ -22,6 +22,32 @@ function addToDB() {
 }
 
 function findCorr() {
+
+    if (!document.getElementById("progName").value) {
+        window.alert("Missing prog ID");
+        return;
+    }
+
+    console.log("The current code is");
+    console.log(editor.getValue());
+
+    if (!editor.getValue().trim()) {
+        window.alert("Missing code");
+        return;
+    }
+
+    var prog = {userId: "sakshams", quesId: "test1", code: editor.getValue()};
+
     console.log("Finding corrections for program");
-    console.error("NOT YET IMPLEMENTED");
+    $.ajax({
+        url: '/api/corrections',
+        type: 'post',
+        contentType: "application/json; charset=utf-8",
+        traditional: true,
+        success: function (data) {
+            console.log(data);
+            $('#results').text(JSON.stringify(data, null, 4)).html();
+        },
+        data: JSON.stringify(prog)
+    });
 }
