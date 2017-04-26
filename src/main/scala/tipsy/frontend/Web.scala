@@ -79,6 +79,53 @@ object Web extends JsonSupport with Ops
                 }
               }
             }
+          } ~ path("corrections") {
+
+            entity(as[Requests.ProgramInsertReq]) { progreq =>
+              Compiler.compileWithStats(progreq) match {
+                case Left(err) =>
+                  // Didn't compile
+                  complete {
+                    Map("success" -> false.toJson, "error" -> err.toString.toJson)
+                  }
+
+                case Right(prog) =>
+                  Compiler(prog.code) match {
+                    case Right(mainTree: ParseTree) =>
+                      val res = for {
+                        SimilarCheckResp(prgs) <- (similarActor ? SimilarCheck(prog))
+                      } yield {
+
+                        val trees = prgs.map { x => Compiler(x.code) }.collect {
+                          case Right(tree) => tree
+                        }
+
+                        val distances =
+                          LeastEdit.compareWithTrees(mainTree, trees)
+                            .sortWith(_._2 > _._2)
+
+                        val corrections = distances collect {
+                          case (correctorTree, dist) =>
+                            Correct(mainTree, correctorTree)
+                        }
+
+                        corrections.map {
+                          case Left(err) =>
+                            Map("success" -> false.toJson, "error" -> err.toJson)
+                          case Right(corrs) =>
+                            Map("success" -> true.toJson,
+                              "corrections" -> corrs.map { x =>
+                                Map("name" -> x._1.toJson,
+                                  "change" -> x._2.toJson)
+                              }.toJson,
+                              "count" -> corrections.length.toJson)
+                        }
+                      }
+                      complete(res)
+                    case Left(_) => ???
+                  }
+              }
+            }
           }
         } ~ get {
           path ("draw_graph" / Segment) { quesId =>
@@ -153,12 +200,20 @@ object Web extends JsonSupport with Ops
 
           } ~ path ("similar" / IntNumber) { id =>
 
-            complete {
-              for {
-                SimilarCheckResp(progs) <-(similarActor ? SimilarCheck(id))
-              } yield Map("success" -> true.toJson,
-                "similar" -> progs.toString.toJson,
-                "count" -> progs.length.toJson)
+            val progopt: Option[Program] = driver.runDB {
+              progTable.filter(_.id === id).result
+            }.headOption
+
+            progopt match {
+              case None => complete((NotFound, "Program not found"))
+              case Some(prog) =>
+                complete {
+                  for {
+                    SimilarCheckResp(progs) <-(similarActor ? SimilarCheck(prog))
+                  } yield Map("success" -> true.toJson,
+                    "similar" -> progs.toString.toJson,
+                    "count" -> progs.length.toJson)
+                }
             }
 
           } ~ path ("corrections" / IntNumber) { id =>
@@ -174,10 +229,10 @@ object Web extends JsonSupport with Ops
                 val res = Compiler(prog.code) match {
                   case Right(mainTree: ParseTree) =>
                     for {
-                      SimilarCheckResp(progs) <- (similarActor ? SimilarCheck(id))
+                      SimilarCheckResp(prgs) <- (similarActor ? SimilarCheck(prog))
                     } yield {
 
-                      val trees = progs.map { x => Compiler(x.code) }.collect {
+                      val trees = prgs.map { x => Compiler(x.code) }.collect {
                         case Right(tree) => tree
                       }
 

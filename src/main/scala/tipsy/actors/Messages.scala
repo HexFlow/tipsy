@@ -11,7 +11,7 @@ object Messages {
   case class CompileAndGetTrees(progs: List[Program])
   case class CompileAndGetTreesResp(progs: List[ParseTree])
 
-  case class SimilarCheck(id: Int)
+  case class SimilarCheck(p: Program)
   case class SimilarCheckResp(progs: List[Program])
 
   case class InsertReq(prog: Program)
