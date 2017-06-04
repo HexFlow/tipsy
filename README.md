@@ -15,10 +15,22 @@ That's it. You just need to download `sbt` (Scala Build Tool), and place it in y
 ## Using
 ```
 bash> sbt
-sbt> run test/C2.c
+sbt> run -<arg> <files>
 ```
 
-This will generate an image `parsetree.png` in your project folder, for the file test/C2.c
+Where arg can be as follows:
+
+| arg       | meaning          |
+| --------- | ---------------- |
+| pp        | PRINTPARSE       |
+| pf        | PRINTFLOW        |
+| dp        | DRAWPARSE        |
+| df        | DRAWFLOW         |
+| le        | LEASTEDIT        |
+| len=int   | LEASTEDITLIMIT   |
+| web       | CLI(default)/WEB |
+
+`dp` and `df` will generate an image in the project folder for each file specified.
 
 ## Notes
 Code for Undergraduate project by [Pallav Agarwal](https://github.com/pallavagarwal07) and [Saksham Sharma](https://github.com/sakshamsharma).

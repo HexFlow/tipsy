@@ -5,3 +5,5 @@ parsetree*
 flowgraph*
 forcegraph*
 test/realdata
+scripts/.python-version
+*.swp

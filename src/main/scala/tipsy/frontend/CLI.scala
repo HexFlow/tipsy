@@ -65,9 +65,9 @@ object CLI extends TreeDraw with FlowDraw {
         filesOrig.map(expandDir).flatten
       }
 
-      val trees = files.zipWithIndex.map{
-        case (file, count) => {
-          println(s"[${count+1} of ${files.length}] Compiling " + file)
+    val trees = files.zipWithIndex.map{
+      case (file, count) => {
+        println(s"[${count+1} of ${files.length}] Compiling " + file)
         WorkflowCompiler(file) match {
           case Right(tree) => {
             if (modes contains PRINTPARSE) println(WorkflowCompiler(file))
