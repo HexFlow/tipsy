@@ -40,9 +40,7 @@ object LeastEdit {
     trees.zipWithIndex.combinations(2).map {
       case Seq(t1, t2) => {
         println("Starting 2 new trees " + t1._2 + " " + t2._2)
-        val v1 = FlowGraphTweaks(t1._1.compress).toVector
-        val v2 = FlowGraphTweaks(t2._1.compress).toVector
-        val k = (editDist(v1, v2, v1.length, v2.length))
+        val k = compareTwoTrees(t1._1, t2._1)
         println(k)
         (t1._2, t2._2, 1/(k.dist.toDouble+0.1))
       }
@@ -50,15 +48,9 @@ object LeastEdit {
     }.toList
   }
 
-  def compareWithTrees(
-    prog: ParseTree,
-    trees: List[ParseTree]
-  ): List[(ParseTree, Double)] = {
-
+  def compareWithTrees(prog: ParseTree, trees: List[ParseTree]): List[(ParseTree, Double)] = {
     trees.map { case tree =>
-      val v1 = FlowGraphTweaks(prog.compress).toVector
-      val v2 = FlowGraphTweaks(tree.compress).toVector
-      val k = (editDist(v1, v2, v1.length, v2.length))
+      val k = compareTwoTrees(prog, tree)
       (tree, 1/(k.dist.toDouble+0.1))
     }.toList
   }
@@ -68,7 +60,6 @@ object LeastEdit {
     val v2 = FlowGraphTweaks(tree2.compress).toVector
     editDist(v1, v2, v1.length, v2.length)
   }
-
 
   def editDistRecurExpr( s1: Vector[String], s2: Vector[String], m: Int, n: Int): Int = {
     if (m == 0) n*20
@@ -84,7 +75,6 @@ object LeastEdit {
       ret
     }
   }
-
 
   def editDistRecur(s1: Vector[CFEnum], s2: Vector[CFEnum],
     m: Int, n: Int): EditRet = {

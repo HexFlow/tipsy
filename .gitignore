@@ -7,3 +7,4 @@ forcegraph*
 test/realdata
 scripts/.python-version
 *.swp
+scripts/parsedCodes

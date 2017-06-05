@@ -141,7 +141,7 @@ object CLexer extends RegexParsers {
   }
 
   def sliteral: Parser[StrLiteral] = positioned {
-    """("[^"]*"|'.'|'\.')""".r ^^ { str =>
+    """("(\\.|[^\\"])*"|'.')""".r ^^ { str =>
       StrLiteral(str.substring(1, str.length - 1))
     }
   }
@@ -163,8 +163,9 @@ object CLexer extends RegexParsers {
   }
 
   def octal: Parser[Int] = {
-    "0[oO][0-7]+".r ^^ {
-      s => Integer.parseInt(s.substring(2), 8)
+    "0[oO]?[0-7]+".r ^^ {
+      case s if (s.substring(1, 2) == "o" || s.substring(1, 2) == "O") => Integer.parseInt(s.substring(2), 8)
+      case s => Integer.parseInt(s.substring(1), 8)
     }
   }
 
