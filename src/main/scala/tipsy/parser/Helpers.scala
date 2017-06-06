@@ -15,7 +15,7 @@ trait Helpers extends PackratParsers with Parsers {
   }
 
   def typedvariable: Parser[TypedIdent] = positioned {
-    typeparse ~ identifier ^^ {
+    typeparse ~ identifier.? ^^ {
       case tql ~ id => TypedIdent(tql, id)
     }
   }
@@ -69,7 +69,7 @@ trait Helpers extends PackratParsers with Parsers {
   def sortFunctionsInUseOrder(lis: List[ParseTree]): List[ParseTree] = {
     val defs = lis.collect { case x @ Definition(_, _, _) => x }
     val fdefs = lis
-      .collect { case x @ FxnDefinition(ti, _, Some(_)) => ti.name.str -> x }
+      .collect { case x @ FxnDefinition(ti, _, Some(_)) => ti.name.get.str -> x }
       .toMap
 
     val usedFxns: mSet[String] = mSet()

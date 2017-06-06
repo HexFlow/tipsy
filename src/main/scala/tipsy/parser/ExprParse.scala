@@ -36,9 +36,10 @@ trait ExprParse extends PackratParsers with Parsers
 
   lazy val fxnExpr: PackratParser[Expression] = {
     identifier ~ BRACKET(ROUND(true)) ~
-    expression ~ BRACKET(ROUND(false)) ^^ {
-      case ident ~ _ ~ CompoundExpr(elist) ~ _ => FxnExpr(ident, elist)
-      case ident ~ _ ~ expr ~ _ => FxnExpr(ident, List(expr))
+    expression.? ~ BRACKET(ROUND(false)) ^^ {
+      case ident ~ _ ~ None ~ _ => FxnExpr(ident, List(): List[Expression])
+      case ident ~ _ ~ Some(CompoundExpr(elist)) ~ _ => FxnExpr(ident, elist)
+      case ident ~ _ ~ Some(expr) ~ _ => FxnExpr(ident, List(expr))
     }
   }
 
@@ -49,7 +50,7 @@ trait ExprParse extends PackratParsers with Parsers
   }
 
   lazy val castExpr: PackratParser[Expression] = {
-    BRACKET(ROUND(true)) ~ typename ~ BRACKET(ROUND(false)) ~
+    BRACKET(ROUND(true)) ~ (typename | typenameFromIdent) ~ BRACKET(ROUND(false)) ~
     expression ^^ {
       case _ ~ t ~ _ ~ e => FxnExpr(IDENT(t.toString), List(e))
     }

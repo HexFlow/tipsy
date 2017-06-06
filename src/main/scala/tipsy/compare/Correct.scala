@@ -17,7 +17,7 @@ object Correct {
 
     def getNamesHelper(k: List[(FxnDefinition, FxnDefinition)]) = {
       k.map {
-        case (f1 @ FxnDefinition(TypedIdent(_, IDENT(name)), _, _), f2) =>
+        case (f1 @ FxnDefinition(TypedIdent(_, Some(IDENT(name))), _, _), f2) =>
           (name, f1, f2)
       }
     }
@@ -84,13 +84,13 @@ object Correct {
 
     // Convert List[FxnDefinition] to List[(FxnDefinition, FxnDefinition)]
     userFxns.map {
-      case ufunc @ (FxnDefinition(TypedIdent(_, IDENT(uname)), _, _), upos) =>
+      case ufunc @ (FxnDefinition(TypedIdent(_, Some(IDENT(uname))), _, _), upos) =>
 
         // Find a similar function
         val simfunc: Option[FxnDefinition] = compFxns.map {
 
           // Calculate score for each function to be compared
-          case newfunc @ (FxnDefinition(TypedIdent(_, IDENT(nname)), _, _), npos) =>
+          case newfunc @ (FxnDefinition(TypedIdent(_, Some(IDENT(nname))), _, _), npos) =>
             val nameDist = strComp(uname, nname)
             val posDist  = math.abs(upos - npos) * 30
             (newfunc._1, nameDist + posDist)

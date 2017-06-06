@@ -36,12 +36,21 @@ case object BLOCKOPEN extends CFEnum {
 case object BLOCKCLOSE extends CFEnum {
   val flowName = "Block Close"
 }
+class FLOWMANIPULATION() extends CFEnum {
+  val flowName = "Flow Manipulation"
+}
+case object CONT extends FLOWMANIPULATION {
+  override val flowName = "Continue"
+}
+case object BRK extends FLOWMANIPULATION {
+  override val flowName = "Break"
+}
 
 // Used for storing types
 case class QualifiedType(qualifiers: List[String], name: CType) extends ParseTree {
   override def toString(): String = (qualifiers :+ name.toString).mkString(" ")
 }
-case class TypedIdent(qt: QualifiedType, name: IDENT) extends ParseTree
+case class TypedIdent(qt: QualifiedType, name: Option[IDENT]) extends ParseTree
 
 // All other ParseTree constructs derive from this
 sealed trait ParseTree extends Positional {
@@ -67,14 +76,14 @@ case class Definitions(defs: List[Definition]) extends ParseTree {
 }
 
 // Definitions. Ex: int a = b + 2;
-case class Definition(ty: QualifiedType, id: Expression,
+case class Definition(ty: QualifiedType, id: Option[Expression],
   value: Option[Expression]) extends ParseTree {
 
   override val compress = {
     // Note: Removed declarations from flow graph
     // DECL(ty.toString()) ::
     value.map { expr =>
-      BinaryExpr(id, BinaryOp("="), expr).compress
+      BinaryExpr(id.get, BinaryOp("="), expr).compress
     }.getOrElse(List())
   }
 }
@@ -92,6 +101,14 @@ case class FxnDefinition(
     args.map(_.qt.toString()).sortWith(_<_).map(x => DECL("Argument " + x)) ++
     body.map(_.compress).getOrElse(List())
   }
+}
+
+sealed trait FlowStatement extends ParseTree
+case class Break() extends FlowStatement {
+  override val compress = List(BRK)
+}
+case class Continue() extends FlowStatement {
+  override val compress = List(CONT)
 }
 
 // A statement. Ex: a += b * 3;
@@ -117,7 +134,8 @@ case class WhileStatement(cond: Expression,
 
 case class DoWhileStatement(body: BlockList,
   cond: Expression) extends Statement {
-  override val compress = LOOPCOND :: EXPR(cond) :: body.compress
+  lazy val compressedBody: List[CFEnum] = body.compress
+  override val compress = compressedBody ++ List(LOOPCOND, EXPR(cond)) ++ compressedBody
 }
 
 case class ReturnStatement(code: Expression) extends Statement {

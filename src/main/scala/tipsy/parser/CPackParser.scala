@@ -46,6 +46,13 @@ object CPackParser extends PackratParsers with Parsers
     }
   }
 
+  lazy val loopBlockparser: PackratParser[BlockList] = positioned {
+    //loops has break and continue too.
+    rep(flowStmt | expressionStmt | statement | definitions) ^^ {
+      case x => BlockList(customFlatten(x))
+    }
+  }
+
   lazy val maybeWithoutBracesBlock: PackratParser[BlockList] = positioned {
     val withoutBraces = (expressionStmt | statement | definitions) ^^ {
       case x => BlockList(customFlatten(List(x)))
@@ -59,9 +66,40 @@ object CPackParser extends PackratParsers with Parsers
     withoutBraces | withBraces
   }
 
+  lazy val flowStmt: PackratParser[FlowStatement] = positioned {
+    lazy val br: PackratParser[Break] = {
+      KEYWORD("break") ~ SEMI() ^^ {
+        case b ~ _ => Break()
+      }
+    }
+
+    lazy val con: PackratParser[Continue] = {
+      KEYWORD("continue") ~ SEMI() ^^ {
+        case c ~ _ => Continue()
+      }
+    }
+
+    br | con
+  }
+
+  lazy val maybeWithoutBracesLoopBlock: PackratParser[BlockList] = positioned {
+    val withoutBraces = (flowStmt | expressionStmt | statement | definitions) ^^ {
+      case x => BlockList(customFlatten(List(x)))
+    }
+
+    val withBraces = {
+      BRACKET(CURLY(true)) ~ loopBlockparser ~ BRACKET(CURLY(false)) ^^ {
+        case _ ~ body ~ _ => body
+      }
+    }
+
+    withoutBraces | withBraces
+  }
+
   lazy val definitions: PackratParser[Definitions] = positioned {
-    typeparse ~ expression ~ SEMI() ^^ {
-      case ty ~ defs ~ _ => {
+    typeparse ~ expression.? ~ SEMI() ^^ {
+      case (qt @ QualifiedType(List(), CUSTOMTYPE("void"))) ~ None ~ _ => Definitions(List(Definition(qt, None, None)))
+      case ty ~ Some(defs) ~ _ => {
 
         val defList = defs match {
           case CompoundExpr(defList) => defList
@@ -71,9 +109,9 @@ object CPackParser extends PackratParsers with Parsers
         Definitions(
           defList.collect {
             case BinaryExpr(id, BinaryOp("="), value) =>
-              Definition(ty, id, Some(value))
+              Definition(ty, Some(id), Some(value))
             case id @ (_: IdentExpr | _: PreUnaryExpr | _: ArrayExpr) =>
-              Definition(ty, id, None)
+              Definition(ty, Some(id), None)
         })
       }
     }
@@ -110,7 +148,7 @@ object CPackParser extends PackratParsers with Parsers
       BRACKET(CURLY(false)) ^^ {
         case _ ~ args ~ _ ~ block ~ _ => {
           FxnDefinition(TypedIdent(QualifiedType(List(), INT()),
-            IDENT("main")), args, Some(block))
+            Some(IDENT("main"))), args, Some(block))
         }
       }
     }
@@ -161,7 +199,7 @@ object CPackParser extends PackratParsers with Parsers
       expressionStmt ~
       expression ~
       BRACKET(ROUND(false)) ~
-      maybeWithoutBracesBlock ^^ {
+      maybeWithoutBracesLoopBlock ^^ {
         case _ ~ _ ~ s1 ~ s2 ~ s3 ~ _ ~ body => {
           ForStatement(s1, s2, s3, body)
         }
@@ -173,14 +211,14 @@ object CPackParser extends PackratParsers with Parsers
       BRACKET(ROUND(true)) ~
       expression ~
       BRACKET(ROUND(false)) ~
-      maybeWithoutBracesBlock ^^ {
+      maybeWithoutBracesLoopBlock ^^ {
         case _ ~ _ ~ cond ~ _ ~ body => WhileStatement(cond, body)
       }
     }
 
     lazy val dowhilestatement: PackratParser[DoWhileStatement] = {
       DO() ~
-      maybeWithoutBracesBlock ~
+      maybeWithoutBracesLoopBlock ~
       WHILE() ~
       BRACKET(ROUND(true)) ~
       expression ~
@@ -200,11 +238,13 @@ object CPackParser extends PackratParsers with Parsers
     returnstatement | ifstmt | forstmt | whilestatement | dowhilestatement
   }
 
-
   /**
     * Expression Statement is an expression followed by a Semi colon.
     */
   def expressionStmt: PackratParser[Expression] = positioned {
-    expression ~ SEMI() ^^ { case expr ~ _ => expr }
+    expression.? ~ SEMI() ^^ {
+      case None ~ _ => CompoundExpr(List(): List[Expression])
+      case Some(expr) ~ _ => expr
+    }
   }
 }

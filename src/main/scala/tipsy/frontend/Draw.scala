@@ -65,9 +65,10 @@ trait TreeDraw {
     case x: QualifiedType =>
       RefTree.Ref(x, x.qualifiers.map(_.refTree) :+ x.name.refTree).rename("Type")
 
-    case x: TypedIdent =>
-      RefTree.Ref(x, Seq(x.qt.refTree, x.name.refTree))
-        .rename("Typed variable")
+    case x: TypedIdent => x match {
+      case TypedIdent(qt, None) => RefTree.Ref(x, Seq(qt.refTree)).rename("Void")
+      case _ => RefTree.Ref(x, Seq(x.qt.refTree, x.name.refTree)).rename("Typed Variable")
+    }
 
     case x @ TopList(items) =>
       RefTree.Ref(x, items.map(_.refTree)).rename("Global")
@@ -99,6 +100,13 @@ trait TreeDraw {
         .rename(name)
     }
 
+    case x: Break =>
+      RefTree.Ref(x, Seq())
+        .rename("Break")
+
+    case x: Continue =>
+      RefTree.Ref(x, Seq())
+        .rename("Continue")
     case x: IfStatement =>
       RefTree.Ref(x, Seq(x.cond.refTree, x.body.refTree, x.elsebody.refTree))
         .rename("If")
