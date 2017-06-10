@@ -21,6 +21,8 @@ object Tipsy {
         case "-le" => optset put (LEASTEDIT, "")
         case msg if msg.startsWith("-len=") =>
           optset put (LEASTEDITLIMIT, msg.split('=')(1))
+        case msg if msg.startsWith("-cluster=") =>
+          optset put (CLUSTER, msg.split('=')(1))
         case "-web" => web = true
         case msg if msg.startsWith("-") =>
           println("[Warning] Ignoring unknown argument: " + msg)

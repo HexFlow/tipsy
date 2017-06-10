@@ -33,7 +33,7 @@ case class EditRet (diffs: List[Diff], dist: Int) {
 }
 
 object LeastEdit {
-  def apply(trees: List[ParseTree]): List[(Int, Int, Double)] = {
+  def apply(trees: List[ParseTree], cluster: Boolean): List[(Int, Int, Double)] = {
     if (trees.length < 2) {
       println("[Warning] Least Edit mode requires at least 2 trees")
     }
@@ -42,7 +42,10 @@ object LeastEdit {
         println("Starting 2 new trees " + t1._2 + " " + t2._2)
         val k = compareTwoTrees(t1._1, t2._1)
         println(k)
-        (t1._2, t2._2, 1/(k.dist.toDouble+0.1))
+        cluster match {
+          case true => (t1._2, t2._2, k.dist.toDouble)
+          case false => (t1._2, t2._2, 1/(k.dist.toDouble  + 0.1))
+        }
       }
       case _ => ???
     }.toList

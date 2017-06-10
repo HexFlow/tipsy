@@ -133,7 +133,7 @@ object Web extends JsonSupport with Ops
               progTable.filter(_.quesId === quesId).result
             }.take(50)
             val validTrees = progs.map(prog => (Compiler(prog.code), (prog.id.toString + "-" + prog.userId))).collect { case (Right(x), y) => (x, y) }.toList
-            DistanceDraw(LeastEdit(validTrees.map(_._1)), validTrees.length, validTrees.map(_._2))
+            DistanceDraw(LeastEdit(validTrees.map(_._1), false), validTrees.length, validTrees.map(_._2))
 
             complete { "OK" }
           } ~ path ("createSchema") {

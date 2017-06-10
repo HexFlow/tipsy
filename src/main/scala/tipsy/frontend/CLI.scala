@@ -4,6 +4,7 @@ import scala.io.Source
 import tipsy.compiler._
 import tipsy.compare._
 import tipsy.parser._
+import tipsy.cluster._
 
 import reftree.render._
 import reftree.contrib._
@@ -23,6 +24,7 @@ case object DRAWPARSE extends CLIMode
 case object PRINTPARSE extends CLIMode
 case object DRAWFLOW extends CLIMode
 case object PRINTFLOW extends CLIMode
+case object CLUSTER extends CLIMode
 
 trait FlowDraw {
   implicit def cfListDrawer: ToRefTree[List[CFEnum]] = ToRefTree[List[CFEnum]] {
@@ -70,7 +72,7 @@ object CLI extends TreeDraw with FlowDraw {
         println(s"[${count+1} of ${files.length}] Compiling " + file)
         WorkflowCompiler(file) match {
           case Right(tree) => {
-            if (modes contains PRINTPARSE) println(WorkflowCompiler(file))
+            if (modes contains PRINTPARSE) println(Right(tree))
             if (modes contains PRINTFLOW) println(FlowGraphTweaks(tree.compress))
             if (modes contains DRAWPARSE)
               renderer.render(s"parsetree-$count", Diagram(tree))
@@ -88,7 +90,19 @@ object CLI extends TreeDraw with FlowDraw {
     }.toList
     if (modes contains LEASTEDIT) {
       val validTrees = trees.collect { case (Some(x), y) => (x, y) }
-      DistanceDraw(LeastEdit(validTrees.map(_._1)), validTrees.length, validTrees.map(_._2))
+      if (modes contains CLUSTER) {
+        lazy val leastEdited = LeastEdit(validTrees.map(_._1), true)
+        val len = validTrees.length
+        val matrixNetwork: Array[Array[Double]] = Array.fill(len)(Array.fill(len)(0.0))
+        for (i <- leastEdited) {
+          matrixNetwork(i._1)(i._2) = i._3
+          matrixNetwork(i._2)(i._1) = i._3
+        }
+        Clusterify(matrixNetwork.map(_.toList).toList, len, validTrees.map(_._2), modes(CLUSTER).toDouble)
+      }
+      else {
+        DistanceDraw(LeastEdit(validTrees.map(_._1), false), validTrees.length, validTrees.map(_._2))
+      }
     }
   }
 }
