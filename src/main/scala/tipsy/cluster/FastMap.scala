@@ -24,7 +24,6 @@ object FastMap {
     val currPivots = pickPivots(matrixNetwork, length)
     println(s"Picked pivots as $currPivots at dim = $cols")
     if (distance(matrixNetwork, currPivots) == 0) {
-      println("parv")
       return
     }
     
