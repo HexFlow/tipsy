@@ -9,15 +9,16 @@ object FastMap {
   var cols = 0
   val pivotIterations = 5
 
-  def apply (matrixNetwork: List[List[Double]], length: Int, clusters: Int): (List[List[Double]], List[(Int, Int)]) = {
-    projectionsInK = Array.fill(length)(Array.fill(clusters)(0.0))
-    pivots = Array.fill(clusters)((-1, -1))
-    generate(matrixNetwork, length, clusters)
+  def apply (matrixNetwork: List[List[Double]], length: Int, dimOfVS: Int): (List[List[Double]], List[(Int, Int)]) = {
+    projectionsInK = Array.fill(length)(Array.fill(dimOfVS)(0.0))
+    pivots = Array.fill(dimOfVS)((-1, -1))
+    cols = 0
+    generate(matrixNetwork, length, dimOfVS)
     (projectionsInK.map(_.toList).toList, pivots.toList)
   }
 
-  def generate (matrixNetwork: List[List[Double]], length: Int, clusters: Int): Unit = {
-    if (clusters == 0) {
+  def generate (matrixNetwork: List[List[Double]], length: Int, dimOfVS: Int): Unit = {
+    if (dimOfVS == 0) {
       return
     }
 
@@ -32,7 +33,7 @@ object FastMap {
     }
 
     cols += 1
-    generate(matrixNetwork, length, clusters - 1)
+    generate(matrixNetwork, length, dimOfVS - 1)
   }
 
   def findProjection(matrixNetwork: List[List[Double]], nodes: (Int, Int), i: Int): Double = {

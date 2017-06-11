@@ -55,8 +55,9 @@ object KMeans {
         val tDist = distance(coordinates(j), centroids(k).toList)
         if(acc._1 > tDist) {
           (tDist, k)
+        } else {
+          acc
         }
-        acc
       }
     }
   }
@@ -82,6 +83,9 @@ object KMeans {
 
     for (i <- List.range(0, length)) {
       cluster(i) = nearestCentroid(i, clusters)._2
+      if (cluster(i) == -1) {
+        println("cluster was assigned a -1 even after this")
+      }
     }
   }
 

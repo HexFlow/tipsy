@@ -12,6 +12,8 @@ object DBSCAN {
   var identifier: mMap[Int, (DBSCANPoint, Int)] = mMap[Int, (DBSCANPoint, Int)]()
   var cluster = -1
   def apply(matrixNetwork: List[List[Double]], length: Int, eps: Double, minPts: Int): mMap[Int, (DBSCANPoint, Int)] = {
+    cluster = -1
+    identifier = mMap[Int, (DBSCANPoint, Int)]()
     for (i <- List.range(0, length)) {
       identifier get i match {
         case Some(_) => 
@@ -35,7 +37,7 @@ object DBSCAN {
     val clusterQueue = Queue[Int]()
     clusterQueue ++= neighbours
     while (! clusterQueue.isEmpty) {
-      val neighbour = clusterQueue.front
+      val neighbour = clusterQueue.dequeue
       identifier get neighbour match {
         case Some((NOISE, -1)) => {
           identifier(neighbour) = (BORDER, cluster)
