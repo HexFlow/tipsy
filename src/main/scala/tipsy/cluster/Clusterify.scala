@@ -10,7 +10,7 @@ object Clusterify {
     println(matrixNetwork)
     val fastmaped = fastmap(matrixNetwork, length, 10)
     val kmeaned = kmeans(matrixNetwork, length, 2, 10)
-    val dbscaned = dbscan(matrixNetwork, length, 201, 2)
+    val dbscaned = dbscan(matrixNetwork, length, 0.40, 3)
   }
 
   def fastmap(matrixNetwork: List[List[Double]], length: Int, dimOfVS: Int): (List[List[Double]], List[(Int, Int)]) = {

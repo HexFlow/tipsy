@@ -11,19 +11,21 @@ object DBSCAN {
 
   var identifier: mMap[Int, (DBSCANPoint, Int)] = mMap[Int, (DBSCANPoint, Int)]()
   var cluster = -1
-  def apply(matrixNetwork: List[List[Double]], length: Int, eps: Double, minPts: Int): mMap[Int, (DBSCANPoint, Int)] = {
+  var matrixNetwork: List[List[Double]] = List[List[Double]]()
+  def apply(tMatrixNetwork: List[List[Double]], length: Int, eps: Double, minPts: Int): mMap[Int, (DBSCANPoint, Int)] = {
     cluster = -1
     identifier = mMap[Int, (DBSCANPoint, Int)]()
+    matrixNetwork = normalize(tMatrixNetwork)
     for (i <- List.range(0, length)) {
       identifier get i match {
         case Some(_) => 
         case None => {
-          val neighbours = regionQuery(matrixNetwork, length, i, eps)
+          val neighbours = regionQuery(length, i, eps)
           if (neighbours.length < minPts) {
             identifier(i) = (NOISE, -1)
           } else {
             cluster += 1
-            expandCluster(matrixNetwork, length, i, eps, neighbours, minPts)
+            expandCluster(length, i, eps, neighbours, minPts)
           }
         }
       }
@@ -32,7 +34,21 @@ object DBSCAN {
     identifier
   }
 
-  def expandCluster(matrixNetwork: List[List[Double]], length: Int, ind: Int, eps: Double, neighbours: List[Int], minPts: Int): Unit = {
+  def normalize[A: Numeric](matrix: List[List[A]]): List[List[A]] = implicitly[Numeric[A]] match {
+    case num: Fractional[_] => {
+      import num._
+      val mx = matrix.map(_.reduceLeft(abs(_) max abs(_))).max
+      matrix.map(_.map(_/mx))
+    }
+    case num: Integral[_] => {
+      import num._
+      val mx = matrix.map(_.reduceLeft(abs(_) max abs(_))).max
+      matrix.map(_.map(_/mx))
+    }
+    case _ => sys.error("Undivisable Number")
+  }
+
+  def expandCluster(length: Int, ind: Int, eps: Double, neighbours: List[Int], minPts: Int): Unit = {
     identifier(ind) = (CORE, cluster)
     val clusterQueue = Queue[Int]()
     clusterQueue ++= neighbours
@@ -44,7 +60,7 @@ object DBSCAN {
         }
         case None => {
           identifier(neighbour) = (BORDER, cluster)
-          val newNeighbours = regionQuery(matrixNetwork, length, neighbour, eps)
+          val newNeighbours = regionQuery(length, neighbour, eps)
           if (newNeighbours.length >= minPts) {
             clusterQueue ++= newNeighbours
             identifier(neighbour) = (CORE, cluster)
@@ -55,7 +71,7 @@ object DBSCAN {
     }
   }
 
-  def regionQuery(matrixNetwork: List[List[Double]],length: Int, ind: Int, eps: Double): List[Int] = {
+  def regionQuery(length: Int, ind: Int, eps: Double): List[Int] = {
     matrixNetwork(ind).zipWithIndex.filter(_._1 < eps).map(_._2)
   } 
 }
