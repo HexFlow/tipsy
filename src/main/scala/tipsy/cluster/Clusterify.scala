@@ -14,7 +14,7 @@ object Clusterify {
     println("-----")
     println(names)
     val fastmaped = fastmap(matrixNetwork, length, 10)
-    val kmeaned = kmeans(matrixNetwork, length, 2, 10)
+    val kmeaned = kmeans(matrixNetwork, length, 4, 10, true)
     val dbscaned = dbscan(matrixNetwork, length, 0.30, 3)
   }
 
@@ -48,9 +48,9 @@ object Clusterify {
     dbscaned
   }
 
-  def kmeans(matrixNetwork: List[List[Double]], length: Int, clusters: Int, dimOfVS: Int): (List[List[Double]], List[Int]) = {
+  def kmeans(matrixNetwork: List[List[Double]], length: Int, clusters: Int, dimOfVS: Int, equalSized: Boolean): (List[List[Double]], List[Int]) = {
     val fastmaped = fastmap(matrixNetwork, length, dimOfVS)
-    val kmeaned = KMeans(fastmaped._1, length, dimOfVS, clusters)
+    val kmeaned = KMeans(fastmaped._1, length, dimOfVS, clusters, equalSized)
     println("--------------------")
     println("Centroids In K-Means")
     println("--------------------")
