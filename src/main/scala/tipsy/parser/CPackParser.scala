@@ -48,8 +48,27 @@ object CPackParser extends PackratParsers with Parsers
 
   lazy val loopBlockparser: PackratParser[BlockList] = positioned {
     //loops has break and continue too.
-    rep(flowStmt | expressionStmt | statement | definitions) ^^ {
+    rep(flowifstmt | flowStmt | expressionStmt | statement | definitions) ^^ {
       case x => BlockList(customFlatten(x))
+    }
+  }
+
+  lazy val flowifstmt: PackratParser[IfStatement] = {
+    IF() ~
+    BRACKET(ROUND(true)) ~
+    expression ~
+    BRACKET(ROUND(false)) ~
+    maybeWithoutBracesLoopBlock ~
+    opt(
+      ELSE() ~ maybeWithoutBracesLoopBlock
+    ) ^^ {
+      case _ ~ _ ~ cond ~ _ ~ body ~ elseblk => {
+        val ebody = elseblk match {
+          case Some(_ ~ elsebody) => elsebody
+          case _ => BlockList(List())
+        }
+        IfStatement(cond, body, ebody)
+      }
     }
   }
 
@@ -82,8 +101,20 @@ object CPackParser extends PackratParsers with Parsers
     br | con
   }
 
+  lazy val maybeWithoutBracesSwitchBlock: PackratParser[BlockList] = positioned {
+    val withoutBraces = loopBlockparser ^^ {
+      case body => body
+    }
+    val withBraces = {
+      BRACKET(CURLY(true)) ~ loopBlockparser ~ BRACKET(CURLY(false)) ^^ {
+        case _ ~ body ~ _ => body
+      }
+    }
+    withoutBraces | withBraces
+  }
+
   lazy val maybeWithoutBracesLoopBlock: PackratParser[BlockList] = positioned {
-    val withoutBraces = (flowStmt | expressionStmt | statement | definitions) ^^ {
+    val withoutBraces = (flowifstmt | flowStmt | expressionStmt | statement | definitions) ^^ {
       case x => BlockList(customFlatten(List(x)))
     }
 
@@ -192,15 +223,48 @@ object CPackParser extends PackratParsers with Parsers
       }
     }
 
+    lazy val switchStatement: PackratParser[SwitchStatement] = {
+      SWITCH() ~
+      BRACKET(ROUND(true)) ~
+      expression ~
+      BRACKET(ROUND(false)) ~
+      BRACKET(CURLY(true)) ~
+      rep(KEYWORD("case") ~ expression ~ COLON() ~ maybeWithoutBracesSwitchBlock) ~
+      opt(KEYWORD("default") ~ COLON() ~ maybeWithoutBracesSwitchBlock) ~
+      rep(KEYWORD("case") ~ expression ~ COLON() ~ maybeWithoutBracesSwitchBlock) ~
+      BRACKET(CURLY(false)) ^^ {
+        case _ ~ _ ~ expr ~ _ ~ _ ~ caseblk1 ~ defaultblk ~ caseblk2 ~ _ => {
+          val defaultBody =  defaultblk match {
+            case Some(_ ~ _ ~ dbody) => dbody
+            case _ => BlockList(List())
+          }
+          val caseBody1 = caseblk1.map {
+            x => x match {
+              case (_ ~ exp ~ _ ~ cbody) => (exp, cbody)
+            }
+          }
+          val caseBody2 = caseblk2.map {
+            x => x match {
+              case (_ ~ exp ~ _ ~ cbody) => (exp, cbody)
+            }
+          }
+          SwitchStatement(expr, caseBody1 ++ caseBody2, defaultBody)
+        }
+      }
+    }
+
     lazy val forstmt: PackratParser[ForStatement] = {
       FOR() ~
       BRACKET(ROUND(true)) ~
       expressionStmt ~
       expressionStmt ~
-      expression ~
+      expression.? ~
       BRACKET(ROUND(false)) ~
       maybeWithoutBracesLoopBlock ^^ {
-        case _ ~ _ ~ s1 ~ s2 ~ s3 ~ _ ~ body => {
+        case _ ~ _ ~ s1 ~ s2 ~ None ~ _ ~ body => {
+          ForStatement(s1, s2, CompoundExpr(List(): List[Expression]), body)
+        }
+        case _ ~ _ ~ s1 ~ s2 ~ Some(s3) ~ _ ~ body => {
           ForStatement(s1, s2, s3, body)
         }
       }
@@ -234,8 +298,8 @@ object CPackParser extends PackratParsers with Parsers
           ReturnStatement(e.getOrElse(LiterExpr(IntLiteral(0))))
       }
     }
-
-    returnstatement | ifstmt | forstmt | whilestatement | dowhilestatement
+ 
+    returnstatement | ifstmt | switchStatement | forstmt | whilestatement | dowhilestatement
   }
 
   /**

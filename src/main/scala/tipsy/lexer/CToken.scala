@@ -14,13 +14,14 @@ case class IDENT(str: String) extends CToken {
 case class LITER(l: Literal) extends CToken
 case class OPERATOR(op: COperator) extends CToken
 case class SEMI() extends CToken
-//case class COMMA() extends CToken
-
 case class IF() extends CToken
 case class ELSE() extends CToken
 case class FOR() extends CToken
 case class WHILE() extends CToken
 case class DO() extends CToken
+case class SWITCH() extends CToken
+case class COLON() extends CToken
+case class QUESTION() extends CToken
 
 sealed trait Literal extends Positional
 case class StrLiteral(s: String) extends Literal
@@ -56,7 +57,9 @@ case class CUSTOMTYPE(n: String) extends CType {
   override def toString = n
 }
 
-sealed trait CBracket { val open: Boolean }
+sealed trait CBracket extends Positional {
+  val open: Boolean
+}
 case class ROUND(open: Boolean) extends CBracket
 case class CURLY(open: Boolean) extends CBracket
 case class SQUARE(open: Boolean) extends CBracket
@@ -68,7 +71,6 @@ case class StatementOp(op: String) extends COperator
 case class UnaryOp(op: String) extends COperator
 case class TernaryOp(op: String) extends COperator
 case class ParseBinaryOp(op: String, priority: Int) extends COperator
-
 case class BinaryOp(op: String) extends COperator {
   override val toString: String = {
     op match {
@@ -80,3 +82,4 @@ case class BinaryOp(op: String) extends COperator {
     }
   }
 }
+case class CompoundOp(op: String, ops: List[COperator]) extends COperator

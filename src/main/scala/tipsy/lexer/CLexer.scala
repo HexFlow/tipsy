@@ -15,7 +15,15 @@ object CLexer extends RegexParsers {
     parse(tokens, code) match {
       case NoSuccess(msg, next) =>
         Left(CLexerError(Location(next.pos.line, next.pos.column), msg))
-      case Success(result, next) => Right(result)
+      case Success(result, next) => {
+        /*Right(result.foldRight(List(): List[CToken]) {
+          (x, acc) => x match{
+            case OPERATOR(CompoundOp(_, x :: y :: Nil)) => OPERATOR(x) :: OPERATOR(y) :: acc
+            case x => x :: acc
+          }
+        })*/
+       Right(result)
+      }
     }
   }
 
@@ -23,9 +31,9 @@ object CLexer extends RegexParsers {
     phrase {
       rep1 {
         keyword | ctype |
-        elsef | iff |
-        forf | whilef | dof |
-        ctypequalifier | semi | bracket |
+        elsef | iff | switchf |
+        forf | whilef | dof | question |
+        ctypequalifier | semi | colon | bracket |
         identifier | literal | operator
       }
     }
@@ -34,7 +42,7 @@ object CLexer extends RegexParsers {
   def keyword: Parser[KEYWORD] = positioned {
     ("auto|break|case|continue|default|enum|extern".r |
       "goto|return|register|sizeof".r |
-      "struct|switch|typedef|union".r) ^^ {
+      "struct|typedef|union".r) ^^ {
       KEYWORD(_)
     }
   }
@@ -46,13 +54,15 @@ object CLexer extends RegexParsers {
   }
 
   def ctype: Parser[TYPE] = positioned {
-    ("(int|char|byte|short|long long|long|float|double|void)\\b".r) ^^ {
+    ("(int|char|byte|short|long long int|long long|long int|long|float|double|void)\\b".r) ^^ {
         _ match {
           case "int" => TYPE(INT())
           case "byte" => TYPE(BYTE())
           case "char" => TYPE(CHAR())
           case "short" => TYPE(SHORT())
+          case "long long int" => TYPE(LONGLONG())
           case "long long" => TYPE(LONGLONG())
+          case "long int" => TYPE(LONG())
           case "long" => TYPE(LONG())
           case "float" => TYPE(FLOAT())
           case "double" => TYPE(DOUBLE())
@@ -66,7 +76,7 @@ object CLexer extends RegexParsers {
     def op(x: String, level: Int) = OPERATOR(ParseBinaryOp(x, level))
 
     val binaryOp =
-      """[+*/-]|\,|<<=|>>=|>=|>|<=|<|==|!=|\+=|\*=|\-=|\/=|\%=|\&=|\^=|\|=|=|%|[|]{1,2}|&{1,2}|\^""".r ^^ {
+      """\,|<<=|>>=|>>|<<|>=|>|<=|<|==|!=|\+=|\*=|\-=|\/=|[+*/-]|\%=|\&=|\^=|\|=|=|%|[|]{1,2}|&{1,2}|\^""".r ^^ {
         case x @ "," => op(x, 1)
 
         case x @ ("=" | "+=" | "-=" | "*=" | "/=" | "%=" | "&=" | "^=" | "|=" |
@@ -101,7 +111,16 @@ object CLexer extends RegexParsers {
       case x => OPERATOR(UnaryOp(x))
     }
 
-    unaryOp | binaryOp
+    val unaryOp1 = """!|~""".r ^^ {
+      case x => OPERATOR(UnaryOp(x))
+    }
+
+    val signOp = binaryOp ~ """\+|\-""".r ^^ {
+      case OPERATOR(x) ~ y => OPERATOR(CompoundOp("Compound Operation", List(x, UnaryOp(y))))
+    }
+
+    //unaryOp | signOp | binaryOp | unaryOp1
+     unaryOp | binaryOp | unaryOp1
   }
 
   def identifier: Parser[IDENT] = positioned {
@@ -113,10 +132,12 @@ object CLexer extends RegexParsers {
   }
 
   def semi: Parser[SEMI] = positioned { ";".r ^^ { _ => SEMI() } }
-
+  def colon: Parser[COLON] = positioned { ":".r ^^ { _ => COLON() } }
+  def question: Parser[QUESTION] = positioned { "\\?".r ^^ { _ => QUESTION() }}
   // def comma: Parser[COMMA] = positioned { ",".r ^^ { _ => COMMA() } }
 
   def iff: Parser[IF] = positioned { "if".r ^^ { _ => IF() } }
+  def switchf: Parser[SWITCH] = positioned { "switch".r ^^ { _ => SWITCH() } }
   def elsef: Parser[ELSE] = positioned { "else".r ^^ { _ => ELSE() } }
   def forf: Parser[FOR] = positioned { "for".r ^^ { _ => FOR() }}
   def whilef: Parser[WHILE] = positioned { "while".r ^^ { _ => WHILE() }}

@@ -21,6 +21,9 @@ case class DECL(value: String) extends CFEnum {
 case object IFCOND extends CFEnum {
   val flowName = "If"
 }
+case object SWITCHCOND extends CFEnum {
+  val flowName = "Switch"
+}
 case object LOOPCOND extends CFEnum {
   val flowName = "Loop"
 }
@@ -117,6 +120,12 @@ case class IfStatement(cond: Expression, body: BlockList,
   elsebody: BlockList) extends Statement {
   override val compress = {
     IFCOND :: EXPR(cond) :: body.compress ++ elsebody.compress
+  }
+}
+
+case class SwitchStatement(value: Expression, caseBlocks: List[(Expression, BlockList)], defaultBlock: BlockList) extends Statement {
+  override val compress = {
+    SWITCHCOND :: EXPR(value) :: caseBlocks.flatMap(x => EXPR(x._1) :: x._2.compress) ++ defaultBlock.compress
   }
 }
 

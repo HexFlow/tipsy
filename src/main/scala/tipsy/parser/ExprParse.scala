@@ -20,12 +20,12 @@ trait ExprParse extends PackratParsers with Parsers
   lazy val literExpr: PackratParser[LiterExpr] =
     literal ^^ { case LITER(a) => LiterExpr(a) }
 
-  lazy val preUnaryExpr: PackratParser[Expression] = preUnaryOp ~ identExpr ^^ {
+  lazy val preUnaryExpr: PackratParser[Expression] = preUnaryOp ~ (arrayExpr | identExpr | literExpr) ^^ {
     case pop ~ e2 => PreUnaryExpr(pop, e2)
   }
 
   lazy val postUnaryExpr: PackratParser[Expression] =
-    identExpr ~ postUnaryOp ^^ {
+    (arrayExpr | identExpr | literExpr) ~ postUnaryOp ^^ {
       case e1 ~ pop => PostUnaryExpr(e1, pop)
     }
 
