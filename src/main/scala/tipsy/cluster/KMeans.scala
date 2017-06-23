@@ -27,7 +27,6 @@ object KMeans {
     var clusterSize = (length + clusters - 1)/clusters
     var accuracy = length >> 10
     var changed = 0
-    var distMat = getDistMat(length)
     while(changed == 0) {
       var counter: Array[Int] = Array.fill(clusters)(0)
       centroids = Array.fill(clusters)(Array.fill(dimOfVS)(0.0))
@@ -37,27 +36,25 @@ object KMeans {
           centroids(cluster(i))(j) += coordinates(i)(j)
         }
       }
-      for(i <- 0 to clusters - 1) {
+      for (i <- 0 to clusters - 1) {
         for (j <- 0 to dimOfVS - 1) {
           if (counter(i) != 0)
             centroids(i)(j) /= counter(i)
         }
       }
+      var distList: List[(Double, Int, Int)] = getDistList(length)
+      var tempCluster: Array[Int] = Array.fill(length)(-1)
       counter = Array.fill(clusters)(0)
-      for(i <- 0 to length - 1) {
-        val distList: List[(Double, Int)] = getDistList(i, clusters)
-        var j = 0
-        var flag = 1
-        while(flag == 1) {
-          if (counter(distList(j)._2) <= clusterSize) {
-            counter(distList(j)._2) += 1
-            if (cluster(i) != distList(j)._2) {
-              cluster(i) = distList(j)._2
+      for (i <- 0 to (length * clusters - 1)) {
+        if (counter(distList(i)._2) <= clusterSize) {
+          if (tempCluster(distList(i)._3) == -1) {
+            counter(distList(i)._2) += 1
+            tempCluster(distList(i)._3) = distList(i)._2
+            if (cluster(distList(i)._3) != distList(i)._2) {
+              cluster(distList(i)._3) = distList(i)._2
               changed += 1
             }
-            flag = 0
           }
-          j += 1
         }
       }
       if(changed <= accuracy) {
@@ -68,20 +65,14 @@ object KMeans {
     }
   }
 
-  def getDistMat(length: Int): List[List[Double]] = {
-    var distMat: Array[Array[Double]] = Array.fill(length)(Array.fill(clusters)(0.0))
+  def getDistList(length: Int): List[(Double, Int, Int)] = {
+    val distList: Array[(Double, Int, Int)] = Array.fill(length * clusters)((0.0, -1, -1))
     for (i <- 0 to length - 1) {
       for (j <- 0 to clusters - 1) {
-        distMat(i)(j) = distance(coordinates(i), centroids(j).toList)
+        distList(i * clusters + j) = (distance(coordinates(i), centroids(j).toList), j, i)
       }
     }
-    distMat.toList.map(_.toList)
-  }
-
-  def getDistList(j: Int, i: Int): List[(Double, Int)] = {
-    ((0 to i-1).map { k =>
-      distance(coordinates(j), centroids(k).toList)
-    }).toList.zipWithIndex.sortWith(_._1<_._1)
+    distList.toList.sortWith(_._1<_._1)
   }
 
   def unequalkmeans(length: Int): Unit = { 
