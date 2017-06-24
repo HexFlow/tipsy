@@ -162,7 +162,7 @@ object CLexer extends RegexParsers {
   }
 
   def sliteral: Parser[StrLiteral] = positioned {
-    """("(\\.|[^\\"])*"|'.')""".r ^^ { str =>
+    """("(\\.|[^\\"])*"|'.'|'\\.')""".r ^^ { str =>
       StrLiteral(str.substring(1, str.length - 1))
     }
   }
