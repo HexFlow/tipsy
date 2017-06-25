@@ -53,6 +53,9 @@ case class FLOAT() extends CType {
 case class DOUBLE() extends CType {
   override def toString = "double"
 }
+case class TYPEPOINTER(typ: CType) extends CType {
+  override def toString = typ + "*"
+}
 case class CUSTOMTYPE(n: String) extends CType {
   override def toString = n
 }
