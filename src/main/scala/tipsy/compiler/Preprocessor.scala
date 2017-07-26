@@ -25,14 +25,18 @@ object Preprocessor {
     } else {
       var flag = false
       // Contains the part of user code from GCC output
-      val result = out.split("\n").collect {
+      val tresult = out.split("\n").collect {
         case line if flag && !line.startsWith("#") => Some(line)
         case line if line.startsWith("#") => {
           if (line.contains(filename)) flag = true
           else flag = false
           None
         }
-      }.collect{ case Some(x) => x }.reduceLeft(_ + "\n" + _)
+      }.collect{ case Some(x) => x }
+      var result: String = "";
+      if (tresult.length != 0) {
+        result = tresult.reduceLeft(_ + "\n" + _)
+      }
       Right(result)
     }
   }

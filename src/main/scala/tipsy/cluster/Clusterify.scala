@@ -4,7 +4,7 @@ import scala.collection.mutable.{Map => mMap}
 
 object Clusterify {
 
-  def apply(matrixNetwork: List[List[Double]], length: Int, names: List[String], cluster: Double): Unit = {
+  def apply(matrixNetwork: List[List[Double]], length: Int, names: List[String], cluster: Int, equalSized: Boolean): Unit = {
     println("--------------")
     println("Matrix Network")
     println("--------------")
@@ -13,9 +13,15 @@ object Clusterify {
     println("Names")
     println("-----")
     println(names)
-    val fastmaped = fastmap(matrixNetwork, length, 10)
-    val kmeaned = kmeans(matrixNetwork, length, 4, 10, true)
-    val dbscaned = dbscan(matrixNetwork, length, 0.30, 3)
+/*    val mb = 1024*1024
+    val runtime = Runtime.getRuntime
+    println("** Used Memory:  " + (runtime.totalMemory - runtime.freeMemory) / mb)
+    println("** Free Memory:  " + runtime.freeMemory / mb)
+    println("** Total Memory: " + runtime.totalMemory / mb)
+    println("** Max Memory:   " + runtime.maxMemory / mb)*/
+    val fastmaped = fastmap(matrixNetwork, length, 100)
+    val kmeaned = kmeans(matrixNetwork, length, cluster, 100, equalSized)
+    val dbscaned = dbscan(matrixNetwork, length, 0.299, 3)
   }
 
   def fastmap(matrixNetwork: List[List[Double]], length: Int, dimOfVS: Int): (List[List[Double]], List[(Int, Int)]) = {

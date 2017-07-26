@@ -160,7 +160,7 @@ sealed trait Expression extends ParseTree {
   // Provide list of functions used in this expression in order of use
   val getFxns: List[String] = {
     this match {
-      case ArrayExpr(_, index) => index.getFxns
+      case ArrayExpr(_, indices) => indices.flatMap(_.getFxns)
       case FxnExpr(name, _) => List(name.str)
       case PreUnaryExpr(_, e) => e.getFxns
       case PostUnaryExpr(e, _) => e.getFxns
@@ -177,7 +177,7 @@ case class IdentExpr(id: IDENT) extends Expression {
 case class LiterExpr(liter: Literal) extends Expression {
   override def toString() = liter.toString
 }
-case class ArrayExpr(name: IDENT, index: Expression) extends Expression
+case class ArrayExpr(name: IDENT, index: List[Expression]) extends Expression
 case class FxnExpr(fxnName: IDENT, exp: List[Expression]) extends Expression
 case class PreUnaryExpr(op: UnaryOp, exp: Expression) extends Expression
 case class PostUnaryExpr(exp: Expression, op: UnaryOp) extends Expression

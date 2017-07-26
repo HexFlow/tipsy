@@ -25,6 +25,7 @@ case object PRINTPARSE extends CLIMode
 case object DRAWFLOW extends CLIMode
 case object PRINTFLOW extends CLIMode
 case object CLUSTER extends CLIMode
+case object EQUALCLUSTER extends CLIMode
 
 trait FlowDraw {
   implicit def cfListDrawer: ToRefTree[List[CFEnum]] = ToRefTree[List[CFEnum]] {
@@ -98,7 +99,8 @@ object CLI extends TreeDraw with FlowDraw {
           matrixNetwork(i._1)(i._2) = i._3
           matrixNetwork(i._2)(i._1) = i._3
         }
-        Clusterify(matrixNetwork.map(_.toList).toList, len, validTrees.map(_._2), modes(CLUSTER).toDouble)
+        val equalSized = if (modes contains EQUALCLUSTER) true else false
+        Clusterify(matrixNetwork.map(_.toList).toList, len, validTrees.map(_._2), Integer.parseInt(modes(CLUSTER)), equalSized)
       }
       else {
         DistanceDraw(LeastEdit(validTrees.map(_._1), false), validTrees.length, validTrees.map(_._2))

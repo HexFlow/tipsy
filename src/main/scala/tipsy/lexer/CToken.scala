@@ -27,6 +27,7 @@ sealed trait Literal extends Positional
 case class StrLiteral(s: String) extends Literal
 case class IntLiteral(i: Int) extends Literal
 case class FloatLiteral(f: Double) extends Literal
+case class SIZEOF(ct: CType) extends Literal
 
 sealed trait CType extends Positional
 case class INT() extends CType {

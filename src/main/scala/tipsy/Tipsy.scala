@@ -19,6 +19,7 @@ object Tipsy {
         case "-dp" => optset put (DRAWPARSE, "")
         case "-df" => optset put (DRAWFLOW, "")
         case "-le" => optset put (LEASTEDIT, "")
+        case "-eq" => optset put (EQUALCLUSTER, "")
         case msg if msg.startsWith("-len=") =>
           optset put (LEASTEDITLIMIT, msg.split('=')(1))
         case msg if msg.startsWith("-cluster=") =>

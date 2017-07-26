@@ -30,7 +30,7 @@ object CLexer extends RegexParsers {
   def tokens: Parser[List[CToken]] = {
     phrase {
       rep1 {
-        keyword | ctype |
+        keyword | sizeof | ctype |
         elsef | iff | switchf |
         forf | whilef | dof | question |
         ctypequalifier | semi | colon | bracket |
@@ -39,9 +39,15 @@ object CLexer extends RegexParsers {
     }
   }
 
+  def sizeof: Parser[LITER] = positioned {
+    "sizeof" ~ "\\(".r ~ ctype ~ "\\)".r ^^ {
+      case _ ~ _ ~ TYPE(ct) ~ _ => LITER(SIZEOF(ct))
+    }
+  }
+
   def keyword: Parser[KEYWORD] = positioned {
     ("auto|break|case|continue|default|enum|extern".r |
-      "goto|return|register|sizeof".r |
+      "goto|return|register".r |
       "struct|typedef|union".r) ^^ {
       KEYWORD(_)
     }

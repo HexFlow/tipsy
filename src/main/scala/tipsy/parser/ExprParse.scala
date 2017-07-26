@@ -30,8 +30,15 @@ trait ExprParse extends PackratParsers with Parsers
     }
 
   lazy val arrayExpr: PackratParser[Expression] =
-    identifier ~ BRACKET(SQUARE(true)) ~ expression ~ BRACKET(SQUARE(false)) ^^ {
-      case ident ~ _ ~ index ~ _ => ArrayExpr(ident, index)
+    (identifier) ~ rep1(BRACKET(SQUARE(true)) ~ expression ~ BRACKET(SQUARE(false))) ^^ {
+      case ident ~ indices => {
+        val expressions: List[Expression] = indices.map {
+          x => x match {
+            case _ ~ expr ~ _ => expr
+          }
+        }
+        ArrayExpr(ident, expressions)
+      }
     }
 
   lazy val fxnExpr: PackratParser[Expression] = {
