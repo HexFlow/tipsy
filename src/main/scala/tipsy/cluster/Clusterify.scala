@@ -21,7 +21,7 @@ object Clusterify {
     println("** Max Memory:   " + runtime.maxMemory / mb)*/
     val fastmaped = fastmap(matrixNetwork, length, 100)
     val kmeaned = kmeans(matrixNetwork, length, cluster, 100, equalSized)
-    val dbscaned = dbscan(matrixNetwork, length, 0.299, 3)
+//    val dbscaned = dbscan(matrixNetwork, length, 0.299, 3)
   }
 
   def fastmap(matrixNetwork: List[List[Double]], length: Int, dimOfVS: Int): (List[List[Double]], List[(Int, Int)]) = {

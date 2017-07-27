@@ -18,7 +18,7 @@ object DBSCAN {
     matrixNetwork = normalize(tMatrixNetwork)
     for (i <- List.range(0, length)) {
       identifier get i match {
-        case Some(_) => 
+        case Some(_) =>
         case None => {
           val neighbours = regionQuery(length, i, eps)
           if (neighbours.length < minPts) {
@@ -73,5 +73,5 @@ object DBSCAN {
 
   def regionQuery(length: Int, ind: Int, eps: Double): List[Int] = {
     matrixNetwork(ind).zipWithIndex.filter(_._1 < eps).map(_._2)
-  } 
+  }
 }

@@ -75,7 +75,7 @@ object KMeans {
     distList.toList.sortWith(_._1<_._1)
   }
 
-  def unequalkmeans(length: Int): Unit = { 
+  def unequalkmeans(length: Int): Unit = {
     kmeansPP(length)
     val accuracy = length >> 10
     var changed = 0
@@ -108,9 +108,9 @@ object KMeans {
       }
     }
   }
-  
+
   def nearestCentroid(j: Int, i: Int): (Double, Int) = {
-    List.range(0, i).foldLeft((100000000000.0, -1)) {
+    List.range(0, i).foldLeft((1000000000000000000.0, -1)) {
       (acc, k) => {
         val tDist = distance(coordinates(j), centroids(k).toList)
         if(acc._1 > tDist) {
@@ -154,7 +154,7 @@ object KMeans {
       (acc, i) => acc + square(vector1(i) - vector2(i))
     }
   }
-  
+
   def square(x: Double): Double = {
     x * x
   }

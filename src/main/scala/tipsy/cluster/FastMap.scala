@@ -7,14 +7,47 @@ object FastMap {
   var projectionsInK = Array[Array[Double]]()
   var pivots = Array[(Int, Int)]()
   var cols = 0
-  val pivotIterations = 5
+  val pivotIterations = 50
 
   def apply (matrixNetwork: List[List[Double]], length: Int, dimOfVS: Int): (List[List[Double]], List[(Int, Int)]) = {
     projectionsInK = Array.fill(length)(Array.fill(dimOfVS)(0.0))
     pivots = Array.fill(dimOfVS)((-1, -1))
     cols = 0
+    validateMatrixNetwork(matrixNetwork, length)
     generate(matrixNetwork, length, dimOfVS)
+    validateProjections(matrixNetwork, length, dimOfVS)
     (projectionsInK.map(_.toList).toList, pivots.toList)
+  }
+
+  def validateMatrixNetwork (matrixNetwork: List[List[Double]], length: Int): Unit = {
+    for (i <- 0 to length - 1) {
+      for (j <- i + 1 to length - 1) {
+        for (k <- j + 1 to length - 1) {
+          val (a, b, c) = (matrixNetwork(i)(j), matrixNetwork(i)(k), matrixNetwork(j)(k))
+          if (a + b < c) {
+            println(s"** [error] triangle inequality not satisfied amongst: ($a($i, $j), $b($i, $k)) and $c($j, $k)")
+          }
+          if (a + c < b) {
+            println(s"** [error] triangle inequality not satisfied amongst: ($a($i, $j), $c($j, $k)) and $b($i, $k)")
+          }
+          if (b + c < a) {
+            println(s"** [error] triangle inequality not satisfied amongst: ($b($i, $k), $c($j, $k)) and $a($i, $j)")
+          }
+        }
+      }
+    }
+  }
+
+  def validateProjections (matrixNetwork: List[List[Double]], length: Int, dimOfVS: Int): Unit = {
+    for(i <- 0 to length - 1) {
+      for(j <- i + 1 to length - 1) {
+        print(s"($i, $j): ${matrixNetwork(i)(j)} ")
+        val dist = List.range(0, dimOfVS).foldLeft(0.0) {
+          (acc, cur) => acc + square(projectionsInK(i)(cur) - projectionsInK(j)(cur))
+        }
+        println(math.sqrt(dist))
+      }
+    }
   }
 
   def generate (matrixNetwork: List[List[Double]], length: Int, dimOfVS: Int): Unit = {
@@ -27,7 +60,7 @@ object FastMap {
     if (distance(matrixNetwork, currPivots) == 0) {
       return
     }
-    
+
     for (i <- List.range(0, length)) {
       projectionsInK(i)(cols) = findProjection(matrixNetwork, currPivots, i)
     }
