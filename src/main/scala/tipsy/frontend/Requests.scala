@@ -26,17 +26,27 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
     def read(va: JsValue) = ???
   }
 
-  object DiffChangeFormat extends RootJsonFormat[DiffChange] {
-    def write(a: DiffChange) = a match {
-      case ADD_d => "Add+".toJson
-      case DEL_d => "Remove-".toJson
+  object DiffFormat extends RootJsonFormat[Diff] {
+    def write(a: Diff) = a match {
+      case Diff(ADD_d, Some(x), None) => JsObject (
+        "change" -> "Add+".toJson,
+        "addEntry" -> x.toJson
+        )
+      case Diff(DEL_d, None, Some(x)) => JsObject (
+        "change" -> "Remove-".toJson,
+        "removeEntry" -> x.toJson
+        )
+      case Diff(REPLACE_d, Some(x), Some(y)) => JsObject (
+        "change" -> "Replace+-".toJson,
+        "addEntry" -> x.toJson,
+        "removeEntry" -> y.toJson
+        )
     }
     def read(va: JsValue) = ???
   }
 
   implicit val cfenumFormat = lazyFormat(CFEnumFormat)
-  implicit val diffChangeFormat = lazyFormat(DiffChangeFormat)
-  implicit val diffFormat = lazyFormat(jsonFormat2(Diff))
+  implicit val diffFormat = lazyFormat(DiffFormat)
   implicit val editRetFormat = lazyFormat(jsonFormat2(EditRet))
 }
 

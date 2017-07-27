@@ -1,20 +1,23 @@
 package tipsy.compare
 
 import tipsy.parser._
-import scalaz._
 
 import scala.math.min
 
 sealed trait DiffChange
 case object ADD_d extends DiffChange
 case object DEL_d extends DiffChange
+case object REPLACE_d extends DiffChange
 
 case class Diff (
   change: DiffChange,
-  entry: CFEnum
+  addEntry: Option[CFEnum],
+  delEntry: Option[CFEnum]
 )
 
 case class EditRet (diffs: List[Diff], dist: Int) {
+  private var penalty: Int = 2
+
   def correct(d: Diff, dis: Int): EditRet = {
     this.copy(diffs = diffs ++ List(d), dist = dis + dist)
   }
@@ -120,17 +123,15 @@ object LeastEdit {
 
   def editDistRecur(m: Int, n: Int): EditRet = {
 
-    if (m == 0) EditRet(List(), n*20)
+    if (m == 0) EditRet(cfenum2.map(x => Diff(ADD_d, Some(x), None)).toList, n*20)
 
-    else if (n == 0) EditRet(cfenum1.map(Diff(DEL_d, _)).toList, m*20)
+    else if (n == 0) EditRet(cfenum1.map(x => Diff(DEL_d, None, Some(x))).toList, m*20)
 
     else if (cfenum1(m-1) == cfenum2(n-1)) {
       if (editDist(m-1)(n-1) == EditRet(List(), -1)) {
         editDist(m-1)(n-1) = editDistRecur(m-1, n-1)
-        editDist(m-1)(n-1)
-      } else {
-        editDist(m-1)(n-1)
       }
+      editDist(m-1)(n-1)
     }
 
     else {
@@ -154,7 +155,7 @@ object LeastEdit {
       } else {
         editDist(m)(n-1)
       }
-      val opt1 = tOpt1.correct(Diff(ADD_d, cfenum2(n-1)), 20)
+      val opt1 = tOpt1.correct(Diff(ADD_d, Some(cfenum2(n-1)), None), 20)
 
       val tOpt2: EditRet = if (editDist(m-1)(n) == EditRet(List(), -1)) {
         editDist(m-1)(n) = editDistRecur(m-1, n)
@@ -162,7 +163,7 @@ object LeastEdit {
       } else {
         editDist(m-1)(n)
       }
-      val opt2 = tOpt2.correct(Diff(DEL_d, cfenum1(m-1)), 20)
+      val opt2 = tOpt2.correct(Diff(DEL_d, None, Some(cfenum1(m-1))), 20)
 
       val tOpt3: EditRet = if (editDist(m-1)(n-1) == EditRet(List(), -1)) {
         editDist(m-1)(n-1) = editDistRecur(m-1, n-1)
@@ -170,8 +171,7 @@ object LeastEdit {
       } else {
         editDist(m-1)(n-1)
       }
-      val opt3 = tOpt3.correct(Diff(ADD_d, cfenum2(n-1)), d/2)
-                      .correct(Diff(DEL_d, cfenum1(m-1)), d/2)
+      val opt3 = tOpt3.correct(Diff(REPLACE_d, Some(cfenum2(n-1)), Some(cfenum1(m-1))), d)
 
       val ret: EditRet = List(
         opt1, opt2, opt3
