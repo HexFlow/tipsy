@@ -8,7 +8,8 @@ resolvers ++= Seq(
   Resolver.bintrayRepo("stanch", "maven"),
   Resolver.bintrayRepo("drdozer", "maven"),
   Resolver.bintrayRepo("Typesafe Releases",
-    "http://repo.typesafe.com/typesafe/releases")
+    "http://repo.typesafe.com/typesafe/releases"),
+  Resolver.bintrayRepo("Sonatype Releases", "https://oss.sonatype.org/content/repositories/releases/")
 )
 
 libraryDependencies ++= Seq(
@@ -25,5 +26,6 @@ libraryDependencies ++= Seq(
   "org.scalaz"              %% "scalaz-core"              % "7.2.10",
   "com.github.tminglei"     %% "slick-pg"                 % "0.15.0-RC",
   "com.github.tminglei"     %% "slick-pg_spray-json"      % "0.15.0-RC",
-  "com.typesafe.akka"       %% "akka-actor"               % "2.4.17"
+  "com.typesafe.akka"       %% "akka-actor"               % "2.4.17",
+  "org.scalanlp"            %% "breeze"                   % "0.13.1"
 )

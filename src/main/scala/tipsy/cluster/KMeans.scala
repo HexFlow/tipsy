@@ -134,13 +134,12 @@ object KMeans {
       }
       sum *= randomGenerator.nextDouble()
       var ind = -1
-      while (sum > 0) {
+      while (sum > 0.0) {
         ind += 1
         sum -= d(ind)
       }
       centroids(i) = coordinates(ind).toArray
     }
-
     for (i <- List.range(0, length)) {
       cluster(i) = nearestCentroid(i, clusters)._2
       if (cluster(i) == -1) {

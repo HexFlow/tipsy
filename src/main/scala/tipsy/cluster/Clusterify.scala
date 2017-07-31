@@ -19,9 +19,37 @@ object Clusterify {
     println("** Free Memory:  " + runtime.freeMemory / mb)
     println("** Total Memory: " + runtime.totalMemory / mb)
     println("** Max Memory:   " + runtime.maxMemory / mb)*/
-    val fastmaped = fastmap(matrixNetwork, length, 100)
-    val kmeaned = kmeans(matrixNetwork, length, cluster, 100, equalSized)
+    //val fastmaped = fastmap(matrixNetwork, length, 100)
+    validateMatrixNetwork(matrixNetwork ,length)
+    val kmeaned = kmeans(matrixNetwork, length, cluster, length, equalSized)
 //    val dbscaned = dbscan(matrixNetwork, length, 0.299, 3)
+  }
+
+  def validateMatrixNetwork (matrixNetwork: List[List[Double]], length: Int): Unit = {
+    var cnt = 0
+    for (i <- 0 to length - 1) {
+      for (j <- i + 1 to length - 1) {
+        for (k <- j + 1 to length - 1) {
+          val (a, b, c) = (matrixNetwork(i)(j), matrixNetwork(i)(k), matrixNetwork(j)(k))
+          if (a + b < c) {
+            print(s"** [error] triangle inequality not satisfied amongst: ($a($i, $j), $b($i, $k)) and $c($j, $k) ")
+            println(a + b - c)
+            cnt += 1
+          }
+          if (a + c < b) {
+            print(s"** [error] triangle inequality not satisfied amongst: ($a($i, $j), $c($j, $k)) and $b($i, $k) ")
+            println(a + c - b)
+            cnt += 1
+          }
+          if (b + c < a) {
+            print(s"** [error] triangle inequality not satisfied amongst: ($b($i, $k), $c($j, $k)) and $a($i, $j) ")
+            println(b + c - a)
+            cnt += 1
+          }
+        }
+      }
+    }
+    println(cnt, length)
   }
 
   def fastmap(matrixNetwork: List[List[Double]], length: Int, dimOfVS: Int): (List[List[Double]], List[(Int, Int)]) = {
@@ -55,12 +83,17 @@ object Clusterify {
   }
 
   def kmeans(matrixNetwork: List[List[Double]], length: Int, clusters: Int, dimOfVS: Int, equalSized: Boolean): (List[List[Double]], List[Int]) = {
-    val fastmaped = fastmap(matrixNetwork, length, dimOfVS)
-    val kmeaned = KMeans(fastmaped._1, length, dimOfVS, clusters, equalSized)
-    println("--------------------")
-    println("Centroids In K-Means")
-    println("--------------------")
-    println(kmeaned._1)
+   // val fastmaped = fastmap(matrixNetwork, length, dimOfVS)
+    val coordinates: List[List[Double]] = DMtoCM(matrixNetwork, length)
+   // println("-----------------------")
+   // println("Coordinates For K-Means")
+   // println("-----------------------")
+   // println(coordinates)
+    val kmeaned = KMeans(coordinates, length, dimOfVS, clusters, equalSized)
+ //   println("--------------------")
+ //   println("Centroids In K-Means")
+ //   println("--------------------")
+ //   println(kmeaned._1)
     println("-----------------------------")
     println("Clusters generated in K-Means")
     println("-----------------------------")
