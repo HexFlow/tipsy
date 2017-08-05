@@ -48,7 +48,7 @@ object LeastEdit {
  */
         cluster match {
           case true => (t1._2, t2._2, k.dist)
-          case false => (t1._2, t2._2, 1/(k.dist+0.1))
+          case false => (t1._2, t2._2, 10/(k.dist+0.1))
         }
       }
       case _ => ???
@@ -247,7 +247,7 @@ object LeastEdit {
           } else if (ind == 2) {
             editDist(i)(j) = (a(2).correct(Diff(ADD_d, Some(cfenum2(j - 1)), None), penalty(2)), (b(2) + 1, c(2)))
           } else {
-            editDist(i)(j) = (a(3).correct(Diff(REPLACE_d, Some(cfenum2(j - 1)), Some(cfenum1(i - 1))), penalty(3)), (b(3) + 1, c(3)))
+            editDist(i)(j) = (a(3).correct(Diff(REPLACE_d, Some(cfenum2(j - 1)), Some(cfenum1(i - 1))), penalty(3)), (b(3) + 1, c(3) + 1))
           }
 
         }

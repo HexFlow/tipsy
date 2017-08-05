@@ -4,7 +4,7 @@ import scala.collection.mutable.{Map => mMap}
 
 object Clusterify {
 
-  def apply(matrixNetwork: List[List[Double]], length: Int, names: List[String], cluster: Int, equalSized: Boolean): Unit = {
+  def apply(matrixNetwork: List[List[Double]],forceNetwork: List[(Int, Int, Double)], length: Int, names: List[String], cluster: Int, equalSized: Boolean): Unit = {
     println("--------------")
     println("Matrix Network")
     println("--------------")
@@ -21,7 +21,7 @@ object Clusterify {
     println("** Max Memory:   " + runtime.maxMemory / mb)*/
     //val fastmaped = fastmap(matrixNetwork, length, 100)
     validateMatrixNetwork(matrixNetwork ,length)
-    val kmeaned = kmeans(matrixNetwork, length, cluster, length, equalSized)
+    val kmeaned = kmeans(forceNetwork, length, names, cluster, 2, equalSized)
 //    val dbscaned = dbscan(matrixNetwork, length, 0.299, 3)
   }
 
@@ -82,9 +82,9 @@ object Clusterify {
     dbscaned
   }
 
-  def kmeans(matrixNetwork: List[List[Double]], length: Int, clusters: Int, dimOfVS: Int, equalSized: Boolean): (List[List[Double]], List[Int]) = {
+  def kmeans(forceNetwork: List[(Int, Int, Double)], length: Int, names: List[String], clusters: Int, dimOfVS: Int, equalSized: Boolean): (List[List[Double]], List[Int]) = {
    // val fastmaped = fastmap(matrixNetwork, length, dimOfVS)
-    val coordinates: List[List[Double]] = DMtoCM(matrixNetwork, length)
+    val coordinates: List[List[Double]] = DMtoCM(forceNetwork, length, names)
    // println("-----------------------")
    // println("Coordinates For K-Means")
    // println("-----------------------")
