@@ -23,7 +23,7 @@ c[0] = c[0][1:]
 c[len(c) - 1] = c[len(c) - 1][:-1]
 
 for i in range(len(c)):
-    c[i] = int(c[i].split(',')[1])
+   c[i] = int(c[i].split(',')[1])
 
 cluster = []
 for i in range(total):
@@ -37,21 +37,21 @@ for i in range(total):
     scores.append([])
 def getScore(ind):
     code = n[ind].split('/')[2][4:-2]
-    sf = '../scripts/{0}/score'.format(DIR.split('/')[0]) + code
+    sf = '../../scripts/{0}/score'.format(DIR.split('/')[0]) + code
     with open(sf) as f:
         s = int(f.readlines()[0])
-    return s 
+    return s
 
-for i in range(1, total):
-    for j in range(len(cluster[i])):
-        s = getScore(cluster[i][j])
-        scores[i].append(s)
+for i in range(1, total+1):
+    for j in range(len(cluster[i-1])):
+        s = getScore(cluster[i-1][j])
+        scores[i-1].append(s)
 
 names = [[]]
-for i in range(1,total):
+for i in range(1,total+1):
     names.append([])
-    for j in range(len(cluster[i])):
-        names[i].append(n[cluster[i][j]])
+    for j in range(len(cluster[i-1])):
+        names[i].append(n[cluster[i-1][j]])
 
 def mean(a):
     return sum(a)/float(len(a))
@@ -66,8 +66,8 @@ def stdDev(a):
     return mth.sqrt(var)
 
 analysis = [()]
-for i in range(1, total):
-    analysis.append((min(scores[i]), max(scores[i]), stdDev(scores[i])))
+for i in range(1, total+1):
+    analysis.append((min(scores[i - 1]), max(scores[i - 1]), stdDev(scores[i - 1])))
 
 def indexOf(a, b):
     for i in range(len(a)):
@@ -78,12 +78,13 @@ def indexOf(a, b):
 def wrap(s):
     return ("""<a href="{0}&preview={1}">{1}</a>""".format(LINK,s))
 
-for i in range(1, total):
+
+for i in range(1, total+1):
         print "-----------<br>"
         print "Cluster {0}<br>".format(i)
         print "-----------<br>"
-        for j in range(len(cluster[i])):
-            print str(indexOf(n, names[i][j])) + '-' + wrap(names[i][j].split('/')[2]) + '&nbsp;'*5 + str(scores[i][j]) + '<br>'
+        for j in range(len(cluster[i-1])):
+            print str(indexOf(n, names[i][j])) + '-' + wrap(names[i][j].split('/')[2]) + '&nbsp;'*5 + str(scores[i-1][j]) + '<br>'
         print str(analysis[i]) + '<br>'
         print "------------------<br>"
         print "PairWise Distance:<br>"
@@ -91,12 +92,13 @@ for i in range(1, total):
         print "-----------<br>"
         print "Cluster {0}<br>".format(i)
         print "-----------<br>"
-        for j in range(len(cluster[i])):
-            for k in range(len(cluster[i])):
+        for j in range(len(cluster[i-1])):
+            for k in range(len(cluster[i-1])):
                 if k <= j:
                     continue
-                print wrap(names[i][j].split('/')[2]) + '&nbsp;'*5 + wrap(names[i][k].split('/')[2]) + '&nbsp;'*5 + str(mat[cluster[i][j]][cluster[i][k]]) + '<br>'
+                print wrap(names[i][j].split('/')[2]) + '&nbsp;'*5 + wrap(names[i][k].split('/')[2]) + '&nbsp;'*5 + str(mat[cluster[i-1][j]][cluster[i-1][k]]) + '<br>'
         print "<br><br><br><br>"
+
 #import matplotlib.pyplot as plt
 #
 #for i in scores[1:]:
