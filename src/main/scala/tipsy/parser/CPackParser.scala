@@ -298,7 +298,7 @@ object CPackParser extends PackratParsers with Parsers
           ReturnStatement(e.getOrElse(LiterExpr(IntLiteral(0))))
       }
     }
- 
+
     returnstatement | ifstmt | switchStatement | forstmt | whilestatement | dowhilestatement
   }
 

@@ -38,6 +38,9 @@ object DistanceDraw {
     graph.doLayout(
       onComplete = (it => {
         println("Completed in " + it + " iterations")
+        for (nodes <- graph.nodes) {
+          println(nodes.id, nodes.state)
+        }
         // Renders a 500x500 pixel image of the final graph layout
         //val image = ImageRenderer.drawGraph(graph, 500, 500)
 

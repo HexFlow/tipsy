@@ -89,6 +89,7 @@ object CLI extends TreeDraw with FlowDraw {
         }
       }
     }.toList
+    println(trees.collect{case (Some(x), y) => (x,y)}.length)
     if (modes contains LEASTEDIT) {
       val validTrees = trees.collect { case (Some(x), y) => (x, y) }
       if (modes contains CLUSTER) {

@@ -15,6 +15,8 @@ trait OperatorParsers extends Parsers {
       case OPERATOR(pop @ UnaryOp(_)) => pop
       case OPERATOR(ParseBinaryOp(x, _)) if x == "*" || x == "&" =>
         UnaryOp(x)
+      case OPERATOR(ParseBinaryOp(x, _)) if x == "-" =>
+        UnaryOp(x)
     })
   }
 

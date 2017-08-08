@@ -161,7 +161,7 @@ sealed trait Expression extends ParseTree {
   val getFxns: List[String] = {
     this match {
       case ArrayExpr(_, indices) => indices.flatMap(_.getFxns)
-      case FxnExpr(name, _) => List(name.str)
+      case FxnExpr(name, e) => name.str :: e.flatMap(_.getFxns)
       case PreUnaryExpr(_, e) => e.getFxns
       case PostUnaryExpr(e, _) => e.getFxns
       case BinaryExpr(e1, _, e2) => e1.getFxns ++ e2.getFxns
