@@ -27,6 +27,7 @@ Where arg can be as follows:
 | dp        | DRAWPARSE        |
 | df        | DRAWFLOW         |
 | le        | LEASTEDIT        |
+| cr        | CORRECTION       |
 | len=int   | LEASTEDITLIMIT   |
 | web       | CLI(default)/WEB |
 

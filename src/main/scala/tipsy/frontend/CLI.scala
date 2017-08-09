@@ -26,6 +26,7 @@ case object DRAWFLOW extends CLIMode
 case object PRINTFLOW extends CLIMode
 case object CLUSTER extends CLIMode
 case object EQUALCLUSTER extends CLIMode
+case object CORRECTION extends CLIMode
 
 trait FlowDraw {
   implicit def cfListDrawer: ToRefTree[List[CFEnum]] = ToRefTree[List[CFEnum]] {
@@ -89,9 +90,9 @@ object CLI extends TreeDraw with FlowDraw {
         }
       }
     }.toList
-    println(trees.collect{case (Some(x), y) => (x,y)}.length)
+
+    lazy val validTrees = trees.collect { case (Some(x), y) => (x, y) }
     if (modes contains LEASTEDIT) {
-      val validTrees = trees.collect { case (Some(x), y) => (x, y) }
       if (modes contains CLUSTER) {
         lazy val leastEdited = LeastEdit(validTrees.map(_._1), true)
         val len = validTrees.length
@@ -106,6 +107,11 @@ object CLI extends TreeDraw with FlowDraw {
       }
       else {
         DistanceDraw(LeastEdit(validTrees.map(_._1), false), validTrees.length, validTrees.map(_._2))
+      }
+    } else if (modes contains CORRECTION) {
+      if (validTrees.length == 2) {
+        val corrections = Correct(validTrees(0)._1, validTrees(1)._1)
+        println(corrections)
       }
     }
   }
