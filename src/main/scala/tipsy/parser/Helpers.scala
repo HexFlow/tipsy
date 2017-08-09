@@ -8,15 +8,11 @@ import scala.collection.mutable.{ Set => mSet }
 
 trait Helpers extends PackratParsers with Parsers {
 
+  override type Elem = CToken
+
   def typeparse: Parser[QualifiedType] = positioned {
     rep(typequalifiers) ~ (typename | typenameFromIdent) ^^ {
       case tql ~ ct => QualifiedType(tql.map(_.qualifier), ct)
-    }
-  }
-
-  def typedvariable: Parser[TypedIdent] = positioned {
-    typeparse ~ identifier.? ^^ {
-      case tql ~ id => TypedIdent(tql, id)
     }
   }
 
@@ -68,8 +64,9 @@ trait Helpers extends PackratParsers with Parsers {
     */
   def sortFunctionsInUseOrder(lis: List[ParseTree]): List[ParseTree] = {
     val defs = lis.collect { case x @ Definition(_, _, _) => x }
+    println(defs)
     val fdefs = lis
-      .collect { case x @ FxnDefinition(ti, _, Some(_)) => ti.name.get.str -> x }
+      .collect { case x @ FxnDefinition(ti, _, Some(_)) => ti.name.str -> x }
       .toMap
 
     val usedFxns: mSet[String] = mSet()

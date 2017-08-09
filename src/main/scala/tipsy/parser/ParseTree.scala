@@ -53,7 +53,7 @@ case object BRK extends FLOWMANIPULATION {
 case class QualifiedType(qualifiers: List[String], name: CType) extends ParseTree {
   override def toString(): String = (qualifiers :+ name.toString).mkString(" ")
 }
-case class TypedIdent(qt: QualifiedType, name: Option[IDENT]) extends ParseTree
+case class TypedIdent(qt: QualifiedType, name: IDENT) extends ParseTree
 
 // All other ParseTree constructs derive from this
 sealed trait ParseTree extends Positional {

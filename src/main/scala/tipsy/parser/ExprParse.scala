@@ -17,6 +17,21 @@ trait ExprParse extends PackratParsers with Parsers
   lazy val identExpr: PackratParser[Expression] =
     identifier ^^ { case a => IdentExpr(a) }
 
+  lazy val typedvariable: Parser[TypedIdent] = positioned {
+    val noarray = typeparse ~ identifier ^^ {
+      case tql ~ id => TypedIdent(tql, id)
+    }
+    val array = typeparse ~ identifier ~
+      rep1(BRACKET(SQUARE(true)) ~ expression.? ~ BRACKET(SQUARE(false))) ^^ {
+        case tql ~ id ~ arrayDim => {
+          TypedIdent(QualifiedType(tql.qualifiers, (1 to arrayDim.length).foldRight(tql.name) {
+            (_, acc) => TYPEPOINTER(acc)
+          }), id)
+        }
+    }
+    array | noarray
+  }
+
   lazy val literExpr: PackratParser[Expression] =
     literal ^^ { case LITER(a) => LiterExpr(a) }
 

@@ -157,10 +157,18 @@ object CPackParser extends PackratParsers with Parsers
       }
     }
 
+    val voidSignature = {
+      BRACKET(ROUND(true)) ~
+      TYPE(CUSTOMTYPE("void")) ~
+      BRACKET(ROUND(false)) ^^ {
+        case _ ~ _ ~ _ => (List(): List[TypedIdent])
+      }
+    }
+
     // Similarly, a function may be defined at the same place
     val initialized = {
       typedvariable ~
-      signature ~
+      (signature | voidSignature) ~
       BRACKET(CURLY(true)) ~
       blockparser ~
       BRACKET(CURLY(false)) ^^ {
@@ -173,20 +181,22 @@ object CPackParser extends PackratParsers with Parsers
 
     val main = {
       IDENT("main") ~
-      signature ~
+      (signature | voidSignature) ~
       BRACKET(CURLY(true)) ~
       blockparser ~
       BRACKET(CURLY(false)) ^^ {
         case _ ~ args ~ _ ~ block ~ _ => {
           FxnDefinition(TypedIdent(QualifiedType(List(), INT()),
-            Some(IDENT("main"))), args, Some(block))
+            IDENT("main")), args, Some(block))
         }
       }
     }
 
     // Or just declared here
     val uninitialized = {
-      typedvariable ~ signature ~ SEMI() ^^ {
+      typedvariable ~
+      (signature | voidSignature) ~
+      SEMI() ^^ {
         case tid ~ args ~ _ => {
           FxnDefinition(tid, args, None)
         }
