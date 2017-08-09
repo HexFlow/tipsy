@@ -17,7 +17,7 @@ trait ExprParse extends PackratParsers with Parsers
   lazy val identExpr: PackratParser[Expression] =
     identifier ^^ { case a => IdentExpr(a) }
 
-  lazy val literExpr: PackratParser[LiterExpr] =
+  lazy val literExpr: PackratParser[Expression] =
     literal ^^ { case LITER(a) => LiterExpr(a) }
 
   lazy val preUnaryExpr: PackratParser[Expression] = preUnaryOp ~ (fxnExpr | arrayExpr | identExpr | literExpr | bracketExpr) ^^ {
@@ -63,13 +63,19 @@ trait ExprParse extends PackratParsers with Parsers
     }
   }
 
+  lazy val arrayAssignExpr: PackratParser[Expression] = {
+    BRACKET(CURLY(true)) ~ repsep(expression, comma) ~ BRACKET(CURLY(false)) ^^ {
+      case _ ~ exps ~ _ => CompoundExpr(exps)
+    }
+  }
+
   def prioExprGenerator(prio: Int): ExprParse = positioned {
     lazy val item = {
       if (prio == CLexer.maxLevel) {
         castExpr |
         fxnExpr | bracketExpr | arrayExpr |
         preUnaryExpr | postUnaryExpr |
-        identExpr | literExpr
+        identExpr | literExpr | arrayAssignExpr
       } else {
         chainl1(
           prioExprGenerator(prio+1),
