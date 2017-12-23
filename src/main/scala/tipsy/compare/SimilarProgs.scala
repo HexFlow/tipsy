@@ -1,7 +1,4 @@
-package tipsy.actors
-
-import akka.actor.Actor
-import akka.event.Logging
+package tipsy.compare
 
 import tipsy.db._
 import tipsy.db.schema._
@@ -12,14 +9,9 @@ import tipsy.compare._
 
 import spray.json._
 
-class SimilarActor extends Actor with Ops with JsonSupport with TipsyDriver {
-  import Messages._
+object SimilarProgs extends Ops with JsonSupport with TipsyDriver {
 
-  val log = Logging(context.system, this)
-
-  def receive = {
-    case SimilarCheck(p: Program) =>
-
+  def apply(p: Program) = {
       val props = p.props.convertTo[Stats]
 
       val similarProgs: List[Program] = driver.runDB {
@@ -61,6 +53,6 @@ class SimilarActor extends Actor with Ops with JsonSupport with TipsyDriver {
         }
       }
 
-      sender ! SimilarCheckResp(similar)
+      similar
   }
 }

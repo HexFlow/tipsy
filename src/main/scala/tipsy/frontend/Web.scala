@@ -5,6 +5,7 @@ import tipsy.compare._
 import tipsy.parser._
 import tipsy.db._
 import tipsy.db.schema._
+import tipsy.db.TipsyPostgresProfile.api._
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
@@ -15,22 +16,9 @@ import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.server.directives.FileAndResourceDirectives
 
 import spray.json._
-
-import scala.io.StdIn
-import scala.concurrent.{Future, Await, ExecutionContext}
-import scala.concurrent.duration.Duration
-import scala.util.{Success, Failure}
-
-import tipsy.db.TipsyPostgresProfile.api._
 import slick.backend.DatabasePublisher
 
-import tipsy.actors._
-import tipsy.actors.Messages._
-
-import akka.actor.Props
-import akka.pattern.ask
-import akka.util.Timeout
-import scala.concurrent.duration._
+import scala.util.{Success, Failure}
 
 trait TipsyDriver {
   implicit val system = ActorSystem("web-tipsy")
@@ -38,8 +26,6 @@ trait TipsyDriver {
   implicit val executionContext = system.dispatcher
 
   implicit val driver: Driver = TipsySlick()
-
-  implicit val timeout = Timeout(3.second)
 
   val progTable: TableQuery[Programs] = TableQuery[Programs]
 }
@@ -51,9 +37,6 @@ trait TipsyDriver {
   */
 object Web extends JsonSupport with Ops
     with FileAndResourceDirectives with TipsyDriver {
-
-  val insertActor = system.actorOf(Props[InsertActor], "insert")
-  val similarActor = system.actorOf(Props[SimilarActor], "similar")
 
   // modes is currently not used
   def apply(modes: Set[CLIMode]): Unit = {
@@ -70,9 +53,8 @@ object Web extends JsonSupport with Ops
                 Compiler.compileWithStats(prog) match {
                   case Right(compiledProg) =>
                     // Compiled fine, index it
-                    for {
-                      InsertResp(id) <- (insertActor ? InsertReq(compiledProg))
-                    } yield Map("success" -> true.toJson, "id" -> id.toJson)
+                    val id = insertProg(compiledProg)
+                    Map("success" -> true.toJson, "id" -> id.toJson)
                   case Left(err) =>
                     // Didn't compile
                     Map("success" -> false.toJson, "error" -> err.toString.toJson)
@@ -92,36 +74,34 @@ object Web extends JsonSupport with Ops
                 case Right(prog) =>
                   Compiler(prog.code) match {
                     case Right(mainTree: ParseTree) =>
-                      val res = for {
-                        SimilarCheckResp(prgs) <- (similarActor ? SimilarCheck(prog))
-                      } yield {
+                      val prgs = SimilarProgs(prog)
 
-                        val trees = prgs.map { x => Compiler(x.code) }.collect {
-                          case Right(tree) => tree
-                        }
+                      val trees = prgs.map { x => Compiler(x.code) }.collect {
+                        case Right(tree) => tree
+                      }
 
-                        val distances =
-                          LeastEdit.compareWithTrees(mainTree, trees)
-                            .sortWith(_._2 > _._2)
+                      val distances =
+                        LeastEdit.compareWithTrees(mainTree, trees)
+                          .sortWith(_._2 > _._2)
 
-                        val corrections = distances collect {
-                          case (correctorTree, dist) =>
-                            Correct(mainTree, correctorTree)
-                        }
+                      val corrections = distances collect {
+                        case (correctorTree, dist) =>
+                          Correct(mainTree, correctorTree)
+                      }
 
-                        corrections.map {
-                          case Left(err) =>
-                            Map("success" -> false.toJson, "error" -> err.toJson)
-                          case Right(corrs) =>
-                            Map("success" -> true.toJson,
-                              "corrections" -> corrs.map { x =>
-                                Map("name" -> x._1.toJson,
-                                  "change" -> x._2.toJson)
-                              }.toJson,
-                              "count" -> corrections.length.toJson)
-                        }
+                      val res = corrections.map {
+                        case Left(err) =>
+                          Map("success" -> false.toJson, "error" -> err.toJson)
+                        case Right(corrs) =>
+                          Map("success" -> true.toJson,
+                            "corrections" -> corrs.map { x =>
+                              Map("name" -> x._1.toJson,
+                                "change" -> x._2.toJson)
+                            }.toJson,
+                            "count" -> corrections.length.toJson)
                       }
                       complete(res)
+
                     case Left(_) => ???
                   }
               }
@@ -220,9 +200,8 @@ object Web extends JsonSupport with Ops
               case None => complete((NotFound, "Program not found"))
               case Some(prog) =>
                 complete {
-                  for {
-                    SimilarCheckResp(progs) <-(similarActor ? SimilarCheck(prog))
-                  } yield Map("success" -> true.toJson,
+                  val progs = SimilarProgs(prog)
+                  Map("success" -> true.toJson,
                     "similar" -> progs.toString.toJson,
                     "count" -> progs.length.toJson)
                 }
@@ -240,35 +219,32 @@ object Web extends JsonSupport with Ops
               case Some(prog) =>
                 val res = Compiler(prog.code) match {
                   case Right(mainTree: ParseTree) =>
-                    for {
-                      SimilarCheckResp(prgs) <- (similarActor ? SimilarCheck(prog))
-                    } yield {
+                    val prgs = SimilarProgs(prog)
 
-                      val trees = prgs.map { x => Compiler(x.code) }.collect {
-                        case Right(tree) => tree
-                      }
-
-                      val corrections = LeastEdit.compareWithTrees(mainTree, trees).map {
-                        case (correctorTree, dist) =>
-                          (Correct(mainTree, correctorTree), dist)
-                      }.reduce { (x, y) =>
-                        if (x._2 > y._2) x
-                        else y
-                      }
-
-                      corrections._1 match {
-                        case Left(err) =>
-                          Map("success" -> false.toJson, "error" -> err.toJson)
-                        case Right(corrs) =>
-                          Map("success" -> true.toJson,
-                            "corrections" -> corrs.map { x =>
-                              Map("name" -> x._1.toJson,
-                                "change" -> x._2.toJson)
-                            }.toJson,
-                            "dist" -> corrections._2.toJson)
-                      }
-
+                    val trees = prgs.map { x => Compiler(x.code) }.collect {
+                      case Right(tree) => tree
                     }
+
+                    val corrections = LeastEdit.compareWithTrees(mainTree, trees).map {
+                      case (correctorTree, dist) =>
+                        (Correct(mainTree, correctorTree), dist)
+                    }.reduce { (x, y) =>
+                      if (x._2 > y._2) x
+                      else y
+                    }
+
+                    corrections._1 match {
+                      case Left(err) =>
+                        Map("success" -> false.toJson, "error" -> err.toJson)
+                      case Right(corrs) =>
+                        Map("success" -> true.toJson,
+                          "corrections" -> corrs.map { x =>
+                            Map("name" -> x._1.toJson,
+                              "change" -> x._2.toJson)
+                          }.toJson,
+                          "dist" -> corrections._2.toJson)
+                    }
+
                   case Left(_) => ???
                 }
 
@@ -298,5 +274,24 @@ object Web extends JsonSupport with Ops
       system.terminate()
       ()
     }
+  }
+
+  // Inserts provided program into database, or updates existing program.
+  def insertProg(prog: Program) = {
+    // Operation depends on whether an ID was provided
+    val id: Int = prog.id match {
+      case 0 => {
+        println("Inserting into a new row")
+        insert(prog, progTable)
+      }
+      case idReq => {
+        println("Updating id: " + idReq)
+        driver.runDB { progTable.insertOrUpdate(prog) }
+        idReq
+      }
+    }
+
+    // Return the ID to sender parent
+    id
   }
 }
