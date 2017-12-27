@@ -270,6 +270,7 @@ object Web extends JsonSupport with Ops
     println(s"Server online at http://localhost:8070/")
 
     sys.addShutdownHook {
+      Http().shutdownAllConnectionPools()
       driver.close()
       system.terminate()
       ()

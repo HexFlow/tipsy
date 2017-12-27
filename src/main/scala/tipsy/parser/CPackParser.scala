@@ -53,7 +53,7 @@ object CPackParser extends PackratParsers with Parsers
     }
   }
 
-  lazy val flowifstmt: PackratParser[IfStatement] = {
+  lazy val flowifstmt: PackratParser[IfStatement] = positioned {
     IF() ~
     BRACKET(ROUND(true)) ~
     expression ~
@@ -92,7 +92,7 @@ object CPackParser extends PackratParsers with Parsers
       }
     }
 
-    lazy val con: PackratParser[Continue] = {
+    lazy val con: PackratParser[Continue] = positioned {
       KEYWORD("continue") ~ SEMI() ^^ {
         case c ~ _ => Continue()
       }
@@ -166,7 +166,7 @@ object CPackParser extends PackratParsers with Parsers
     }
 
     // Similarly, a function may be defined at the same place
-    val initialized = {
+    val initialized = positioned {
       typedvariable ~
       (signature | voidSignature) ~
       BRACKET(CURLY(true)) ~
@@ -179,7 +179,7 @@ object CPackParser extends PackratParsers with Parsers
       }
     }
 
-    val main = {
+    val main = positioned {
       IDENT("main") ~
       (signature | voidSignature) ~
       BRACKET(CURLY(true)) ~
@@ -193,7 +193,7 @@ object CPackParser extends PackratParsers with Parsers
     }
 
     // Or just declared here
-    val uninitialized = {
+    val uninitialized = positioned {
       typedvariable ~
       (signature | voidSignature) ~
       SEMI() ^^ {

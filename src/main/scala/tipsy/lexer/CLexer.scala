@@ -3,6 +3,7 @@ package tipsy.lexer
 import tipsy.compiler.{Location, CLexerError}
 
 import scala.util.parsing.combinator.RegexParsers
+import scala.util.parsing.input.Positional
 
 object CLexer extends RegexParsers {
   override def skipWhitespace = true
@@ -62,24 +63,24 @@ object CLexer extends RegexParsers {
   def ctypeHelper(mainType: CType, ps: List[String]): CType = {
     ps match {
       case Nil => mainType
-      case x:: xs => ctypeHelper(TYPEPOINTER(mainType), xs)
+      case x :: xs => ctypeHelper(TYPEPOINTER(mainType), xs)
     }
   }
 
   def ctype: Parser[TYPE] = positioned {
     ("(int|char|byte|short|long long int|long long|long int|long|float|double|void)\\b".r) ~ rep("\\*".r) ^^ {
         _ match {
-          case "int" ~ ps => TYPE(ctypeHelper(INT(), ps))
-          case "byte" ~ ps => TYPE(ctypeHelper(BYTE(), ps))
-          case "char" ~ ps => TYPE(ctypeHelper(CHAR(), ps))
-          case "short" ~ ps => TYPE(ctypeHelper(SHORT(), ps))
+          case "int"           ~ ps => TYPE(ctypeHelper(INT(), ps))
+          case "byte"          ~ ps => TYPE(ctypeHelper(BYTE(), ps))
+          case "char"          ~ ps => TYPE(ctypeHelper(CHAR(), ps))
+          case "short"         ~ ps => TYPE(ctypeHelper(SHORT(), ps))
           case "long long int" ~ ps => TYPE(ctypeHelper(LONGLONG(), ps))
-          case "long long" ~ ps => TYPE(ctypeHelper(LONGLONG(), ps))
-          case "long int" ~ ps => TYPE(ctypeHelper(LONG(), ps))
-          case "long" ~ ps => TYPE(ctypeHelper(LONG(), ps))
-          case "float" ~ ps => TYPE(ctypeHelper(FLOAT(), ps))
-          case "double" ~ ps => TYPE(ctypeHelper(DOUBLE(), ps))
-          case x ~ ps => TYPE(ctypeHelper(CUSTOMTYPE(x), ps))
+          case "long long"     ~ ps => TYPE(ctypeHelper(LONGLONG(), ps))
+          case "long int"      ~ ps => TYPE(ctypeHelper(LONG(), ps))
+          case "long"          ~ ps => TYPE(ctypeHelper(LONG(), ps))
+          case "float"         ~ ps => TYPE(ctypeHelper(FLOAT(), ps))
+          case "double"        ~ ps => TYPE(ctypeHelper(DOUBLE(), ps))
+          case x               ~ ps => TYPE(ctypeHelper(CUSTOMTYPE(x), ps))
         }
     }
   }
@@ -203,7 +204,7 @@ object CLexer extends RegexParsers {
     }
   }
 
-  def obracket: Parser[CBracket] = {
+  def obracket: Parser[CBracket] = positioned {
     """\[|\(|\{""".r ^^ {
       case "{" => CURLY(true)
       case "(" => ROUND(true)
@@ -211,7 +212,7 @@ object CLexer extends RegexParsers {
     }
   }
 
-  def cbracket: Parser[CBracket] = {
+  def cbracket: Parser[CBracket] = positioned {
     """\]|\)|\}""".r ^^ {
       case "}" => CURLY(false)
       case ")" => ROUND(false)
