@@ -19,6 +19,7 @@ import spray.json._
 import slick.backend.DatabasePublisher
 
 import scala.util.{Success, Failure}
+import scala.io.StdIn
 
 trait TipsyDriver {
   implicit val system = ActorSystem("web-tipsy")
@@ -269,12 +270,19 @@ object Web extends JsonSupport with Ops
     val bindingFuture = Http().bindAndHandle(route, "0.0.0.0", 8070)
     println(s"Server online at http://localhost:8070/")
 
-    sys.addShutdownHook {
-      Http().shutdownAllConnectionPools()
-      driver.close()
-      system.terminate()
-      ()
-    }
+    StdIn.readLine()
+
+    // TODO: This still does not shutdown the cluster, and keeps resources stuck.
+    bindingFuture
+      .flatMap(_.unbind())
+      .onComplete(_ => {
+        println("Shutting down HTTP")
+        Http().shutdownAllConnectionPools()
+        driver.close()
+        println("Shutting down actor system")
+        system.terminate()
+        println("Cleanup successful")
+      })
   }
 
   // Inserts provided program into database, or updates existing program.
