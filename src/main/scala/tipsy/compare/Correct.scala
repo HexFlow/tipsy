@@ -6,6 +6,19 @@ import tipsy.frontend._
 
 case class Corrections(line: Int)
 
+/**
+  * Takes functions of 2 programs, and pairs them up based on similarity.
+  * Returns an error, or a list of (Function name, EditRet value for that function).
+  * The EditRet component contains the diff lines required to transform the first
+  * function into the second.
+  *
+  * Criteria used:
+  * 1. Similarity of name.
+  * 2. Order of use in program.
+  *
+  * It is possible for some functions to not have any similar function,
+  * or two functions to have the same similar function
+  */
 object Correct {
   type CorrError = String
 
@@ -14,13 +27,6 @@ object Correct {
 
   def apply(t1: ParseTree, t2: ParseTree)
       : Either[CorrError, List[(String, EditRet)]] = {
-
-    def getNamesHelper(k: List[(FxnDefinition, FxnDefinition)]) = {
-      k.map {
-        case (f1 @ FxnDefinition(TypedIdent(_, IDENT(name)), _, _), f2) =>
-          (name, f1, f2)
-      }
-    }
 
     for {
       tli <- getTopListItems(t1, t2).right
@@ -34,6 +40,14 @@ object Correct {
 
     } yield similarFxnsWithNames.map(x =>
       (x._1, LeastEdit.compareTwoTrees(x._2, x._3)))
+  }
+
+  // Helper to fetch the shared name of two functions from their definition.
+  private def getNamesHelper(k: List[(FxnDefinition, FxnDefinition)]) = {
+    k.map {
+      case (f1 @ FxnDefinition(TypedIdent(_, IDENT(name)), _, _), f2) =>
+        (name, f1, f2)
+    }
   }
 
   // Helper to extract the TopList element from a program's parsetree
@@ -61,15 +75,8 @@ object Correct {
     }
   }
 
-  /**
-    * Takes functions of 2 programs, and pairs them up.
-    * Criteria used:
-    * 1. Similarity of name.
-    * 2. Order of use in program.
-    *
-    * It is possible for some functions to not have any similar function,
-    * or two functions to have the same similar function
-    */
+  // Takes functions of 2 programs, and pairs them up based on similarity.
+  // See docstring of this package for more details.
   private def getMatchingFxns(f1: List[FxnDefinition], f2: List[FxnDefinition])
       : List[(FxnDefinition, FxnDefinition)] = {
 
@@ -108,6 +115,10 @@ object Correct {
       // This will remove those of type (f, None)
       // Converts List[(FxnDefinition, Option[FxnDefinition])] to
       // List[(FxnDefinition, FxnDefinition)] with None elements dropped
+      //
+      // Reason: list.collect takes as argument a partial function.
+      // Such functions are only defined on certain inputs.
+      // All other functions are dropped.
       case x @ (f, Some(g)) => (f, g)
     }
   }

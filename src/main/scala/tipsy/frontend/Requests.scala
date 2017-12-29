@@ -30,16 +30,19 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
     def write(a: Diff) = a match {
       case Diff(ADD_d, Some(x), None) => JsObject (
         "change" -> "Add+".toJson,
-        "addEntry" -> x.toJson
+        "addEntry" -> x.toJson,
+        "position" -> a.position.toString.toJson
         )
       case Diff(DEL_d, None, Some(x)) => JsObject (
         "change" -> "Remove-".toJson,
-        "removeEntry" -> x.toJson
+        "removeEntry" -> x.toJson,
+        "position" -> a.position.toString.toJson
         )
       case Diff(REPLACE_d, Some(x), Some(y)) => JsObject (
         "change" -> "Replace+-".toJson,
         "addEntry" -> x.toJson,
-        "removeEntry" -> y.toJson
+        "removeEntry" -> y.toJson,
+        "position" -> a.position.toString.toJson
         )
     }
     def read(va: JsValue) = ???

@@ -23,21 +23,27 @@ object Preprocessor {
       println(err)
       Left(CPreError(err))
     } else {
-      var flag = false
-      // Contains the part of user code from GCC output
-      val tresult = out.split("\n").collect {
-        case line if flag && !line.startsWith("#") => Some(line)
-        case line if line.startsWith("#") => {
-          if (line.contains(filename)) flag = true
-          else flag = false
-          None
+      // Extract the part of user code from GCC output.
+      // Folding accumulator: (Lines collected till now, in reverse for efficient appends to list).
+      // The List.Fill part is to ensure that the line numbers in this new program output (after preprocessing)
+      // are the same as in the original program. This allows us to display tips on the correct line at
+      // later stages.
+      val tresult = out.split("\n").foldLeft { List("") } { (collected, curline) =>
+        if (curline.startsWith("#") && curline.contains(filename)) {
+          // Parse the line number from the pattern, and add as many empty strings.
+          val pattern = "# ([0-9]+).*".r
+          val pattern(prevLineCount) = curline
+          List.fill(prevLineCount.toInt-1)("")
+        } else {
+          curline :: collected
         }
-      }.collect{ case Some(x) => x }
-      var result: String = "";
+      }.reverse
+
       if (tresult.length != 0) {
-        result = tresult.reduceLeft(_ + "\n" + _)
+        Right(tresult.reduceLeft(_ + "\n" + _))
+      } else {
+        Right("")
       }
-      Right(result)
     }
   }
 }

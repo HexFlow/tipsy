@@ -12,8 +12,9 @@ case object REPLACE_d extends DiffChange
 case class Diff (
   change: DiffChange,
   addEntry: Option[CFEnum],
-  delEntry: Option[CFEnum]
-  )
+  delEntry: Option[CFEnum]) {
+  lazy val position = (delEntry orElse addEntry).map(_.pos)
+}
 
 case class EditRet (diffs: List[Diff], dist: Double) {
   def correct(d: Diff, dis: Double): EditRet = {

@@ -30,6 +30,7 @@ trait TreeDraw {
     case LONGLONG() => IDENT("long long").refTree
     case FLOAT() => IDENT("float").refTree
     case DOUBLE() => IDENT("double").refTree
+    case TYPEPOINTER(t) => IDENT("*" + t.toString).refTree
     case CUSTOMTYPE(n) => IDENT(n).refTree
   }
 
@@ -64,6 +65,9 @@ trait TreeDraw {
   implicit def treeDrawer: ToRefTree[ParseTree] = ToRefTree[ParseTree] {
     case x: QualifiedType =>
       RefTree.Ref(x, x.qualifiers.map(_.refTree) :+ x.name.refTree).rename("Type")
+
+    case x: TypedIdent =>
+      RefTree.Ref(x, Seq(x.qt.refTree, x.name.refTree)).rename("TypedIdent")
 
     case x @ TopList(items) =>
       RefTree.Ref(x, items.map(_.refTree)).rename("Global")
@@ -120,5 +124,9 @@ trait TreeDraw {
       RefTree.Ref(x, Seq(x.code.refTree)).rename("Return")
 
     case x: Expression => x.refTree
+
+    case x @ SwitchStatement(value, cases, default) =>
+      RefTree.Ref(x, Seq(value.refTree) ++ cases.map(_._1.refTree) ++ Seq(default.refTree))
+        .rename("SwitchStatement")
   }
 }
