@@ -102,8 +102,8 @@ object CLI extends TreeDraw with FlowDraw {
           matrixNetwork(i._2)(i._1) = i._3
         }
         val equalSized = if (modes contains EQUALCLUSTER) true else false
-        //TODO : (Time Improvement) get both forceNetwork and matrixNetwrok at once
-        Clusterify(matrixNetwork.map(_.toList).toList, LeastEdit(validTrees.map(_._1), false), len, validTrees.map(_._2), Integer.parseInt(modes(CLUSTER)), equalSized)
+        println(validTrees)
+        Clusterify(matrixNetwork.map(_.toList).toList, leastEdited.map(x =>  (x._1, x._2, 10/(x._3+0.1))), len, validTrees.map(_._2), Integer.parseInt(modes(CLUSTER)), equalSized)
       }
       else {
         DistanceDraw(LeastEdit(validTrees.map(_._1), false), validTrees.length, validTrees.map(_._2))

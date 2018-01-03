@@ -5,8 +5,8 @@ import tipsy.parser._
 import scala.math._
 
 sealed trait DiffChange
-case object ADD_d extends DiffChange
-case object DEL_d extends DiffChange
+case object ADD_d     extends DiffChange
+case object DEL_d     extends DiffChange
 case object REPLACE_d extends DiffChange
 
 case class Diff (
@@ -20,6 +20,13 @@ case class EditRet (diffs: List[Diff], dist: Double) {
   def correct(d: Diff, dis: Double): EditRet = {
     this.copy(diffs = diffs ++ List(d), dist = dis)
   }
+
+  def +(v: Double): EditRet = {
+    this match {
+      case EditRet(x, y) => EditRet(x, y + v)
+    }
+  }
+
   def /(v: Double) = {
     this match {
       case EditRet(x, y) => {
@@ -33,6 +40,7 @@ case class EditRet (diffs: List[Diff], dist: Double) {
 }
 
 object LeastEdit {
+
   def apply(trees: List[ParseTree], cluster: Boolean): List[(Int, Int, Double)] = {
     if (trees.length < 2) {
       println("[Warning] Least Edit mode requires at least 2 trees")
@@ -41,219 +49,110 @@ object LeastEdit {
       case Seq(t1, t2) => {
         println("Starting 2 new trees " + t1._2 + " " + t2._2)
         val k = compareTwoTrees(t1._1, t2._1)
-/*        val mb = 1024 * 1024
- *        println("** Used Memory:  " + (runtime.totalMemory - runtime.freeMemory) / mb)
- *        println("** Free Memory:  " + (runtime.freeMemory / mb))
- *        println("** Total Memory: " + (runtime.totalMemory) / mb)
- *        println("** Max Memory:   " + (runtime.maxMemory) / mb)
- */
+        /*val mb = 1024 * 1024
+         *println("** Used Memory:  " + (runtime.totalMemory - runtime.freeMemory) / mb)
+         *println("** Free Memory:  " + (runtime.freeMemory / mb))
+         *println("** Total Memory: " + (runtime.totalMemory) / mb)
+         *println("** Max Memory:   " + (runtime.maxMemory) / mb)
+         */
         cluster match {
-          case true => (t1._2, t2._2, k.dist)
-          case false => (t1._2, t2._2, 10/(k.dist+0.1))
+          case true  => (t1._2, t2._2, k.dist)
+          case false => (t1._2, t2._2, 10 / (k.dist + 0.1))
         }
       }
       case _ => ???
     }.toList
   }
 
-  var editDist: Array[Array[(EditRet, (Int, Int))]] = Array[Array[(EditRet, (Int, Int))]]()
-  var editDistExpr: Array[Array[(Double, (Int, Int))]] = Array[Array[(Double, (Int, Int))]]()
-  var cfenum1: Vector[CFEnum] = Vector[CFEnum]()
-  var cfenum2: Vector[CFEnum] = Vector[CFEnum]()
-  var string1: Vector[String] = Vector[String]()
-  var string2: Vector[String] = Vector[String]()
-  val powersOfE: Array[Double] = PowersOfN(math.exp(0.0555), 300)
-
-  def compareWithTrees(prog: ParseTree, trees: List[ParseTree]): List[(ParseTree, Double)] = {
+  def compareWithTrees(prog: ParseTree, trees: List[ParseTree]) : List[(ParseTree, Double)] = {
     trees.map { case tree =>
       val k = compareTwoTrees(prog, tree)
-      (tree, 1/(k.dist+0.1))
+      (tree, 1 / (k.dist + 0.1))
     }.toList
   }
 
   def compareTwoTrees(tree1: ParseTree, tree2: ParseTree): EditRet = {
-    cfenum1 = FlowGraphTweaks(tree1.compress).toVector
-    cfenum2 = FlowGraphTweaks(tree2.compress).toVector
-    val l1 = cfenum1.length
-    val l2 = cfenum2.length
-    println(l1 + 1, l2 + 1)
-    editDist = Array.fill(l1 + 1)(Array.fill(l2 + 1)((EditRet(List(), -1), (0, 0))))
-    editDistRecur(l1, l2)
-    editDist(l1)(l2)._1
-  }
+    val Seq(cfEnum1, cfEnum2) = Seq(tree1, tree2).map( x =>
+      FlowGraphTweaks(x.compress).toVector
+    )
+    val Seq(l1, l2) = Seq(cfEnum1, cfEnum2).map(_.length)
+    //println(l1 + 1, l2 + 1)
 
-  private def distance(c: Int): Double = {
-    val k = c / 7
-    val left = c - 7*k
-    var ret = 0.0
-    for (i <- 1 to (k min 3000)) {
-      ret += 7.0 * powersOfE(i)
-    }
-    ret += left.toDouble * powersOfE(k + 1 min 3000)
-    if (ret == Double.PositiveInfinity) {
-      println("** [error] Positive Infinity was reached :(")
-    }
-    ret
-  }
+    lazy val editDistTable: LazyVector[LazyVector[(EditRet, (Int, Int))]] =
+      LazyVector.tabulate(l1 + 1, l2 + 1) { (x, y) => distance(x, y) }
 
-  def editDistRecurExpr(m: Int, n: Int): Unit = {
-    editDistExpr(0)(0) = (0.0, (0, 0))
-    for (i <- 1 to m) {
-      val (a, (b, c)) = editDistExpr(i - 1)(0)
-      editDistExpr(i)(0) = (a + 20, (b + 1, c))
+    def distance(x: Int, y: Int): (EditRet, (Int, Int)) = {
+      (x, y) match {
+        case (0, 0) => (EditRet(List(), 1), (0, 0)) // otherwise 1/0.1 = 10 and all other < 1
+        case (i, 0) => go(i - 1, 0, Some(DEL_d))
+        case (0, j) => go(0, j - 1, Some(ADD_d))
+        case (i, j) => {
+          if (cfEnum1(i - 1) == cfEnum2(j - 1)) go(i - 1, j - 1, None)
+          else Seq( go(i - 1, j, Some(DEL_d))
+                  , go(i, j - 1, Some(ADD_d))
+                  , go(i - 1, j - 1, Some(REPLACE_d))
+               ).minBy(_._1.dist)
+        }
+      }
     }
-    for (j <- 1 to n) {
-      val (a, (b, c)) = editDistExpr(0)(j - 1)
-      editDistExpr(0)(j) = (a + 20, (b + 1, c))
-    }
-    for (i <- 1 to m) {
-      for (j <- 1 to n) {
-        if (string1(i - 1) == string2(j - 1)) {
-          editDistExpr(i)(j) = editDistExpr(i - 1)(j - 1)
-        } else {
-          val a: Array[Double] = Array(-1.0, editDistExpr(i - 1)(j)._1, editDistExpr(i)(j - 1)._1, editDistExpr(i - 1)(j - 1)._1)
-          val b: Array[Int] = Array(-1, editDistExpr(i - 1)(j)._2._1, editDistExpr(i)(j - 1)._2._1, editDistExpr(i - 1)(j - 1)._2._1)
-          val c: Array[Int] = Array(-1, editDistExpr(i - 1)(j)._2._2, editDistExpr(i)(j - 1)._2._2, editDistExpr(i - 1)(j - 1)._2._2)
-          val penalty: Array[Double] = Array(-1.0, a(1) + 20, a(2) + 20, a(3) + 20)
-          val eps = 1e-6
-          var ind = 1
 
-          if (penalty(1) < penalty(2) - eps) {
-            ind = 1
-          } else if (penalty(1) <= penalty(2) + eps && penalty(1) >= penalty(2) - eps) {
-            if (b(1) < b(2)) {
-              ind = 1
-            } else if (b(1) == b(2)) {
-              if (c(1) < c(2)) {
-                ind = 1
-              } else {
-                ind = 2
-              }
-            } else {
-              ind = 2
+    def cost(i: Int, j: Int, action: DiffChange, param: Int): Double = {
+      action match {
+        case DEL_d => 2.0 + param * 5.0
+        case ADD_d => 2.0 + param * 5.0
+        case _     => {
+          (cfEnum1(i), cfEnum2(j)) match {
+            case (POSTEXPR(expr1), POSTEXPR(expr2)) => {
+              1.0 + 5.0 * param + compareTwoExpr(expr1.toVector, expr2.toVector, param)
             }
-          } else {
-            ind = 2
-          }
-
-          if (penalty(ind) < penalty(3) - eps) {
-            ind = ind
-          } else if (penalty(ind) <= penalty(3) + eps && penalty(ind) >= penalty(3) - eps) {
-            if (b(ind) < b(3)) {
-              ind = ind
-            } else if (b(ind) == b(3)) {
-              if (c(ind) < c(3)) {
-                ind = ind
-              } else {
-                ind = 3
-              }
-            } else {
-              ind = 3
-            }
-          } else {
-            ind = 3
-          }
-
-          if (ind == 1) {
-            editDistExpr(i)(j) = (penalty(1), (b(1) + 1, c(1)))
-          } else if (ind == 2) {
-            editDistExpr(i)(j) = (penalty(2), (b(2) + 1, c(2)))
-          } else {
-            editDistExpr(i)(j) = (penalty(3), (b(3) + 1, c(3)))
+            case _ => 1.0 + 5.0 * param
           }
         }
       }
     }
+
+    def go(i: Int, j: Int, action: Option[DiffChange]): (EditRet, (Int, Int)) = {
+      val (editRet, (b, c)) = editDistTable(i)(j)
+      if (!action.isDefined) (editRet, (b, c))
+      else action.get match {
+             case DEL_d => (editRet.correct(Diff(DEL_d, None, Some(cfEnum1(i))), cost(i, j, DEL_d, 3 * b)), (b + 1, c))
+             case ADD_d => (editRet.correct(Diff(ADD_d, Some(cfEnum2(j)), None), cost(i, j, ADD_d, 3 * b)), (b + 1, c))
+             case _     => (editRet.correct(Diff(REPLACE_d, Some(cfEnum2(j)), Some(cfEnum1(i))), cost(i, j, REPLACE_d, c)), (b, c + 1))
+           }
+    }
+
+    editDistTable(l1)(l2)._1
   }
 
-  def editDistRecur(m: Int, n: Int): Unit= {
-    editDist(0)(0) = (EditRet(List(), 1), (0, 0))
-    for (i <- 1 to m) {
-      val (a, (b, c)) = editDist(i - 1)(0)
-      editDist(i)(0) = (a.correct(Diff(DEL_d, None, Some(cfenum1(i - 1))), (a.dist + 20) min (1<<27).toDouble), (b + 1, c))
-    }
-    for (j <- 1 to n) {
-      val (a, (b, c)) = editDist(0)(j - 1)
-      editDist(0)(j) = (a.correct(Diff(ADD_d, Some(cfenum2(j - 1)), None), (a.dist + 20) min (1<<27).toDouble), (b + 1, c))
-    }
-    for (i <- 1 to m) {
-      for (j <- 1 to n) {
-        if (cfenum1(i - 1) == cfenum2(j - 1)) {
-          editDist(i)(j) = editDist(i - 1)(j - 1)
-        } else {
-          val a: Array[EditRet] = Array(EditRet(List(), -1.0), editDist(i - 1)(j)._1, editDist(i)(j - 1)._1, editDist(i - 1)(j - 1)._1)
-          val b: Array[Int] = Array(-1, editDist(i - 1)(j)._2._1, editDist(i)(j - 1)._2._1, editDist(i - 1)(j - 1)._2._1)
-          val c: Array[Int] = Array(-1, editDist(i - 1)(j)._2._2, editDist(i)(j - 1)._2._2, editDist(i - 1)(j - 1)._2._2)
-          val penalty: Array[Double] = Array(-1.0,
-                                             (a(1).dist + 20) min (1<<27).toDouble,
-                                             (a(2).dist + 20) min (1<<27).toDouble,
-                                             (a(3).dist + 20) min (1<<27).toDouble)
-          val eps = 1e-6
-          var ind = 1
+  def compareTwoExpr(expr1: Vector[String], expr2: Vector[String], param: Int): Double = {
+    val Seq(l1, l2) = Seq(expr1, expr2).map(_.length)
 
-          var d = 0.0
+    lazy val editDistTable: LazyVector[LazyVector[(Double, (Int, Int))]] =
+      LazyVector.tabulate(l1 + 1, l2 + 1) { (x, y) => distance(x, y) }
 
-          (cfenum1(i - 1), cfenum2(j - 1)) match {
-            case (POSTEXPR(y), POSTEXPR(z)) => {
-              string1 = y.toVector
-              string2 = z.toVector
-              val (l1, l2) = (y.length, z.length)
-              editDistExpr = Array.fill(l1 + 1)(Array.fill(l2 + 1)(-1.0, (0, 0)))
-              editDistRecurExpr(l1, l2)
-              d = editDistExpr(l1)(l2)._1 / Math.max(y.length, z.length).toDouble
-            }
-            case _ =>
+      def distance(x: Int, y: Int): (Double, (Int, Int)) = {
+        (x, y) match {
+          case (0, 0) => (0.0, (param, param))
+          case (i, 0) => go(i - 1, 0, 2, 1, 0)
+          case (0, j) => go(0, j - 1, 2, 1, 0)
+          case (i, j) => {
+            if (expr1(i - 1) == expr2(j - 1)) go(i - 1, j - 1, 0.0, 0, 0)
+            else Seq( go(i - 1, j, 2, 1, 0)
+                    , go(i, j - 1, 2, 1, 0)
+                    , go(i - 1, j - 1, 1, 0, 1)
+                    ).minBy(_._1)
           }
-
-          penalty(3) = (penalty(3) max (a(3).dist + d)) min (1<<27).toDouble
-
-          if (penalty(1) < penalty(2) - eps) {
-            ind = 1
-          } else if (penalty(1) <= penalty(2) + eps && penalty(1) >= penalty(2) - eps) {
-            if (b(1) < b(2)) {
-              ind = 1
-            } else if (b(1) == b(2)) {
-              if (c(1) < c(2)) {
-                ind = 1
-              } else {
-                ind = 2
-              }
-            } else {
-              ind = 2
-            }
-          } else {
-            ind = 2
-          }
-
-          if (penalty(ind) < penalty(3) - eps) {
-            ind = ind
-          } else if (penalty(ind) <= penalty(3) + eps && penalty(ind) >= penalty(3) - eps) {
-            if (b(ind) < b(3)) {
-              ind = ind
-            } else if (b(ind) == b(3)) {
-              if (c(ind) < c(3)) {
-                ind = ind
-              } else {
-                ind = 3
-              }
-            } else {
-              ind = 3
-            }
-          } else {
-            ind = 3
-          }
-
-          if (ind == 1) {
-            editDist(i)(j) = (a(1).correct(Diff(DEL_d, None, Some(cfenum1(i - 1))), penalty(1)), (b(1) + 1, c(1)))
-          } else if (ind == 2) {
-            editDist(i)(j) = (a(2).correct(Diff(ADD_d, Some(cfenum2(j - 1)), None), penalty(2)), (b(2) + 1, c(2)))
-          } else {
-            editDist(i)(j) = (a(3).correct(Diff(REPLACE_d, Some(cfenum2(j - 1)), Some(cfenum1(i - 1))), penalty(3)), (b(3) + 1, c(3) + 1))
-          }
-
         }
       }
-    }
+
+      def go(i: Int, j: Int, cost: Double, _b: Int, _c: Int): (Double, (Int, Int)) = {
+        val (dist, (b, c)) = editDistTable(i)(j)
+        if (_b == 0 && _c == 0) (dist + cost, (b, c))
+        else if (_b == 1) (dist + 0.5 * b, (b + 1, c))
+        else (dist + 0.5 * c, (b, c + 1))
+      }
+
+      editDistTable(l1)(l2)._1
   }
 
   def levenshteinDist[A](a: Iterable[A], b: Iterable[A]) = {
