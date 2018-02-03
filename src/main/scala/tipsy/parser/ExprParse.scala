@@ -14,8 +14,9 @@ trait ExprParse extends PackratParsers with Parsers
 
   type ExprParse = PackratParser[Expression]
 
-  lazy val identExpr: PackratParser[Expression] =
+  lazy val identExpr: PackratParser[Expression] = positioned {
     identifier ^^ { case a => IdentExpr(a) }
+  }
 
   lazy val typedvariable: Parser[TypedIdent] = positioned {
     val noarray = typeparse ~ identifier ^^ {
@@ -32,19 +33,23 @@ trait ExprParse extends PackratParsers with Parsers
     array | noarray
   }
 
-  lazy val literExpr: PackratParser[Expression] =
+  lazy val literExpr: PackratParser[Expression] = positioned {
     literal ^^ { case LITER(a) => LiterExpr(a) }
-
-  lazy val preUnaryExpr: PackratParser[Expression] = preUnaryOp ~ (fxnExpr | arrayExpr | identExpr | literExpr | bracketExpr) ^^ {
-    case pop ~ e2 => PreUnaryExpr(pop, e2)
   }
 
-  lazy val postUnaryExpr: PackratParser[Expression] =
+  lazy val preUnaryExpr: PackratParser[Expression] = positioned {
+    preUnaryOp ~ (fxnExpr | arrayExpr | identExpr | literExpr | bracketExpr) ^^ {
+      case pop ~ e2 => PreUnaryExpr(pop, e2)
+    }
+  }
+
+  lazy val postUnaryExpr: PackratParser[Expression] = positioned {
     (arrayExpr | identExpr | literExpr | bracketExpr) ~ postUnaryOp ^^ {
       case e1 ~ pop => PostUnaryExpr(e1, pop)
     }
+  }
 
-  lazy val arrayExpr: PackratParser[Expression] =
+  lazy val arrayExpr: PackratParser[Expression] = positioned {
     (identifier) ~ rep1(BRACKET(SQUARE(true)) ~ expression ~ BRACKET(SQUARE(false))) ^^ {
       case ident ~ indices => {
         val expressions: List[Expression] = indices.map {
@@ -55,8 +60,9 @@ trait ExprParse extends PackratParsers with Parsers
         ArrayExpr(ident, expressions)
       }
     }
+  }
 
-  lazy val fxnExpr: PackratParser[Expression] = {
+  lazy val fxnExpr: PackratParser[Expression] = positioned {
     identifier ~ BRACKET(ROUND(true)) ~
     expression.? ~ BRACKET(ROUND(false)) ^^ {
       case ident ~ _ ~ None ~ _ => FxnExpr(ident, List(): List[Expression])
@@ -65,20 +71,20 @@ trait ExprParse extends PackratParsers with Parsers
     }
   }
 
-  lazy val bracketExpr: PackratParser[Expression] = {
+  lazy val bracketExpr: PackratParser[Expression] = positioned {
     BRACKET(ROUND(true)) ~ expression ~ BRACKET(ROUND(false)) ^^ {
       case _ ~ exp ~ _ => exp
     }
   }
 
-  lazy val castExpr: PackratParser[Expression] = {
+  lazy val castExpr: PackratParser[Expression] = positioned {
     BRACKET(ROUND(true)) ~ (typename | typenameFromIdent) ~ BRACKET(ROUND(false)) ~
     expression ^^ {
       case _ ~ t ~ _ ~ e => FxnExpr(IDENT(t.toString), List(e))
     }
   }
 
-  lazy val arrayAssignExpr: PackratParser[Expression] = {
+  lazy val arrayAssignExpr: PackratParser[Expression] = positioned {
     BRACKET(CURLY(true)) ~ repsep(expression, comma) ~ BRACKET(CURLY(false)) ^^ {
       case _ ~ exps ~ _ => CompoundExpr(exps)
     }
