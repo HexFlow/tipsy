@@ -3,18 +3,28 @@ package tipsy.db
 import com.github.tminglei.slickpg._
 import slick.driver.PostgresDriver.api._
 import slick.jdbc.{GetResult, PostgresProfile}
-import spray.json._
+
+import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
+
+import schema.Stats
 
 trait TipsyPostgresProfile extends PostgresProfile
-    with PgSprayJsonSupport
+    with PgCirceJsonSupport
+    with PgArraySupport
     with array.PgArrayJdbcTypes {
   override val pgjson = "jsonb"
 
-  override val api: API = new API {}
+  override val api = MyAPI
 
-  val plainAPI = new API with SprayJsonPlainImplicits
+  object MyAPI extends API
+      with JsonImplicits
+      with ArrayImplicits {
 
-  trait API extends super.API with JsonImplicits {
+    implicit val statsColumnType =
+      MappedColumnType.base[Stats, Json](
+        { s => s.asJson },
+        { j => decode[Stats](j.toString).right.get }
+      )
   }
 }
 

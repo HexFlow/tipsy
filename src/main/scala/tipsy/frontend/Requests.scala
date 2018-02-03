@@ -1,63 +1,63 @@
 package tipsy.frontend
 
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import spray.json.DefaultJsonProtocol
-import spray.json._
-
 import tipsy.db.schema._
 import tipsy.compare._
 import tipsy.parser._
 
+import io.circe._, io.circe.generic.semiauto._, io.circe.generic.JsonCodec, io.circe.syntax._
+import io.circe.{ Decoder, Encoder, HCursor, Json }
+
 /**
   * Collect your json format instances into a support trait
   */
-trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
+trait JsonSupport {
   import Requests._
-  implicit val progReqFormat = jsonFormat4(ProgramInsertReq)
-  implicit val progRespFormat = jsonFormat8(Program)
-  implicit val statsFormat = jsonFormat4(Stats)
 
-  object CFEnumFormat extends RootJsonFormat[CFEnum] {
-    def write(a: CFEnum) = a match {
-      case POSTEXPR(e) => ("Expr: " + e mkString "").toJson
-      case EXPR(e) => (a.flowName + ": " + e.toString).toJson
-      case _ => a.flowName.toJson
+  implicit val encodeCF: Encoder[CFEnum] = new Encoder[CFEnum] {
+    final def apply(a: CFEnum): Json = a match {
+      case POSTEXPR(e) => ("Expr: " + e mkString "").asJson
+      case EXPR(e) => (a.flowName + ": " + e.toString).asJson
+      case _ => a.flowName.asJson
     }
-    def read(va: JsValue) = ???
   }
 
-  object DiffFormat extends RootJsonFormat[Diff] {
-    def write(a: Diff) = a match {
-      case Diff(ADD_d, Some(x), None) => JsObject (
-        "change" -> "Add+".toJson,
-        "addEntry" -> x.toJson,
-        "position" -> a.position.toString.toJson
+  implicit val encodeDiff: Encoder[Diff] = new Encoder[Diff] {
+    final def apply(a: Diff): Json =
+      // ("foo", Json.fromString(a.foo)),
+      // ("bar", Json.fromInt(a.bar))
+      a match {
+        case Diff(ADD_d, Some(x), None) => Json.obj (
+          "change" -> "Add+".asJson,
+          "addEntry" -> x.asJson,
+          "position" -> a.position.toString.asJson
         )
-      case Diff(DEL_d, None, Some(x)) => JsObject (
-        "change" -> "Remove-".toJson,
-        "removeEntry" -> x.toJson,
-        "position" -> a.position.toString.toJson
+        case Diff(DEL_d, None, Some(x)) => Json.obj (
+          "change" -> "Remove-".asJson,
+          "removeEntry" -> x.asJson,
+          "position" -> a.position.toString.asJson
         )
-      case Diff(REPLACE_d, Some(x), Some(y)) => JsObject (
-        "change" -> "Replace+-".toJson,
-        "addEntry" -> x.toJson,
-        "removeEntry" -> y.toJson,
-        "position" -> a.position.toString.toJson
+        case Diff(REPLACE_d, Some(x), Some(y)) => Json.obj (
+          "change" -> "Replace+-".asJson,
+          "addEntry" -> x.asJson,
+          "removeEntry" -> y.asJson,
+          "position" -> a.position.toString.asJson
         )
-    }
-    def read(va: JsValue) = ???
+      }
   }
 
-  implicit val cfenumFormat = lazyFormat(CFEnumFormat)
-  implicit val diffFormat = lazyFormat(DiffFormat)
-  implicit val editRetFormat = lazyFormat(jsonFormat2(EditRet))
+  // implicit val progReqFormat = jsonFormat4(ProgramInsertReq)
+  // implicit val progRespFormat = jsonFormat9(Program)
+
+  // implicit val cfenumFormat = lazyFormat(CFEnumFormat)
+  // implicit val diffFormat = lazyFormat(DiffFormat)
+  // implicit val editRetFormat = lazyFormat(jsonFormat2(EditRet))
 }
 
 /**
   * Includes case classes for expected data bodies in web requests
   */
 object Requests {
-  case class ProgramInsertReq (
+  @JsonCodec case class ProgramInsertReq (
     id: Option[Int],
     userId: String,
     quesId: String,

@@ -7,12 +7,10 @@ import tipsy.db.TipsyPostgresProfile.api._
 import tipsy.frontend._
 import tipsy.compare._
 
-import spray.json._
-
-object SimilarProgs extends Ops with JsonSupport with TipsyDriver {
+object SimilarProgs extends Ops with TipsyDriver {
 
   def apply(p: Program) = {
-      val props = p.props.convertTo[Stats]
+      val props = p.props
 
       val similarProgs: List[Program] = driver.runDB {
         progTable.filter { row =>
@@ -23,9 +21,9 @@ object SimilarProgs extends Ops with JsonSupport with TipsyDriver {
         }.result
       }.toList
 
-      val similar = similarProgs.filter { elem =>
+      similarProgs.filter { elem =>
         try {
-          val stats = elem.props.convertTo[Stats]
+          val stats = elem.props
           val sat = for {
             f1 <- stats.fxns
             f2 <- props.fxns
@@ -52,7 +50,5 @@ object SimilarProgs extends Ops with JsonSupport with TipsyDriver {
           case e: Throwable => false
         }
       }
-
-      similar
   }
 }

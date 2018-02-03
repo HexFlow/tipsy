@@ -15,8 +15,10 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.server.directives.FileAndResourceDirectives
 
-import spray.json._
 import slick.backend.DatabasePublisher
+
+import de.heikoseeberger.akkahttpcirce._
+import io.circe.syntax._, io.circe.generic.auto._
 
 import scala.util.{Success, Failure}
 import scala.io.StdIn
@@ -36,7 +38,7 @@ trait TipsyDriver {
   * store programs in database, and provide
   * information/corrections
   */
-object Web extends JsonSupport with Ops
+object Web extends JsonSupport with Ops with FailFastCirceSupport
     with FileAndResourceDirectives with TipsyDriver {
 
   // modes is currently not used
@@ -55,10 +57,10 @@ object Web extends JsonSupport with Ops
                   case Right(compiledProg) =>
                     // Compiled fine, index it
                     val id = insertProg(compiledProg)
-                    Map("success" -> true.toJson, "id" -> id.toJson)
+                    Map("success" -> true.asJson, "id" -> id.asJson)
                   case Left(err) =>
                     // Didn't compile
-                    Map("success" -> false.toJson, "error" -> err.toString.toJson)
+                    Map("success" -> false.asJson, "error" -> err.toString.asJson)
                 }
               }
             }
@@ -69,7 +71,7 @@ object Web extends JsonSupport with Ops
                 case Left(err) =>
                   // Didn't compile
                   complete {
-                    Map("success" -> false.toJson, "error" -> err.toString.toJson)
+                    Map("success" -> false.asJson, "error" -> err.toString.asJson)
                   }
 
                 case Right(prog) =>
@@ -92,14 +94,14 @@ object Web extends JsonSupport with Ops
 
                       val res = corrections.map {
                         case Left(err) =>
-                          Map("success" -> false.toJson, "error" -> err.toJson)
+                          Map("success" -> false.asJson, "error" -> err.asJson)
                         case Right(corrs) =>
-                          Map("success" -> true.toJson,
+                          Map("success" -> true.asJson,
                             "corrections" -> corrs.map { x =>
-                              Map("name" -> x._1.toJson,
-                                "change" -> x._2.toJson)
-                            }.toJson,
-                            "count" -> corrections.length.toJson)
+                              Map("name" -> x._1.asJson,
+                                "change" -> x._2.asJson)
+                            }.asJson,
+                            "count" -> corrections.length.asJson)
                       }
                       complete(res)
 
@@ -139,8 +141,8 @@ object Web extends JsonSupport with Ops
             }
             val result = driver.runDB(myQuery)
             complete(Map(
-              "success" -> result.toJson
-            ).toJson)
+              "success" -> result.asJson
+            ).asJson)
           } ~ path ("progCount") {
                 // Get list of program IDs
 
@@ -150,9 +152,9 @@ object Web extends JsonSupport with Ops
             val progs = driver.runDB(myQuery.result)
 
             complete(Map(
-              "Available programs" -> progs.toJson,
-              "Count" -> progs.length.toJson
-            ).toJson)
+              "Available programs" -> progs.asJson,
+              "Count" -> progs.length.asJson
+            ).asJson)
 
           } ~ path ("getId" / IntNumber) { id =>
             // Retreive a program given the ID
@@ -162,7 +164,7 @@ object Web extends JsonSupport with Ops
             }.headOption
 
             prog match {
-              case Some(x) => complete(x.toJson)
+              case Some(x) => complete(x.asJson)
               case None => complete((NotFound, "Program not found"))
             }
 
@@ -178,12 +180,12 @@ object Web extends JsonSupport with Ops
                 case Some(p: Program) => {
                   Compiler(p.code) match {
                     case Left(err) =>
-                      Map("success" -> false.toJson,
-                        "message" -> err.toString.toJson)
+                      Map("success" -> false.asJson,
+                        "message" -> err.toString.asJson)
                     case Right(tree: ParseTree) =>
-                      Map("success" -> true.toJson,
-                        "tree" -> tree.toString.toJson,
-                        "flow" -> tree.compress.toString.toJson)
+                      Map("success" -> true.asJson,
+                        "tree" -> tree.toString.asJson,
+                        "flow" -> tree.compress.toString.asJson)
                   }
                 }
 
@@ -202,9 +204,9 @@ object Web extends JsonSupport with Ops
               case Some(prog) =>
                 complete {
                   val progs = SimilarProgs(prog)
-                  Map("success" -> true.toJson,
-                    "similar" -> progs.toString.toJson,
-                    "count" -> progs.length.toJson)
+                  Map("success" -> true.asJson,
+                    "similar" -> progs.toString.asJson,
+                    "count" -> progs.length.asJson)
                 }
             }
 
@@ -236,14 +238,14 @@ object Web extends JsonSupport with Ops
 
                     corrections._1 match {
                       case Left(err) =>
-                        Map("success" -> false.toJson, "error" -> err.toJson)
+                        Map("success" -> false.asJson, "error" -> err.asJson)
                       case Right(corrs) =>
-                        Map("success" -> true.toJson,
+                        Map("success" -> true.asJson,
                           "corrections" -> corrs.map { x =>
-                            Map("name" -> x._1.toJson,
-                              "change" -> x._2.toJson)
-                          }.toJson,
-                          "dist" -> corrections._2.toJson)
+                            Map("name" -> x._1.asJson,
+                              "change" -> x._2.asJson)
+                          }.asJson,
+                          "dist" -> corrections._2.asJson)
                     }
 
                   case Left(_) => ???

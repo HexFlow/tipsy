@@ -5,8 +5,6 @@ import tipsy.db.schema._
 import tipsy.lexer._
 import tipsy.parser._
 
-import spray.json._
-
 object ProgStats {
   def apply(code: ParseTree): Stats = {
 

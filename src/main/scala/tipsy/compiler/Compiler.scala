@@ -6,13 +6,11 @@ import tipsy.db.schema._
 import tipsy.frontend._
 import tipsy.frontend.Requests._
 
-import spray.json._
-
 import java.io._
 import scala.sys.process._
 import scala.util.Random
 
-object Compiler extends JsonSupport {
+object Compiler {
   def getTree(progcode: String) = {
 
     val curtime = System.currentTimeMillis().toString()
@@ -50,7 +48,7 @@ object Compiler extends JsonSupport {
         code    = prog.code,
         score   = "0",
         correct = false,
-        props   = ProgStats(tree).toJson
+        props   = ProgStats(tree)
       ))
     }
 
