@@ -3,7 +3,8 @@ package tipsy.parser
 import tipsy.lexer._
 import scala.util.parsing.input.{Positional, Position}
 
-sealed trait CFEnum extends Positional {
+@SerialVersionUID(100L)
+sealed trait CFEnum extends Positional with Serializable {
   val flowName: String
 }
 case class FUNC() extends CFEnum {
