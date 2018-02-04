@@ -10,7 +10,7 @@ case class Program (
   time: String,
   quesId: String,
   code: String,
-  // cf: List[CFEnum],
+  cf: List[CFEnum],
   score: String,
   correct: Boolean,
   props: Stats
@@ -24,13 +24,13 @@ class Programs(tag: Tag) extends
   def time: Rep[String] = column[String]("SUB_TIME")
   def quesId: Rep[String] = column[String]("QUES_ID")
   def code: Rep[String] = column[String]("CODE")
-  // def cf: Rep[List[CFEnum]] = column[List[CFEnum]]("CF")
+  def cf: Rep[List[CFEnum]] = column[List[CFEnum]]("CF")
   def score: Rep[String] = column[String]("SCORE")
   def correct: Rep[Boolean] = column[Boolean]("CORRECT")
   def props: Rep[Stats] = column[Stats]("PROPS")
 
   def * = (
-    (id, userId, time, quesId, code, score, correct, props) <>
+    (id, userId, time, quesId, code, cf, score, correct, props) <>
       ((Program.apply _).tupled, Program.unapply)
   )
 }

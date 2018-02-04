@@ -44,7 +44,7 @@ object Compiler {
         time    = curtime,
         quesId  = prog.quesId,
         code    = prog.code,
-        // cf      = tree.compress,
+        cf      = tree.compress,
         score   = "0",
         correct = false,
         props   = ProgStats(tree)

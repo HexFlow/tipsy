@@ -13,7 +13,7 @@ case class Diff (
   change: DiffChange,
   addEntry: Option[CFEnum],
   delEntry: Option[CFEnum]) {
-  lazy val position = (delEntry orElse addEntry).map(_.pos)
+  lazy val position = delEntry.map(x => (x.line, x.column))
 }
 
 case class EditRet (diffs: List[Diff], dist: Double) {

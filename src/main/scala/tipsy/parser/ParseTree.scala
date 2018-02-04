@@ -5,8 +5,16 @@ import tipsy.compare.FlowGraphTweaks.{ renameIdentsInExpr => r }
 import scala.util.parsing.input.{Positional, Position}
 
 @SerialVersionUID(100L)
-sealed trait CFEnum extends Positional with Serializable {
+sealed trait CFEnum extends Serializable {
   val flowName: String
+
+  var line: Int = 0
+  var column: Int = 0
+  def setPos(p: Position): CFEnum = {
+    if (line == 0) line = p.line
+    if (column == 0) column = p.column
+    return this
+  }
 }
 case class FUNC() extends CFEnum {
   val flowName = "Func"
@@ -38,14 +46,11 @@ case class BLOCKOPEN() extends CFEnum {
 case class BLOCKCLOSE() extends CFEnum {
   val flowName = "Block Close"
 }
-class FLOWMANIPULATION() extends CFEnum {
-  val flowName = "Flow Manipulation"
+case class CONT() extends CFEnum {
+  val flowName = "Continue"
 }
-case class CONT() extends FLOWMANIPULATION {
-  override val flowName = "Continue"
-}
-case class BRK() extends FLOWMANIPULATION {
-  override val flowName = "Break"
+case class BRK() extends CFEnum {
+  val flowName = "Break"
 }
 
 // Used for storing types
