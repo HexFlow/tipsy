@@ -12,7 +12,8 @@ case object REPLACE_d extends DiffChange
 case class Diff (
   change: DiffChange,
   addEntry: Option[CFEnum],
-  delEntry: Option[CFEnum]) {
+  delEntry: Option[CFEnum],
+  fxn: String = "") {
   lazy val position = delEntry.map(x => (x.line, x.column))
 }
 
@@ -27,12 +28,22 @@ case class EditRet (diffs: List[Diff], dist: Double) {
     }
   }
 
+  def +(v: EditRet): EditRet = {
+    this match {
+      case EditRet(x, y) => EditRet(x ++ v.diffs, y + v.dist)
+    }
+  }
+
+
   def /(v: Double) = {
     this match {
       case EditRet(x, y) => {
         EditRet(x, y/v)
       }
     }
+  }
+  def >(x: EditRet): Boolean = {
+    dist > x.dist
   }
   def apply(a: EditRet) {
     this.copy(diffs = a.diffs, dist = a.dist)
