@@ -25,7 +25,7 @@ trait Ops {
     }
 
   def insert[F, T <: Table[F] with WithPrimaryKey]
-    (item: F, table: TableQuery[T]): Int = {
+    (item: F, table: TableQuery[T]): Future[Int] = {
 
     /** InsertQuery needed to obtain the ID assigned to the new entry
       *
@@ -39,15 +39,15 @@ trait Ops {
   }
 
   def getById[F, T<:Table[F] with WithPrimaryKey]
-    (id: Int, table: TableQuery[T]): Option[F] = {
+    (id: Int, table: TableQuery[T]): Future[Option[F]] = {
 
     driver.runDB {
       table.filter(_.id === id).result
-    }.headOption
+    }.map(_.headOption)
   }
 
   def deleteById[T<:Table[_] with WithPrimaryKey]
-    (id: Int, table: TableQuery[T]): Boolean = {
+    (id: Int, table: TableQuery[T]): Future[Boolean] = {
 
     driver.runDB {
       table.filter(_.id === id).delete.asTry.map {
@@ -60,11 +60,11 @@ trait Ops {
     }
   }
 
-  def create[T <: Table[_]](table: TableQuery[T]): Unit = {
+  def create[T <: Table[_]](table: TableQuery[T]): Future[Unit] = {
     driver.runDB(table.schema.create)
   }
 
-  def drop[T <: Table[_]](table: TableQuery[T]): Unit = {
+  def drop[T <: Table[_]](table: TableQuery[T]): Future[Unit] = {
     driver.runDB(table.schema.drop)
   }
 }

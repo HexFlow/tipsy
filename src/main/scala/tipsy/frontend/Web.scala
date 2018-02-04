@@ -43,6 +43,8 @@ object Web extends JsonSupport with Ops with FailFastCirceSupport
 
   // modes is currently not used
   def apply(modes: Set[CLIMode]): Unit = {
+    implicit val blockingDispatcher = system.dispatchers.lookup("tipsy-blocking-dispatcher")
+
     val route: Route =
       pathPrefix ("api") {
 

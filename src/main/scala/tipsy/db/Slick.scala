@@ -13,9 +13,10 @@ case class Driver(
     db.close()
   }
 
-  def runDB[R](action: DBIOAction[R, NoStream, Nothing]): R = {
-    val futureAction = db.run(action)
-    Await.result(futureAction, Duration.Inf)
+  def runDB[R](action: DBIOAction[R, NoStream, Nothing]): Future[R] = {
+    db.run(action)
+    // val futureAction = db.run(action)
+    // Await.result(futureAction, Duration.Inf)
   }
 }
 
