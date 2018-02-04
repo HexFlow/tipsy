@@ -8,6 +8,7 @@ import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
 
 import schema.Stats
 import tipsy.parser.CFEnum
+import tipsy.compare._
 import scala.util.parsing.input.{ NoPosition, OffsetPosition }
 
 trait TipsyPostgresProfile extends PostgresProfile
@@ -66,16 +67,20 @@ trait TipsyPostgresProfile extends PostgresProfile
 
     case class SerializedFxnPair(name: String, cf: List[String])
 
-    implicit val cfPairColumnType =
-      MappedColumnType.base[List[(String, List[CFEnum])], Json](
-        { s =>
-          s.map ( fxnPair =>
-            SerializedFxnPair(fxnPair._1, fxnPair._2.map(cfToStr(_))).asJson
-          ).asJson
+    implicit val normCodeColumnType =
+      MappedColumnType.base[NormCode, Json](
+        { case NormCode(s) =>
+          s.map { case NormFxn(name, cf) =>
+            SerializedFxnPair(name, cf.map(cfToStr(_))).asJson
+          }.asJson
         },
-        { j => decode[List[SerializedFxnPair]](j.toString).right.get.map {
-          case SerializedFxnPair(name, cfStrs) => (name, cfStrs.map(strToCf(_)))
-        } }
+        {
+          j => {
+            NormCode(decode[List[SerializedFxnPair]](j.toString).right.get.map {
+              case SerializedFxnPair(name, cfStrs) => NormFxn(name, cfStrs.map(strToCf(_)))
+            })
+          }
+        }
       )
   }
 }

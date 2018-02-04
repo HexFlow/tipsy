@@ -5,10 +5,16 @@ import tipsy.lexer._
 import tipsy.frontend._
 import tipsy.compiler._
 
+import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
+
+case class NormFxn(name: String, cf: List[CFEnum])
+
+case class NormCode(fxns: List[NormFxn])
+
 object NormalizeParseTree {
 
   // We assume pt contains functions sorted in use order.
-  def apply(parseTree: ParseTree): Either[CCompilationError, List[(String, List[CFEnum])]] = {
+  def apply(parseTree: ParseTree): Either[CCompilationError, NormCode] = {
     for {
 
       topList <- (parseTree match {
@@ -16,13 +22,13 @@ object NormalizeParseTree {
         case _ => Left(CCustomError("Given tree was not a TopList"))
       }).right
 
-    } yield getFunctions(topList).map(fxnToPair(_))
+    } yield NormCode(getFunctions(topList).map(fxnToPair(_)))
   }
 
-  private def fxnToPair(x: FxnDefinition): (String, List[CFEnum]) = {
+  private def fxnToPair(x: FxnDefinition): NormFxn = {
     x match {
       case FxnDefinition(TypedIdent(_, IDENT(name)), _, _) =>
-        (name, FlowGraphTweaks.renameFxnNames(x.compress))
+        NormFxn(name, FlowGraphTweaks.renameFxnNames(x.compress))
     }
   }
 
