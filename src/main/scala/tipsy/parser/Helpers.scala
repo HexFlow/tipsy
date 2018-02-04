@@ -70,6 +70,10 @@ trait Helpers extends PackratParsers with Parsers {
 
     val usedFxns: mSet[String] = mSet()
 
+    def filterFuncNames(expr: List[String]): List[String] = {
+      expr.filter(_.startsWith("func:")).map(_.drop(5))
+    }
+
     // Takes a function name and provides bodies of functions called by it
     // Takes care not to return functions which have been already returned
     def processFxn(name: String): List[ParseTree] = {
@@ -82,7 +86,7 @@ trait Helpers extends PackratParsers with Parsers {
           case None => List()
           case Some(fxn @ FxnDefinition(_, _, Some(body))) => {
             val fxns =
-              body.compress.collect { case EXPR(e) => e }.flatMap(_.getFxns)
+              body.compress.collect { case POSTEXPR(e) => e }.flatMap(filterFuncNames(_))
             fxn :: fxns.flatMap(processFxn(_))
           }
           case _ => ???

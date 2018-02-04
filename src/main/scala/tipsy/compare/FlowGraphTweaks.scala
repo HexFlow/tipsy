@@ -15,7 +15,6 @@ object FlowGraphTweaks {
       case x :: xs => {
         val res = x match {
           case DECL(_) => List()
-          case EXPR(x) => List(POSTEXPR(renameIdentsInExpr(x)))
           case x => List(x)
         }
 
@@ -46,7 +45,7 @@ object FlowGraphTweaks {
         case ArrayExpr(IDENT(i), index) =>
           List(renameIdent(i))
         case FxnExpr(IDENT(i), exps) =>
-          exps.flatMap(renameRecur(_)) ++ List(i.toString)
+          exps.flatMap(renameRecur(_)) ++ List(s"func:${i.toString}")
         case PreUnaryExpr(op, exp) => renameRecur(exp) ++ List(op.toString)
         case PostUnaryExpr(exp, op) => renameRecur(exp) ++ List(op.toString)
         case BinaryExpr(e1, op, e2) =>
@@ -58,4 +57,29 @@ object FlowGraphTweaks {
     }
     renameRecur(e)
   }
+
+  def renameFxnNames(lenums: List[CFEnum]): List[CFEnum] = {
+    var gcnt = 0
+    var varsUsed: Map[String, Int] = Map()
+
+    // Does the actual renaming / query-map logic
+    def renameIdent(name: String): String = {
+      if (varsUsed isDefinedAt name) {
+        "func" + varsUsed(name).toString
+      } else {
+        gcnt = gcnt + 1
+        varsUsed += (name -> gcnt)
+        "func" + gcnt.toString
+      }
+    }
+
+    lenums.map {
+      case POSTEXPR(e) => POSTEXPR(e.map {
+        case x if x.startsWith("func:") => renameIdent(x)
+        case y => y
+      })
+      case x => x
+    }
+  }
+
 }

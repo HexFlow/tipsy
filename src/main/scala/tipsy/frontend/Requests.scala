@@ -16,7 +16,7 @@ trait JsonSupport {
   implicit val encodeCF: Encoder[CFEnum] = new Encoder[CFEnum] {
     final def apply(a: CFEnum): Json = a match {
       case POSTEXPR(e) => ("Expr: " + e mkString "").asJson
-      case EXPR(e) => (a.flowName + ": " + e.toString).asJson
+      // case EXPR(e) => (a.flowName + ": " + e.toString).asJson
       case _ => a.flowName.asJson
     }
   }

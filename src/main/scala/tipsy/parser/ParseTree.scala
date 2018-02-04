@@ -1,6 +1,7 @@
 package tipsy.parser
 
 import tipsy.lexer._
+import tipsy.compare.FlowGraphTweaks.{ renameIdentsInExpr => r }
 import scala.util.parsing.input.{Positional, Position}
 
 @SerialVersionUID(100L)
@@ -12,9 +13,6 @@ case class FUNC() extends CFEnum {
 }
 case class RETTYPE(ret: String) extends CFEnum {
   val flowName = "Returns " + ret
-}
-case class EXPR(value: Expression) extends CFEnum {
-  val flowName = "Expression"
 }
 case class DECL(value: String) extends CFEnum {
   val flowName = "Declaration: " + value
@@ -130,14 +128,14 @@ sealed trait Statement extends ParseTree
 case class IfStatement(cond: Expression, body: BlockList,
   elsebody: BlockList) extends Statement {
   override lazy val rawCompress = {
-    IFCOND() :: EXPR(cond) :: body.compress ++ elsebody.compress
+    IFCOND() :: POSTEXPR(r(cond)) :: body.compress ++ elsebody.compress
   }
 }
 
 case class SwitchStatement(value: Expression, caseBlocks: List[(Expression, BlockList)],
   defaultBlock: BlockList) extends Statement {
   override lazy val rawCompress = {
-    SWITCHCOND() :: EXPR(value) :: caseBlocks.flatMap(x => EXPR(x._1) ::
+    SWITCHCOND() :: POSTEXPR(r(value)) :: caseBlocks.flatMap(x => POSTEXPR(r(x._1)) ::
       x._2.compress) ++ defaultBlock.compress
   }
 }
@@ -145,19 +143,19 @@ case class SwitchStatement(value: Expression, caseBlocks: List[(Expression, Bloc
 case class ForStatement(e1: Expression, e2: Expression,
   e3: Expression, body: BlockList) extends Statement {
   override lazy val rawCompress =
-    EXPR(e1) :: LOOPCOND() :: EXPR(e2) ::
+    POSTEXPR(r(e1)) :: LOOPCOND() :: POSTEXPR(r(e2)) ::
   body.copy(items = body.items :+ e3).compress
 }
 
 case class WhileStatement(cond: Expression,
   body: BlockList) extends Statement {
-  override lazy val rawCompress = LOOPCOND() :: EXPR(cond) :: body.compress
+  override lazy val rawCompress = LOOPCOND() :: POSTEXPR(r(cond)) :: body.compress
 }
 
 case class DoWhileStatement(body: BlockList,
   cond: Expression) extends Statement {
   lazy val compressedBody: List[CFEnum] = body.compress
-  override lazy val rawCompress = compressedBody ++ List(LOOPCOND(), EXPR(cond)) ++ compressedBody
+  override lazy val rawCompress = compressedBody ++ List(LOOPCOND(), POSTEXPR(r(cond))) ++ compressedBody
 }
 
 case class ReturnStatement(code: Expression) extends Statement {
@@ -168,7 +166,7 @@ case class ReturnStatement(code: Expression) extends Statement {
 // ---------------------------- =>
 
 sealed trait Expression extends ParseTree {
-  override lazy val rawCompress = List(EXPR(this))
+  override lazy val rawCompress = List(POSTEXPR(r(this)))
 
   // Provide list of functions used in this expression in order of use
   val getFxns: List[String] = {
