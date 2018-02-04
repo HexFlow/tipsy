@@ -11,8 +11,11 @@ import scala.sys.process._
 import scala.util.Random
 
 object Compiler {
-  def getTree(progcode: String) = {
+  def apply(prog: String) = {
+    getTree(prog)
+  }
 
+  def getTree(progcode: String) = {
     val curtime = System.currentTimeMillis().toString()
     val filename =
       "." + curtime + "-" + Random.alphanumeric.take(5).mkString + ".c"
@@ -28,14 +31,9 @@ object Compiler {
     result
   }
 
-  def apply(prog: String) = {
-    getTree(prog)
-  }
-
   def compileWithStats(
     prog: ProgramInsertReq
   ): Either[CCompilationError, Program] = {
-
     val idReq: Int = prog.id.getOrElse(0)
     val curtime = System.currentTimeMillis().toString()
 
@@ -52,7 +50,6 @@ object Compiler {
         props   = ProgStats(tree)
       ))
     }
-
   }
 
   def compileWithStatsProgram(p: Program) = {

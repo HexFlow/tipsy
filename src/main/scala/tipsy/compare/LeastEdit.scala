@@ -72,11 +72,10 @@ object LeastEdit {
   }
 
   def compareTwoTrees(tree1: ParseTree, tree2: ParseTree): EditRet = {
-    val Seq(cfEnum1, cfEnum2) = Seq(tree1, tree2).map( x =>
-      FlowGraphTweaks(x.compress).toVector
-    )
-    val Seq(l1, l2) = Seq(cfEnum1, cfEnum2).map(_.length)
-    //println(l1 + 1, l2 + 1)
+    val cfEnum1 = FlowGraphTweaks(tree1.compress).toVector
+    val cfEnum2 = FlowGraphTweaks(tree2.compress).toVector
+    val l1 = cfEnum1.length
+    val l2 = cfEnum2.length
 
     lazy val editDistTable: LazyVector[LazyVector[(EditRet, (Int, Int))]] =
       LazyVector.tabulate(l1 + 1, l2 + 1) { (x, y) => distance(x, y) }
@@ -125,7 +124,8 @@ object LeastEdit {
   }
 
   def compareTwoExpr(expr1: Vector[String], expr2: Vector[String], param: Int): Double = {
-    val Seq(l1, l2) = Seq(expr1, expr2).map(_.length)
+    val l1 = expr1.length
+    val l2 = expr2.length
 
     lazy val editDistTable: LazyVector[LazyVector[(Double, (Int, Int))]] =
       LazyVector.tabulate(l1 + 1, l2 + 1) { (x, y) => distance(x, y) }
