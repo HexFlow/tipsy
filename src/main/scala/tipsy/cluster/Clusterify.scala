@@ -13,16 +13,19 @@ object Clusterify {
     println("Names")
     println("-----")
     println(names)
-/*    val mb = 1024*1024
-    val runtime = Runtime.getRuntime
-    println("** Used Memory:  " + (runtime.totalMemory - runtime.freeMemory) / mb)
-    println("** Free Memory:  " + runtime.freeMemory / mb)
-    println("** Total Memory: " + runtime.totalMemory / mb)
-    println("** Max Memory:   " + runtime.maxMemory / mb)*/
-    //val fastmaped = fastmap(matrixNetwork, length, 100)
+
+    // val mb = 1024*1024
+    // val runtime = Runtime.getRuntime
+    // println("** Used Memory:  " + (runtime.totalMemory - runtime.freeMemory) / mb)
+    // println("** Free Memory:  " + runtime.freeMemory / mb)
+    // println("** Total Memory: " + runtime.totalMemory / mb)
+    // println("** Max Memory:   " + runtime.maxMemory / mb)
+
+    // val fastmaped = fastmap(matrixNetwork, length, 100)
+    // val kmeaned = kmeans(forceNetwork, length, names, cluster, 2, equalSized)
+    // val dbscaned = dbscan(matrixNetwork, length, 0.299, 3)
+
     validateMatrixNetwork(matrixNetwork ,length)
-    val kmeaned = kmeans(forceNetwork, length, names, cluster, 2, equalSized)
-//    val dbscaned = dbscan(matrixNetwork, length, 0.299, 3)
   }
 
   def validateMatrixNetwork (matrixNetwork: List[List[Double]], length: Int): Unit = {

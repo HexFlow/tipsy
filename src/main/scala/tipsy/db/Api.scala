@@ -63,6 +63,20 @@ trait TipsyPostgresProfile extends PostgresProfile
         { s => s.map(cfToStr(_)).asJson },
         { j => decode[List[String]](j.toString).right.get.map(strToCf(_)) }
       )
+
+    case class SerializedFxnPair(name: String, cf: List[String])
+
+    implicit val cfPairColumnType =
+      MappedColumnType.base[List[(String, List[CFEnum])], Json](
+        { s =>
+          s.map ( fxnPair =>
+            SerializedFxnPair(fxnPair._1, fxnPair._2.map(cfToStr(_))).asJson
+          ).asJson
+        },
+        { j => decode[List[SerializedFxnPair]](j.toString).right.get.map {
+          case SerializedFxnPair(name, cfStrs) => (name, cfStrs.map(strToCf(_)))
+        } }
+      )
   }
 }
 

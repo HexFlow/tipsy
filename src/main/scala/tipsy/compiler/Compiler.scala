@@ -1,7 +1,7 @@
 package tipsy.compiler
 
 import tipsy.compiler._
-import tipsy.compare.ProgStats
+import tipsy.compare.{ProgStats, NormalizeParseTree}
 import tipsy.db.schema._
 import tipsy.frontend._
 import tipsy.frontend.Requests._
@@ -37,19 +37,20 @@ object Compiler {
     val idReq: Int = prog.id.getOrElse(0)
     val curtime = System.currentTimeMillis().toString()
 
-    getTree(prog.code).right.flatMap { tree =>
-      Right(Program(
+    for {
+      tree <- getTree(prog.code).right
+      cf <- NormalizeParseTree(tree).right
+    } yield Program(
         id      = idReq,
         userId  = prog.userId,
         time    = curtime,
         quesId  = prog.quesId,
         code    = prog.code,
-        cf      = tree.compress,
+        cf      = cf,
         score   = "0",
         correct = false,
         props   = ProgStats(tree)
-      ))
-    }
+      )
   }
 
   def compileWithStatsProgram(p: Program) = {

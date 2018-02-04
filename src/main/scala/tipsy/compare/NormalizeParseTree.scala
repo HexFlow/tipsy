@@ -3,16 +3,17 @@ package tipsy.compare
 import tipsy.parser._
 import tipsy.lexer._
 import tipsy.frontend._
+import tipsy.compiler._
 
 object NormalizeParseTree {
 
   // We assume pt contains functions sorted in use order.
-  def apply(parseTree: ParseTree) = {
+  def apply(parseTree: ParseTree): Either[CCompilationError, List[(String, List[CFEnum])]] = {
     for {
 
       topList <- (parseTree match {
         case TopList(tl) => Right(tl)
-        case _ => Left("Given tree was not a TopList")
+        case _ => Left(CCustomError("Given tree was not a TopList"))
       }).right
 
     } yield getFunctions(topList).map(fxnToPair(_))
