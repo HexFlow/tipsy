@@ -1,14 +1,22 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python2
+
+import PyQt4
+import matplotlib
+matplotlib.use('qt4agg')
 
 from matplotlib import pyplot as plt
 from scipy.cluster.hierarchy import dendrogram, linkage, cophenet, to_tree
 import numpy as np
 import json
 import sys
+import os
 
 SHOWPLOT = int(sys.argv[1])
+MATRIX = sys.argv[2]
 
-with open('matrix') as f:
+os.system("""cat {0} | sed -E 's/List//g' | sed -E 's/\(/\[/g' | sed -E 's/\)/\]/g' > {0}_res""".format(MATRIX))
+
+with open("""{0}_res""".format(MATRIX)) as f:
     matrixNetwork = json.load(f)
 
 matrixNetwork = np.array(matrixNetwork)
