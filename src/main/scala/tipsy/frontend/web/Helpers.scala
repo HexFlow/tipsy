@@ -20,19 +20,20 @@ trait Helpers extends Ops with TipsyDriver {
   // Inserts provided program into database, or updates existing program.
   def insertProg(prog: Program) = {
     // Operation depends on whether an ID was provided
-    val id: Future[Int] = prog.id match {
-      case 0 => {
-        println("Inserting into a new row")
-        insert(prog, progTable)
+    for {
+      id <- prog.id match {
+        case 0 => {
+          println("Inserting into a new row")
+          insert(prog, progTable)
+        }
+        case idReq => {
+          println("Updating id: " + idReq)
+          driver.runDB { progTable.insertOrUpdate(prog) }
+          Future(idReq)
+        }
       }
-      case idReq => {
-        println("Updating id: " + idReq)
-        driver.runDB { progTable.insertOrUpdate(prog) }
-        Future(idReq)
-      }
-    }
-    updateDists ! id
-    id // Return the ID to sender parent
+      _ <- Future(updateDists ! (id, prog.quesId))
+    } yield id // Return the ID to sender parent
   }
 
   def getFromDB(id: Int): Future[Option[Program]] = {

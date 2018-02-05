@@ -21,9 +21,7 @@ trait TipsyActor extends Actor {
   }
 }
 
-class UpdateDistsActor extends TipsyActor with TipsyDriver {
-  val log = Logging(context.system, this)
-
+class UpdateDistsActor extends TipsyActor with TipsyDriverWithoutActors {
   def receive = {
     case (id: Int, quesId: String) =>
       println(s"Adding ${id} to dists table.")
@@ -72,7 +70,7 @@ class UpdateDistsActor extends TipsyActor with TipsyDriver {
         }
       } yield matrix
 
-      val matrix = runInf(action)
+      val matrix = Await.result(action, Duration.Inf)
 
       val matrixStr = matrix.map {
         case (id, distMap) => s"${id}: " ++
@@ -84,5 +82,7 @@ class UpdateDistsActor extends TipsyActor with TipsyDriver {
       val writer = new PrintWriter(new File(s"matrix_${quesId}"))
       writer.write(matrixStr)
       writer.close()
+
+    case _ => println("Unknown type of message received in updateDists actor.")
   }
 }
