@@ -11,9 +11,11 @@ import scala.concurrent.Future
 import scala.math._
 
 object Compare extends TipsyDriver with Ops {
-  def suggestCorrections(code: NormCode, quesId: String) = {
+  val repCntInCluster = 2
+
+  def suggestCorrections(code: NormCode)(implicit quesId: String) = {
     for {
-      repIds <- fetchClusterRepIds()
+      repIds <- fetchClusterRepIds(quesId)
       minDistRepIdsAndEditRet <- getBestN(code, 4, repIds)
       progIdsToConsider <- Future.sequence(
         minDistRepIdsAndEditRet.map(x => fetchClusterFromRepId(x._1)))
@@ -37,14 +39,25 @@ object Compare extends TipsyDriver with Ops {
     }.map(_.headOption)
   }
 
-  def fetchClusterRepIds(): Future[List[Int]] = {
-    // TODO: Stub
-    Future(List())
+  def fetchClusterRepIds(implicit quesId: String): Future[List[Int]] = {
+    // Fetch clusters of this question. Take `repCntInCluster` from each and return that list.
+    for {
+      cluster <- driver.runDB {
+        clusterTable.filter(_.id === quesId).result
+      }.map(_.headOption.map(_.cluster).getOrElse(List()))
+    } yield cluster.flatMap(_.take(repCntInCluster))
   }
 
-  def fetchClusterFromRepId(id: Int): Future[List[Int]] = {
-    // TODO: Stub
-    Future(List())
+  def fetchClusterFromRepId(id: Int)(implicit quesId: String): Future[List[Int]] = {
+    // Given a representative of a cluster, fetch that full cluster.
+    for {
+      cluster <- driver.runDB {
+        clusterTable.filter(_.id === quesId).result
+      }.map(_.headOption.map(_.cluster).getOrElse(List()))
+    } yield
+      cluster.collect {
+        case x if x.take(repCntInCluster).contains(id) => x
+      }.headOption.getOrElse(List())
   }
 }
 
@@ -52,6 +65,8 @@ object NewLeastEdit {
   val INF: Double = 1000000
   val deletedFxnPerEntryPenalty = 10
   val addedFxnPerEntryPenalty = 20
+  val fxnOrderingPenaltyScaling = 20
+  val pairingUpPenaltyThreshold = 0.5
 
   def findDist(n1: NormCode, n2: NormCode): EditRet = {
     (n1, n2) match {
@@ -68,8 +83,9 @@ object NewLeastEdit {
             }.reduceLeft(_ + _)
             val deletionCost = pairedResult.deleted.map(_.cf.length).sum * deletedFxnPerEntryPenalty
             val additionCost = pairedResult.added.map(_.cf.length).sum * addedFxnPerEntryPenalty
+            val fxnOrderingCost = pairedResult.penalty * fxnOrderingPenaltyScaling
 
-            pairedDists + deletionCost + additionCost
+            pairedDists + deletionCost + additionCost + fxnOrderingCost
           }.foldLeft(EditRet(List(), INF)) {
             case (a, b) => if (a.dist <= b.dist) a else b
           }
@@ -206,6 +222,6 @@ object NewLeastEdit {
         deleted,
         penalty
       )
-    }.toList
+    }.toList.filter(_.penalty < pairingUpPenaltyThreshold)
   }
 }
