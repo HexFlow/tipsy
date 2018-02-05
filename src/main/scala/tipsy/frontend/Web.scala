@@ -32,6 +32,7 @@ trait TipsyDriver {
 
   val progTable: TableQuery[Programs] = TableQuery[Programs]
   val clusterTable: TableQuery[Clusters] = TableQuery[Clusters]
+  val distTable: TableQuery[Dists] = TableQuery[Dists]
 }
 
 /**

@@ -22,6 +22,7 @@ trait TableHandlers extends Ops with TipsyDriver with Helpers {
     for {
       _ <- create(progTable)
       _ <- create(clusterTable)
+      _ <- create(distTable)
     } yield (OK, "Created schemas".asJson)
   }
 
@@ -29,6 +30,7 @@ trait TableHandlers extends Ops with TipsyDriver with Helpers {
     for {
       _ <- drop(progTable)
       _ <- drop(clusterTable)
+      _ <- drop(distTable)
     } yield (OK, "Dropped schemas".asJson)
   }
 

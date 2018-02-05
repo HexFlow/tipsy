@@ -37,6 +37,12 @@ trait TipsyPostgresProfile extends PostgresProfile
         { j => decode[List[List[Int]]](j.toString).right.get }
       )
 
+    implicit val mapIntDoubleColumnType =
+      MappedColumnType.base[Map[Int, Double], Json](
+        { s => s.asJson },
+        { j => decode[Map[Int, Double]](j.toString).right.get }
+      )
+
     // This following part is still a dream. It did not work since
     // NoPosition cannot be serialized somehow. Will wait till
     // all NoPositions are eliminated :)
