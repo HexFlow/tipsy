@@ -162,6 +162,7 @@ print(outliers, file = sys.stderr)
 
 for i in outliers:
     clusters[i] = (i, clusterCount)
+clusterCount += 1
 
 def mkFinal(a):
     id, cnt = a
@@ -170,19 +171,20 @@ def mkFinal(a):
 finalclusters = [[] for i in range(clusterCount)]
 for cluster in clusters:
     finalclusters[cluster[1]].append(idRevMap[cluster[0]])
+print(finalclusters, file = sys.stderr)
 
 def rmse(i, lis):
     ret = 0.0
     for j in range(len(lis)):
-        ret += matrixNetwork[i][j] ** 2
+        ret += matrixNetwork[idMap[i]][idMap[lis[j]]] ** 2
     return (ret / 2.0) ** 0.5
 
 def reorder(lis):
     a = []
     for i in range(len(lis)):
-        a.append((rmse(i, lis), i))
+        a.append((rmse(lis[i], lis), lis[i]))
     a.sort()
     return [i[1] for i in a]
 
 for i in range(clusterCount):
-    print(i, ':', ','.join(map(str, reorder(finalclusters[i]))))
+    print(str(i) +':' +  ','.join(map(str, reorder(finalclusters[i]))))
