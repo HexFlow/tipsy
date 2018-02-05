@@ -27,7 +27,7 @@ case class Diff (
 
 case class EditRet (diffs: List[Diff], dist: Double) {
   def correct(d: Diff, dis: Double): EditRet = {
-    this.copy(diffs = diffs ++ List(d), dist = dis)
+    this.copy(diffs = diffs ++ List(d), dist = dist + dis)
   }
 
   def +(v: Double): EditRet = {
