@@ -5,6 +5,7 @@ import matplotlib
 
 from matplotlib import pyplot as plt
 from scipy.cluster.hierarchy import dendrogram, linkage, cophenet, to_tree
+from __future__ import print_function
 import numpy as np
 import json
 import sys
@@ -31,7 +32,7 @@ with open(MATRIX) as f:
 
     for key in forId.keys():
         idRevMap[cnt] = key
-        cnt+=1
+        cnt += 1
 
 matrixNetwork = np.zeros(shape=(cnt, cnt))
 for i in range(0, cnt):
@@ -41,7 +42,7 @@ for i in range(0, cnt):
         else:
             matrixNetwork[i][j] = forId[idRevMap[i]][idRevMap[j]]
 
-print(matrixNetwork)
+print(matrixNetwork, file = sys.stderr)
 
 compressedMatrixNetwork = matrixNetwork[np.triu_indices(len(matrixNetwork), 1)]
 
@@ -57,9 +58,9 @@ for method_ in hcMethods:
         method = method_
 
 if method in ['centroid', 'median', 'ward']:
-    print('** [warning] ' + method + ' method will work only when euclidean distance exists for set of points')
+    print('** [warning] ' + method + ' method will work only when euclidean distance exists for set of points', file = sys.stderr)
 
-print(method, mx)
+print(method, mx, file = sys.stderr)
 
 def fancy_dendrogram(*args, **kwargs):
     max_d = kwargs.pop('max_d', None)
@@ -143,17 +144,17 @@ def dfs(rootnode, parentnode = None):
         assign(rootnode)
         clusterCount += 1
         if parentnode.dist >= thresholdDist:
-            print("[warning] a cluster was made before thresholdDist")
+            print("[warning] a cluster was made before thresholdDist", file = sys.stderr)
     else:
         dfs(rootnode.left, rootnode)
         dfs(rootnode.right, rootnode)
 
 dfs(hierarchicalTree)
 
-print(clusterCount)
-print(thresholdDist, thresholdCount)
-print(clusters)
-print(outliers)
+print(clusterCount, file = sys.stderr)
+print(thresholdDist, thresholdCount, file = sys.stderr)
+print(clusters, file = sys.stderr)
+print(outliers, file = sys.stderr)
 
 for i in outliers:
     clusters[i] = (i, clusterCount)
@@ -164,5 +165,6 @@ def mkFinal(a):
 
 finalclusters = map(mkFinal, clusters)
 
-with open('hierarchicalClusters', 'w') as f:
-    f.write(' | '.join(map(str, clusters)))
+print(' | '.join(map(str, clusters)))
+# with open('hierarchicalClusters', 'w') as f:
+    # f.write(' | '.join(map(str, clusters)))
