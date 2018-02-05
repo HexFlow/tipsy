@@ -17,6 +17,7 @@ if len(sys.argv) >= 2 and sys.argv[1] == "showplot":
     SHOWPLOT = 1
 
 forId = {}
+idMap = {}
 idRevMap = {}
 cnt = 0
 
@@ -33,6 +34,7 @@ for line in sys.stdin.readlines():
 
 for key in forId.keys():
     idRevMap[cnt] = key
+    idMap[key] = cnt
     cnt += 1
 
 matrixNetwork = np.zeros(shape=(cnt, cnt))
@@ -47,8 +49,9 @@ print(matrixNetwork, file = sys.stderr)
 
 compressedMatrixNetwork = matrixNetwork[np.triu_indices(len(matrixNetwork), 1)]
 
-hcMethods = ['single', 'complete', 'average', 'weighted', 'centroid', 'median', 'ward']
+# hcMethods = ['single', 'complete', 'average', 'weighted', 'centroid', 'median', 'ward']
 # centroid, median, ward will only work if euclidean distance is used that is an embedding of distances between parsetrees is possible in k-dim vector space with l2 norm
+hcMethods = ['single', 'complete', 'average', 'weighted']
 mx = 0.0
 method = 'single'
 for method_ in hcMethods:
@@ -164,6 +167,22 @@ def mkFinal(a):
     id, cnt = a
     return (idRevMap[id], cnt)
 
-finalclusters = map(mkFinal, clusters)
+finalclusters = [[] for i in range(clusterCount)]
+for cluster in clusters:
+    finalclusters[cluster[1]].append(idRevMap[cluster[0]])
 
-print(' | '.join(map(str, clusters)).strip())
+def rmse(i, lis):
+    ret = 0.0
+    for j in range(len(lis)):
+        ret += matrixNetwork[i][j] ** 2
+    return (ret / 2.0) ** 0.5
+
+def reorder(lis):
+    a = []
+    for i in range(len(lis)):
+        a.append((rmse(i, lis), i))
+    a.sort()
+    return [i[1] for i in a]
+
+for i in range(clusterCount):
+    print(i, ':', ','.join(map(str, reorder(finalclusters[i]))))
