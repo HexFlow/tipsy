@@ -5,6 +5,8 @@ import tipsy.compiler._
 import tipsy.compare._
 import tipsy.parser._
 import tipsy.cluster._
+import tipsy.db.TipsyPostgresProfile.api._
+import tipsy.db.schema._
 
 import reftree.render._
 import reftree.contrib._
@@ -14,6 +16,10 @@ import reftree.contrib.SimplifiedInstances.list
 
 import java.nio.file.Paths
 import java.io.File
+import java.io.PrintWriter
+
+import scala.concurrent.{ Future, Await }
+import scala.concurrent.duration.Duration
 
 import scala.util.{Try, Success, Failure}
 import scalaz._, Scalaz._
@@ -28,6 +34,7 @@ case object PRINTFLOW extends CLIMode
 case object CLUSTER extends CLIMode
 case object EQUALCLUSTER extends CLIMode
 case object CORRECTION extends CLIMode
+case object DUMPMATRIX extends CLIMode
 
 trait FlowDraw {
   implicit def cfListDrawer: ToRefTree[List[CFEnum]] = ToRefTree[List[CFEnum]] {
@@ -45,7 +52,8 @@ trait FlowDraw {
   * There may be more frontends later, for instance
   * a web based one.
   */
-object CLI extends TreeDraw with FlowDraw {
+object CLI extends TreeDraw with FlowDraw with TipsyDriverWithoutActors {
+
   val renderer = Renderer(
     renderingOptions = RenderingOptions(density = 75),
     directory = Paths.get("."),
@@ -91,6 +99,21 @@ object CLI extends TreeDraw with FlowDraw {
         }
       }
     }.toList
+
+    if (modes contains DUMPMATRIX) {
+      val quesId = modes(DUMPMATRIX)
+      val action = for {
+        matrix <- driver.runDB {
+          distTable.filter(_.quesId === quesId).map(e => (e.id, e.dists)).result
+        }
+        matrixStr = Dists.getAsDump(matrix)
+        writer = new PrintWriter(new File(s"matrix_${quesId}"))
+        _ <- Future(writer.write(matrixStr))
+        _ <- Future(writer.close())
+        _ <- Future(println("Finished task"))
+      } yield ()
+      Await.result(action, Duration.Inf)
+    }
 
     lazy val validTrees = trees.collect { case (Some(x), y) => (x, y) }
     if (modes contains LEASTEDIT) {

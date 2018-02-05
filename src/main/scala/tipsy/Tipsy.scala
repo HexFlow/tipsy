@@ -20,6 +20,8 @@ object Tipsy {
         case "-df" => optset put (DRAWFLOW, "")
         case "-le" => optset put (LEASTEDIT, "")
         case "-eq" => optset put (EQUALCLUSTER, "")
+        case msg if msg.startsWith("-dm=") =>
+          optset put (DUMPMATRIX, msg.split('=')(1))
         case "-cr" => optset put (CORRECTION, "")
         case msg if msg.startsWith("-len=") =>
           optset put (LEASTEDITLIMIT, msg.split('=')(1))

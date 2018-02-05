@@ -162,7 +162,8 @@ print(outliers, file = sys.stderr)
 
 for i in outliers:
     clusters[i] = (i, clusterCount)
-clusterCount += 1
+if len(outliers) > 0:
+    clusterCount += 1
 
 def mkFinal(a):
     id, cnt = a
@@ -187,4 +188,4 @@ def reorder(lis):
     return [i[1] for i in a]
 
 for i in range(clusterCount):
-    print(str(i) +':' +  ','.join(map(str, reorder(finalclusters[i]))))
+    print(','.join(map(str, reorder(finalclusters[i]))))

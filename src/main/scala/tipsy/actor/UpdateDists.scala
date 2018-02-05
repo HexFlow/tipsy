@@ -75,18 +75,19 @@ class UpdateDistsActor extends TipsyActor with TipsyDriverWithoutActors {
 
         matrixStr = Dists.getAsDump(matrix)
 
+        writer = new PrintWriter(new File(s"matrix_${quesId}"))
+        _ <- Future(writer.write(matrixStr))
+        _ <- Future(writer.close())
+
         // Ugly way to get output of clustering.
         cmd = List("bash", "-c", "nix-shell scripts/shell.nix --run \"python2 scripts/hierarchical_clustering.py\" 2> errlog")
         is = new java.io.ByteArrayInputStream(matrixStr.getBytes("UTF-8"))
         out = (cmd #< is).lines_!
         res = out.mkString("")
+        _ <- Future(println(res))
+        clusterList = res.split('\n').map(_.split(',').map(_.toInt).toList).toList
 
-        // Ugly way to parse output of clustering.
-        k: Array[Array[Int]] = (res.split('|').map(_.trim).map(_.drop(1).dropRight(1).split(',').map(_.trim.toInt)))
-        j: List[(Int, Int)] = k.map(x => (x(0), x(1))).toList
-
-        clusterMap: Map[Int, List[Int]] = j.groupBy(_._2).map { case (k, v) => k -> v.map(_._1) }
-        clusterList: List[List[Int]] = clusterMap.map { case (_, v) => v }.toList
+        _ <- Future(println(clusterList))
 
         _ <- driver.runDB {
           clusterTable.insertOrUpdate(Cluster(
