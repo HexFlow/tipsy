@@ -3,7 +3,7 @@ from base64 import b64decode
 import pymysql.cursors
 import pymysql
 
-connection = pymysql.connect(host='localhost', user='root', db='prutor3', password='csssucks')
+connection = pymysql.connect(host='localhost', user='root', db='its2ndSem', password='')
 labNo = 'Lab-11'
 queNo = 2
 

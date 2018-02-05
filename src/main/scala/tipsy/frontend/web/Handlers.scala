@@ -72,32 +72,12 @@ trait Handlers extends JsonSupport with TableHandlers with Helpers {
     Compiler(prog.code) match {
       case Left(err) => Future((BadRequest, ("Compilation failed: " ++ err.toString).asJson))
       case Right(mainTree: ParseTree) =>
-        for {
-          prgs <- SimilarProgs(prog)
-
-          trees = prgs.map { x => Compiler(x.code) } collect {
-            case Right(tree) => tree
-          }
-
-          distances = LeastEdit.compareWithTrees(mainTree, trees)
-          .sortWith(_._2 > _._2)
-
-          corrections = distances collect {
-            case (correctorTree, dist) => Correct(mainTree, correctorTree)
-          }
-
-          res = corrections.map {
-            case Left(err) =>
-              Map("success" -> false.asJson, "error" -> err.toString.asJson).asJson
-            case Right(corrs) =>
-              Map("success" -> true.asJson,
-                "corrections" -> corrs.map { x =>
-                  Map("name" -> x._1.asJson,
-                    "change" -> x._2.asJson).asJson
-                }.asJson,
-                "count" -> corrections.length.asJson).asJson
-          }.asJson
-        } yield ((OK, res))
+        NormalizeParseTree(mainTree) match {
+          case Left(err) => Future((BadRequest, ("Normalization failed: " ++ err.toString).asJson))
+          case Right(nc) => for {
+            res <- Compare.suggestCorrections(nc)(prog.quesId)
+          } yield (OK, res.asJson)
+        }
     }
   }
 

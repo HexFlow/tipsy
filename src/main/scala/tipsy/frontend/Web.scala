@@ -10,14 +10,13 @@ import tipsy.db.TipsyPostgresProfile.api._
 import tipsy.frontend.web.Handlers
 
 import akka.actor.ActorSystem
+import akka.actor._
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.server.directives.FileAndResourceDirectives
-
-import akka.actor.Props
 
 import slick.backend.DatabasePublisher
 
@@ -108,6 +107,7 @@ object Web extends JsonSupport with Ops with FailFastCirceSupport
         Http().shutdownAllConnectionPools()
         driver.close()
         println("Shutting down actor system")
+        updateDists ! PoisonPill
         system.terminate()
         println("Cleanup successful")
       })

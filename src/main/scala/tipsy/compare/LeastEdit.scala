@@ -45,6 +45,12 @@ case class EditRet (diffs: List[Diff], dist: Double) {
   def >(x: EditRet): Boolean = {
     dist > x.dist
   }
+  def <=(x: EditRet): Boolean = {
+    dist <= x.dist
+  }
+  def min(x: EditRet): EditRet = {
+    if (this <= x) this else x
+  }
   def apply(a: EditRet) {
     this.copy(diffs = a.diffs, dist = a.dist)
   }

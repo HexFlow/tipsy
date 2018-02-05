@@ -13,15 +13,15 @@ import scala.math._
 object Compare extends TipsyDriver with Ops {
   val repCntInCluster = 2
 
-  def suggestCorrections(code: NormCode)(implicit quesId: String) = {
+  def suggestCorrections(code: NormCode)(implicit quesId: String): Future[List[EditRet]] = {
     for {
-      repIds <- fetchClusterRepIds(quesId)
+      repIds <- fetchClusterRepIds
       minDistRepIdsAndEditRet <- getBestN(code, 4, repIds)
       progIdsToConsider <- Future.sequence(
         minDistRepIdsAndEditRet.map(x => fetchClusterFromRepId(x._1))
       )
       minDistEditRet <- getBestN(code, 4, progIdsToConsider.flatten.distinct).map(_.map(_._2))
-    } yield ()
+    } yield minDistEditRet
   }
 
   def getBestN(code: NormCode, n: Int, ids: List[Int]): Future[List[(Int, EditRet)]] = {
@@ -71,7 +71,7 @@ object NewLeastEdit {
 
   def findDist(n1: NormCode, n2: NormCode): EditRet = {
     (n1, n2) match {
-      case (NormCode(fxns1), NormCode(fxns2)) =>
+      case (NormCode(fxns1: List[NormFxn]), NormCode(fxns2)) =>
         val fdiff = math.abs(fxns1.length - fxns2.length)
         if (fdiff > 1) {
           EditRet(List(), INF)
@@ -81,15 +81,13 @@ object NewLeastEdit {
 
             val pairedDists = pairedResult.paired.map {
               case (f1, f2) => compareTwoFxns(f1, f2)
-            }.reduceLeft(_ + _)
+            }.foldLeft(EditRet(List(), 0))(_ + _)
             val deletionCost = pairedResult.deleted.map(_.cf.length).sum * deletedFxnPerEntryPenalty
             val additionCost = pairedResult.added.map(_.cf.length).sum * addedFxnPerEntryPenalty
             val fxnOrderingCost = pairedResult.penalty * fxnOrderingPenaltyScaling
 
             pairedDists + deletionCost + additionCost + fxnOrderingCost
-          }.foldLeft(EditRet(List(), INF)) {
-            case (a, b) => if (a.dist <= b.dist) a else b
-          }
+          }.foldLeft(EditRet(List(), INF))(_ min _)
         }
     }
   }
@@ -143,7 +141,8 @@ object NewLeastEdit {
            }
     }
 
-    editDistTable(l1)(l2)._1
+    val res = editDistTable(l1)(l2)._1
+    res.copy(diffs = res.diffs.map(_.copy(fxn = tree1.name)))
   }
 
   def compareTwoExpr(expr1: Vector[String], expr2: Vector[String], param: Int): Double = {

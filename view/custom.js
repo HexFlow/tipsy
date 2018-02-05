@@ -22,12 +22,6 @@ function addToDB() {
 }
 
 function findCorr() {
-
-    if (!document.getElementById("progName").value) {
-        window.alert("Missing prog ID");
-        return;
-    }
-
     console.log("The current code is");
     console.log(editor.getValue());
 
@@ -36,7 +30,7 @@ function findCorr() {
         return;
     }
 
-    var prog = {userId: "sakshams", quesId: "test1", code: editor.getValue()};
+    var prog = {userId: "sakshams", quesId: "1", code: editor.getValue()};
 
     console.log("Finding corrections for program");
     $.ajax({

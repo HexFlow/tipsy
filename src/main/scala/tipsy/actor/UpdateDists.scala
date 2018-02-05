@@ -6,9 +6,11 @@ import akka.event.Logging
 
 import scala.concurrent.{ Future, Await }
 import scala.concurrent.duration.Duration
+import scala.sys.process._
 
 import java.io.File
 import java.io.PrintWriter
+import java.nio.charset.Charset
 
 import tipsy.frontend._
 import tipsy.compare._
@@ -68,20 +70,36 @@ class UpdateDistsActor extends TipsyActor with TipsyDriverWithoutActors {
         matrix <- driver.runDB {
           distTable.filter(_.quesId === quesId).map(e => (e.id, e.dists)).result
         }
-      } yield matrix
 
-      val matrix = Await.result(action, Duration.Inf)
+        _ <- Future(println(s"Finished updating dists after ${id}."))
 
-      val matrixStr = matrix.map {
-        case (id, distMap) => s"${id}: " ++
-          distMap.toList.map {
-            case (nid, dist) => s"(${nid}, ${dist})"
-          }.mkString(" | ")
-      }.mkString("\n")
+        matrixStr = Dists.getAsDump(matrix)
 
-      val writer = new PrintWriter(new File(s"matrix_${quesId}"))
-      writer.write(matrixStr)
-      writer.close()
+        // Ugly way to get output of clustering.
+        cmd = List("bash", "-c", "nix-shell scripts/shell.nix --run \"python2 scripts/hierarchical_clustering.py\" 2> errlog")
+        is = new java.io.ByteArrayInputStream(matrixStr.getBytes("UTF-8"))
+        out = (cmd #< is).lines_!
+        res = out.mkString("")
+
+        // Ugly way to parse output of clustering.
+        k: Array[Array[Int]] = (res.split('|').map(_.trim).map(_.drop(1).dropRight(1).split(',').map(_.trim.toInt)))
+        j: List[(Int, Int)] = k.map(x => (x(0), x(1))).toList
+
+        clusterMap: Map[Int, List[Int]] = j.groupBy(_._2).map { case (k, v) => k -> v.map(_._1) }
+        clusterList: List[List[Int]] = clusterMap.map { case (_, v) => v }.toList
+
+        _ <- driver.runDB {
+          clusterTable.insertOrUpdate(Cluster(
+            quesId = quesId,
+            cluster = clusterList
+          ))
+        }
+
+        _ <- Future(println(s"Finished updating clusters after ${id}."))
+
+      } yield ()
+
+      Await.result(action, Duration.Inf)
 
     case _ => println("Unknown type of message received in updateDists actor.")
   }

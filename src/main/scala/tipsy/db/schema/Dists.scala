@@ -16,3 +16,14 @@ class Dists(tag: Tag) extends Table[Dist](tag, "DISTS") with WithPrimaryKey {
 
   def * = (id, quesId, dists) <> ((Dist.apply _).tupled, Dist.unapply)
 }
+
+object Dists {
+  def getAsDump(matrix: Seq[(Int, Map[Int, Double])]): String = {
+    matrix.map {
+      case (id, distMap) => s"${id}: " ++
+        distMap.toList.map {
+          case (nid, dist) => s"(${nid}, ${dist})"
+        }.mkString(" | ")
+    }.mkString("\n")
+  }
+}

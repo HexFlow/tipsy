@@ -1,38 +1,39 @@
 #!/usr/bin/env python2
 
+from __future__ import print_function
+
 import PyQt4
 import matplotlib
 
 from matplotlib import pyplot as plt
 from scipy.cluster.hierarchy import dendrogram, linkage, cophenet, to_tree
-from __future__ import print_function
 import numpy as np
 import json
 import sys
 import os
 
-SHOWPLOT = int(sys.argv[1])
-MATRIX = sys.argv[2]
+SHOWPLOT = 0
+if len(sys.argv) >= 2 and sys.argv[1] == "showplot":
+    SHOWPLOT = 1
 
 forId = {}
 idRevMap = {}
 cnt = 0
 
-with open(MATRIX) as f:
-    def extract(d):
-        a = d.strip()[1:-1].split(',')
-        return (int(a[0].strip()), float(a[1].strip()))
+def extract(d):
+    a = d.strip()[1:-1].split(',')
+    return (int(a[0].strip()), float(a[1].strip()))
 
-    for line in f.readlines():
-        sp = line.split(':')
-        id = int(sp[0].strip())
-        res = sp[1].strip().split('|')
-        matches = map(extract, res)
-        forId[id] = dict(matches)
+for line in sys.stdin.readlines():
+    sp = line.split(':')
+    id = int(sp[0].strip())
+    res = sp[1].strip().split('|')
+    matches = map(extract, res)
+    forId[id] = dict(matches)
 
-    for key in forId.keys():
-        idRevMap[cnt] = key
-        cnt += 1
+for key in forId.keys():
+    idRevMap[cnt] = key
+    cnt += 1
 
 matrixNetwork = np.zeros(shape=(cnt, cnt))
 for i in range(0, cnt):
@@ -143,7 +144,7 @@ def dfs(rootnode, parentnode = None):
     elif rootnode.count >= thresholdCount[0] and rootnode.count <= thresholdCount[1]:
         assign(rootnode)
         clusterCount += 1
-        if parentnode.dist >= thresholdDist:
+        if parentnode is not None and parentnode.dist >= thresholdDist:
             print("[warning] a cluster was made before thresholdDist", file = sys.stderr)
     else:
         dfs(rootnode.left, rootnode)
@@ -165,6 +166,4 @@ def mkFinal(a):
 
 finalclusters = map(mkFinal, clusters)
 
-print(' | '.join(map(str, clusters)))
-# with open('hierarchicalClusters', 'w') as f:
-    # f.write(' | '.join(map(str, clusters)))
+print(' | '.join(map(str, clusters)).strip())
