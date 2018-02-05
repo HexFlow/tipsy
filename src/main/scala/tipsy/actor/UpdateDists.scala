@@ -84,9 +84,7 @@ class UpdateDistsActor extends TipsyActor with TipsyDriverWithoutActors {
         is = new java.io.ByteArrayInputStream(matrixStr.getBytes("UTF-8"))
         out = (cmd #< is).lines_!
         res = out.mkString("")
-        _ <- Future(println(res))
-        clusterList = res.split('\n').map(_.split(',').map(_.toInt).toList).toList
-
+        clusterList = res.split('|').map(_.split(',').map(_.toInt).toList).toList
         _ <- Future(println(clusterList))
 
         _ <- driver.runDB {

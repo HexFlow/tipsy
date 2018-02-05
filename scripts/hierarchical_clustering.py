@@ -187,5 +187,5 @@ def reorder(lis):
     a.sort()
     return [i[1] for i in a]
 
-for i in range(clusterCount):
-    print(','.join(map(str, reorder(finalclusters[i]))))
+res = map(lambda x: ','.join(map(str, reorder(x))), finalclusters)
+print('|'.join(res))
