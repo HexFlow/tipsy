@@ -21,12 +21,14 @@ trait TableHandlers extends Ops with TipsyDriver with Helpers {
   def createSchema(): HandleResp = {
     for {
       _ <- create(progTable)
+      _ <- create(clusterTable)
     } yield (OK, "Created schemas".asJson)
   }
 
   def dropSchema(): HandleResp = {
     for {
       _ <- drop(progTable)
+      _ <- drop(clusterTable)
     } yield (OK, "Dropped schemas".asJson)
   }
 

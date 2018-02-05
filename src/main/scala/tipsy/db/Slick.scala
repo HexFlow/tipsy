@@ -5,9 +5,7 @@ import org.postgresql.ds.PGSimpleDataSource
 import scala.concurrent.{Future, Await}
 import scala.concurrent.duration.Duration
 
-case class Driver(
-  db: Database
-) {
+case class Driver(db: Database) {
   def close() {
     println("Shutting down DB connection")
     db.close()
@@ -15,8 +13,6 @@ case class Driver(
 
   def runDB[R](action: DBIOAction[R, NoStream, Nothing]): Future[R] = {
     db.run(action)
-    // val futureAction = db.run(action)
-    // Await.result(futureAction, Duration.Inf)
   }
 }
 

@@ -31,6 +31,7 @@ trait TipsyDriver {
   implicit val driver: Driver = TipsySlick()
 
   val progTable: TableQuery[Programs] = TableQuery[Programs]
+  val clusterTable: TableQuery[Clusters] = TableQuery[Clusters]
 }
 
 /**

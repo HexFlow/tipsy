@@ -11,7 +11,7 @@ import scala.concurrent.Future
 import scala.math._
 
 object Compare extends TipsyDriver with Ops {
-  def suggestCorrections(code: NormCode) = {
+  def suggestCorrections(code: NormCode, quesId: String) = {
     for {
       repIds <- fetchClusterRepIds()
       minDistRepIdsAndEditRet <- getBestN(code, 4, repIds)
@@ -177,6 +177,14 @@ object NewLeastEdit {
     penalty: Double // Penalty is 0 for functions which are surely corresponding.
   )
 
+  // Takes a list of normalized functions. Provides a list of PairResult, which
+  // basically contains paired up functions, as well as a penalty of the permutation.
+  // That means, that a pairing-up in which functions were in their original
+  // usage order, has a 0 penalty.
+  // It also contains functions which were not paired up.
+  // Note: The first list is considered as the buggy program which needs corrections.
+  // So the 'added' list in PairResult is the list of functions in f2 which were
+  // not paired with a function in f1, in that PairResult.
   def pairUpFxnsList(f1: List[NormFxn], f2: List[NormFxn]): List[PairResult] = {
     val l1 = f1.length
     val l2 = f2.length

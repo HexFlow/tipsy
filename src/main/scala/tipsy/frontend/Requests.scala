@@ -26,21 +26,24 @@ trait JsonSupport {
       // ("foo", Json.fromString(a.foo)),
       // ("bar", Json.fromInt(a.bar))
       a match {
-        case Diff(ADD_d, Some(x), None) => Json.obj (
+        case Diff(ADD_d, Some(x), None, f) => Json.obj (
           "change" -> "Add+".asJson,
           "addEntry" -> x.asJson,
-          "position" -> a.position.toString.asJson
+          "position" -> a.position.toString.asJson,
+          "function" -> f.asJson
         )
-        case Diff(DEL_d, None, Some(x)) => Json.obj (
+        case Diff(DEL_d, None, Some(x), f) => Json.obj (
           "change" -> "Remove-".asJson,
           "removeEntry" -> x.asJson,
-          "position" -> a.position.toString.asJson
+          "position" -> a.position.toString.asJson,
+          "function" -> f.asJson
         )
-        case Diff(REPLACE_d, Some(x), Some(y)) => Json.obj (
+        case Diff(REPLACE_d, Some(x), Some(y), f) => Json.obj (
           "change" -> "Replace+-".asJson,
           "addEntry" -> x.asJson,
           "removeEntry" -> y.asJson,
-          "position" -> a.position.toString.asJson
+          "position" -> a.position.toString.asJson,
+          "function" -> f.asJson
         )
       }
   }
