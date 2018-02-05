@@ -2,7 +2,6 @@
 
 import PyQt4
 import matplotlib
-matplotlib.use('qt4agg')
 
 from matplotlib import pyplot as plt
 from scipy.cluster.hierarchy import dendrogram, linkage, cophenet, to_tree
@@ -14,12 +13,36 @@ import os
 SHOWPLOT = int(sys.argv[1])
 MATRIX = sys.argv[2]
 
-os.system("""cat {0} | sed -E 's/List//g' | sed -E 's/\(/\[/g' | sed -E 's/\)/\]/g' > {0}_res""".format(MATRIX))
+forId = {}
+idRevMap = {}
+cnt = 0
 
-with open("""{0}_res""".format(MATRIX)) as f:
-    matrixNetwork = json.load(f)
+with open(MATRIX) as f:
+    def extract(d):
+        a = d.strip()[1:-1].split(',')
+        return (int(a[0].strip()), float(a[1].strip()))
 
-matrixNetwork = np.array(matrixNetwork)
+    for line in f.readlines():
+        sp = line.split(':')
+        id = int(sp[0].strip())
+        res = sp[1].strip().split('|')
+        matches = map(extract, res)
+        forId[id] = dict(matches)
+
+    for key in forId.keys():
+        idRevMap[cnt] = key
+        cnt+=1
+
+matrixNetwork = np.zeros(shape=(cnt, cnt))
+for i in range(0, cnt):
+    for j in range(0, cnt):
+        if i == j:
+            matrixNetwork[i][j] = 0
+        else:
+            matrixNetwork[i][j] = forId[idRevMap[i]][idRevMap[j]]
+
+print(matrixNetwork)
+
 compressedMatrixNetwork = matrixNetwork[np.triu_indices(len(matrixNetwork), 1)]
 
 hcMethods = ['single', 'complete', 'average', 'weighted', 'centroid', 'median', 'ward']
@@ -135,5 +158,11 @@ print(outliers)
 for i in outliers:
     clusters[i] = (i, clusterCount)
 
+def mkFinal(a):
+    id, cnt = a
+    return (idRevMap[id], cnt)
+
+finalclusters = map(mkFinal, clusters)
+
 with open('hierarchicalClusters', 'w') as f:
-    f.write(', '.join(map(str, clusters)))
+    f.write(' | '.join(map(str, clusters)))

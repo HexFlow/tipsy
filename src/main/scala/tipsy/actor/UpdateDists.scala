@@ -76,7 +76,7 @@ class UpdateDistsActor extends TipsyActor with TipsyDriverWithoutActors {
         case (id, distMap) => s"${id}: " ++
           distMap.toList.map {
             case (nid, dist) => s"(${nid}, ${dist})"
-          }.mkString(", ")
+          }.mkString(" | ")
       }.mkString("\n")
 
       val writer = new PrintWriter(new File(s"matrix_${quesId}"))
