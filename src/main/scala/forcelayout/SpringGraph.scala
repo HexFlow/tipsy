@@ -167,7 +167,7 @@ class SpringGraph(val sourceNodes: Seq[Node], val sourceEdges: Seq[Edge]) {
   
   def getNearestNode(pt: Vector2D) = nodes.map(node => (node, (node.state.pos - pt).magnitude)).sortBy(_._2).head._1
 
-  def doLayout(onComplete: (Int => Unit) = null, onIteration: (Int => Unit) = null, maxIterations: Int = 1000): Unit = {
+  def doLayout(onComplete: (Int => Unit) = null, onIteration: (Int => Unit) = null, maxIterations: Int = 100): Unit = {
     var it = 0
     do { 
       step

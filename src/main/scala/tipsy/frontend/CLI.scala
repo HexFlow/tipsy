@@ -16,6 +16,7 @@ import java.nio.file.Paths
 import java.io.File
 
 import scala.util.{Try, Success, Failure}
+import scalaz._, Scalaz._
 
 sealed trait CLIMode
 case object LEASTEDIT extends CLIMode
@@ -106,7 +107,17 @@ object CLI extends TreeDraw with FlowDraw {
         Clusterify(matrixNetwork.map(_.toList).toList, leastEdited.map(x =>  (x._1, x._2, 10/(x._3+0.1))), len, validTrees.map(_._2), Integer.parseInt(modes(CLUSTER)), equalSized)
       }
       else {
-        DistanceDraw(LeastEdit(validTrees.map(_._1), false), validTrees.length, validTrees.map(_._2))
+        // DistanceDraw(LeastEdit(validTrees.map(_._1), false), validTrees.length, validTrees.map(_._2))
+        validTrees.map(x => NormalizeParseTree(x._1)).sequenceU match {
+          case Left(err) => println("ERROR: Could not normalize some trees: " ++ err.toString)
+          case Right(cfList) =>
+            val pairs = cfList.zipWithIndex.combinations(2).map {
+              case Seq((cf1, idx1), (cf2, idx2)) =>
+                val force = 1.0/(0.1+NewLeastEdit.findDist(cf1, cf2).dist)
+                (idx1, idx2, force)
+            }.toList
+            DistanceDraw(pairs, cfList.length, validTrees.map(_._2))
+        }
       }
     } else if (modes contains CORRECTION) {
       if (validTrees.length == 2) {
