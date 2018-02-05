@@ -31,6 +31,7 @@ trait Helpers extends Ops with TipsyDriver {
         Future(idReq)
       }
     }
+    updateDists ! id
     id // Return the ID to sender parent
   }
 

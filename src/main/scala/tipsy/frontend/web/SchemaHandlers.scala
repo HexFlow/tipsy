@@ -16,7 +16,7 @@ import scala.util.{Success, Failure}
 
 import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
 
-trait TableHandlers extends Ops with TipsyDriver with Helpers {
+trait TableHandlers extends Helpers {
 
   def createSchema(): HandleResp = {
     for {

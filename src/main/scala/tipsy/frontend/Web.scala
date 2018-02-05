@@ -3,6 +3,7 @@ package tipsy.frontend
 import tipsy.compiler._
 import tipsy.compare._
 import tipsy.parser._
+import tipsy.actors._
 import tipsy.db._
 import tipsy.db.schema._
 import tipsy.db.TipsyPostgresProfile.api._
@@ -16,6 +17,8 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.server.directives.FileAndResourceDirectives
 
+import akka.actor.Props
+
 import slick.backend.DatabasePublisher
 
 import de.heikoseeberger.akkahttpcirce._
@@ -27,6 +30,9 @@ trait TipsyDriver {
   implicit val system = ActorSystem("web-tipsy")
   implicit val materializer = ActorMaterializer()
   implicit val executionContext = system.dispatcher
+
+  val updateDists = system.actorOf(Props[UpdateDistsActor].
+    withDispatcher("db-update-dispatcher"), "updateDistsActor")
 
   implicit val driver: Driver = TipsySlick()
 
@@ -41,7 +47,7 @@ trait TipsyDriver {
   * information/corrections
   */
 object Web extends JsonSupport with Ops with FailFastCirceSupport
-    with FileAndResourceDirectives with TipsyDriver with Handlers {
+    with FileAndResourceDirectives with Handlers {
 
   // modes is currently not used
   def apply(modes: Set[CLIMode]): Unit = {

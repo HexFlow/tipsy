@@ -9,8 +9,8 @@ case class Cluster (
 )
 
 class Clusters(tag: Tag) extends Table[Cluster](tag, "CLUSTERS") {
-  def id: Rep[String] = column[String]("QUES_ID", O.PrimaryKey)
+  def quesId: Rep[String] = column[String]("QUES_ID", O.PrimaryKey)
   def cluster: Rep[List[List[Int]]] = column [List[List[Int]]]("CLUSTER")
 
-  def * = (id, cluster) <> ((Cluster.apply _).tupled, Cluster.unapply)
+  def * = (quesId, cluster) <> ((Cluster.apply _).tupled, Cluster.unapply)
 }

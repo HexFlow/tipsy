@@ -15,6 +15,9 @@ resolvers ++= Seq(
 
 addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
 
+// For cats
+scalacOptions += "-Ypartial-unification"
+
 libraryDependencies ++= Seq(
   "org.scalatest"           %% "scalatest"                % "2.2.6" % "test",
   "org.scala-lang.modules"  %% "scala-parser-combinators" % "1.0.4",
@@ -30,7 +33,8 @@ libraryDependencies ++= Seq(
   "com.github.tminglei"     %% "slick-pg_circe-json"      % "0.15.7",
   "com.typesafe.akka"       %% "akka-actor"               % "2.5.8",
   "org.scalanlp"            %% "breeze"                   % "0.13.1",
-  "de.heikoseeberger"       %% "akka-http-circe"          % "1.20.0-RC1"
+  "de.heikoseeberger"       %% "akka-http-circe"          % "1.20.0-RC1",
+  "org.typelevel"           %% "cats-core"                % "1.0.1"
 )
 
 libraryDependencies ++= Seq(

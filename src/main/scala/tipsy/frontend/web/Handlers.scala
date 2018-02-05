@@ -14,8 +14,7 @@ import scala.concurrent.Future
 
 import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
 
-trait Handlers extends Ops with TipsyDriver with JsonSupport with TableHandlers
-    with Helpers {
+trait Handlers extends JsonSupport with TableHandlers with Helpers {
 
   def similarFromDB(id: Int): HandleResp = {
     val r = getFromDB(id)

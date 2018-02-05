@@ -18,8 +18,9 @@ object Compare extends TipsyDriver with Ops {
       repIds <- fetchClusterRepIds(quesId)
       minDistRepIdsAndEditRet <- getBestN(code, 4, repIds)
       progIdsToConsider <- Future.sequence(
-        minDistRepIdsAndEditRet.map(x => fetchClusterFromRepId(x._1)))
-      minDistEditRet <- getBestN(code, 4, progIdsToConsider.flatten).map(_.map(_._2))
+        minDistRepIdsAndEditRet.map(x => fetchClusterFromRepId(x._1))
+      )
+      minDistEditRet <- getBestN(code, 4, progIdsToConsider.flatten.distinct).map(_.map(_._2))
     } yield ()
   }
 
@@ -43,7 +44,7 @@ object Compare extends TipsyDriver with Ops {
     // Fetch clusters of this question. Take `repCntInCluster` from each and return that list.
     for {
       cluster <- driver.runDB {
-        clusterTable.filter(_.id === quesId).result
+        clusterTable.filter(_.quesId === quesId).result
       }.map(_.headOption.map(_.cluster).getOrElse(List()))
     } yield cluster.flatMap(_.take(repCntInCluster))
   }
@@ -52,7 +53,7 @@ object Compare extends TipsyDriver with Ops {
     // Given a representative of a cluster, fetch that full cluster.
     for {
       cluster <- driver.runDB {
-        clusterTable.filter(_.id === quesId).result
+        clusterTable.filter(_.quesId === quesId).result
       }.map(_.headOption.map(_.cluster).getOrElse(List()))
     } yield
       cluster.collect {
@@ -214,7 +215,7 @@ object NewLeastEdit {
       // The penalty is out of 1.
       val penalty = (permutedFxnsWithOrigIndex.map(_._2).zipWithIndex.map {
         case (i1, i2) => if (i1 == i2) 0 else 1
-      }.sum) / fxns.length
+      }.sum).toDouble / fxns.length.toDouble
 
       PairResult(
         paired,
