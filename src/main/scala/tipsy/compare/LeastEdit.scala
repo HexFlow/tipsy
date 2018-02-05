@@ -4,7 +4,15 @@ import tipsy.parser._
 
 import scala.math._
 
-sealed trait DiffChange
+sealed trait DiffChange {
+  def string(): String = {
+    this match {
+      case ADD_d => "Add"
+      case DEL_d => "Delete"
+      case REPLACE_d => "Replace"
+    }
+  }
+}
 case object ADD_d     extends DiffChange
 case object DEL_d     extends DiffChange
 case object REPLACE_d extends DiffChange

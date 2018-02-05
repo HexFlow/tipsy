@@ -110,8 +110,23 @@ object CLI extends TreeDraw with FlowDraw {
       }
     } else if (modes contains CORRECTION) {
       if (validTrees.length == 2) {
-        val corrections = Correct(validTrees(0)._1, validTrees(1)._1)
-        println(corrections)
+        val res = for {
+          cf1 <- NormalizeParseTree(validTrees(0)._1).right
+          cf2 <- NormalizeParseTree(validTrees(1)._1).right
+        } yield NewLeastEdit.findDist(cf1, cf2)
+
+        res match {
+          case Left(err) => println("Error while fetching corrections: " ++ err.toString)
+          case Right(EditRet(diffs, dist)) =>
+            println("Edit ret:")
+            println("Distance: " ++ dist.toString)
+            println("Diffs:")
+            diffs.map {
+              case Diff(change, addEntry, delEntry, fxn) =>
+                println(change.string ++ ": " ++ addEntry.toString ++ " ====>> " ++
+                  delEntry.toString ++ " in " ++ fxn)
+            }
+        }
       }
     }
   }
