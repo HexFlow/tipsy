@@ -64,7 +64,7 @@ object Compare extends TipsyDriver with Ops {
 
 object NewLeastEdit {
   val INF: Double = 1000000
-  val deletedFxnPerEntryPenalty = 10
+  val deletedFxnPerEntryPenalty = 20 // TODO: Fix this.
   val addedFxnPerEntryPenalty = 20
   val fxnOrderingPenaltyScaling = 20
   val pairingUpPenaltyThreshold = 0.5

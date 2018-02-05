@@ -7,6 +7,9 @@ import akka.event.Logging
 import scala.concurrent.{ Future, Await }
 import scala.concurrent.duration.Duration
 
+import java.io.File
+import java.io.PrintWriter
+
 import tipsy.frontend._
 import tipsy.compare._
 import tipsy.db.schema._
@@ -63,8 +66,23 @@ class UpdateDistsActor extends TipsyActor with TipsyDriver {
             } yield ()
           }
         }
-      } yield ()
 
-      runInf(action)
+        matrix <- driver.runDB {
+          distTable.filter(_.quesId === quesId).map(e => (e.id, e.dists)).result
+        }
+      } yield matrix
+
+      val matrix = runInf(action)
+
+      val matrixStr = matrix.map {
+        case (id, distMap) => s"${id}: " ++
+          distMap.toList.map {
+            case (nid, dist) => s"(${nid}, ${dist})"
+          }.mkString(", ")
+      }.mkString("\n")
+
+      val writer = new PrintWriter(new File(s"matrix_${quesId}"))
+      writer.write(matrixStr)
+      writer.close()
   }
 }

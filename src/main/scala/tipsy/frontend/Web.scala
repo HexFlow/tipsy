@@ -31,8 +31,7 @@ trait TipsyDriver {
   implicit val materializer = ActorMaterializer()
   implicit val executionContext = system.dispatcher
 
-  val updateDists = system.actorOf(Props[UpdateDistsActor].
-    withDispatcher("db-update-dispatcher"), "updateDistsActor")
+  val updateDists = system.actorOf(Props[UpdateDistsActor], "updateDistsActor")
 
   implicit val driver: Driver = TipsySlick()
 
