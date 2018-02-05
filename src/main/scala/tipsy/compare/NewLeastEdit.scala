@@ -37,8 +37,8 @@ object NewLeastEdit {
   }
 
   def compareTwoFxns(tree1: NormFxn, tree2: NormFxn): EditRet = {
-    val cfEnum1 = tree1.cf
-    val cfEnum2 = tree2.cf
+    val cfEnum1 = tree1.cf.reverse
+    val cfEnum2 = tree2.cf.reverse
     val l1 = cfEnum1.length
     val l2 = cfEnum2.length
 
@@ -47,7 +47,7 @@ object NewLeastEdit {
 
     def distance(x: Int, y: Int): (EditRet, (Int, Int)) = {
       (x, y) match {
-        case (0, 0) => (EditRet(List(), 1), (0, 0)) // otherwise 1/0.1 = 10 and all other < 1
+        case (0, 0) => (EditRet(List(), 0), (0, 0))
         case (i, 0) => go(i - 1, 0, Some(DEL_d))
         case (0, j) => go(0, j - 1, Some(ADD_d))
         case (i, j) => {
@@ -62,15 +62,16 @@ object NewLeastEdit {
 
     def cost(i: Int, j: Int, action: DiffChange, param: Int): Double = {
       action match {
-        case DEL_d => 2.0 + param * 5.0
-        case ADD_d => 2.0 + param * 5.0
+        case DEL_d => 20.0 // 2.0 + param * 5.0
+        case ADD_d => 20.0 // 2.0 + param * 5.0
         case _     => {
           (cfEnum1(i), cfEnum2(j)) match {
             case (POSTEXPR(expr1), POSTEXPR(expr2)) => {
               val normFactor = max(expr1.length, expr2.length) * 2
-              (1.0 + 5.0 * param) * compareTwoExpr(expr1.toVector, expr2.toVector, param)/normFactor
+              val ret = compareTwoExpr(expr1.toVector, expr2.toVector, param)
+              (10.0 /*1.0 + 5.0 * param*/) * ret/normFactor
             }
-            case _ => 1.0 + 5.0 * param
+            case _ => 10.0 // 1.0 + 5.0 * param
           }
         }
       }
@@ -82,12 +83,14 @@ object NewLeastEdit {
       else action.get match {
              case DEL_d => (editRet.correct(Diff(DEL_d, None, Some(cfEnum1(i))), cost(i, j, DEL_d, 3 * b)), (b + 1, c))
              case ADD_d => (editRet.correct(Diff(ADD_d, Some(cfEnum2(j)), None), cost(i, j, ADD_d, 3 * b)), (b + 1, c))
-             case _     => (editRet.correct(Diff(REPLACE_d, Some(cfEnum2(j)), Some(cfEnum1(i))), cost(i, j, REPLACE_d, c)), (b, c + 1))
+             case _     => {
+               (editRet.correct(Diff(REPLACE_d, Some(cfEnum2(j)), Some(cfEnum1(i))), cost(i, j, REPLACE_d, c)), (b, c + 1))
+             }
            }
     }
 
     val res = editDistTable(l1)(l2)._1
-    res.copy(diffs = res.diffs.map (_.copy(fxn = tree1.name)))
+    res.copy(diffs = res.diffs.reverse.map (_.copy(fxn = tree1.name)))
   }
 
   def compareTwoExpr(expr1: Vector[String], expr2: Vector[String], param: Int): Double = {
