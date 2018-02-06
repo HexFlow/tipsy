@@ -1,7 +1,6 @@
 package tipsy.db
 
 import tipsy.db.TipsyPostgresProfile.api._
-import schema._
 
 /**
   * Define all generic methods on tables here

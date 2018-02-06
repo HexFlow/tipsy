@@ -1,8 +1,6 @@
 package tipsy.compare
 
-import tipsy.db._
 import tipsy.db.schema._
-import tipsy.lexer._
 import tipsy.parser._
 
 object ProgStats {

@@ -1,16 +1,10 @@
 package tipsy.actors
 
 import akka.actor.Actor
-import akka.actor.Props
-import akka.event.Logging
 
 import scala.concurrent.{ Future, Await }
 import scala.concurrent.duration.Duration
-import scala.sys.process._
 
-import java.io.File
-import java.io.PrintWriter
-import java.nio.charset.Charset
 
 import tipsy.frontend._
 import tipsy.compare._

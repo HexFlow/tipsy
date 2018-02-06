@@ -1,11 +1,8 @@
 package tipsy.parser
 
-import tipsy.compiler.{Location, CParserError}
 import tipsy.lexer._
 
-import scala.util.parsing.combinator.PackratParsers
 import scala.util.parsing.combinator.Parsers
-import scala.util.parsing.input.{NoPosition, Position, Reader}
 
 trait OperatorParsers extends Parsers {
   override type Elem = CToken

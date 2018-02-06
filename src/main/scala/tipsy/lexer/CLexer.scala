@@ -3,7 +3,6 @@ package tipsy.lexer
 import tipsy.compiler.{Location, CLexerError}
 
 import scala.util.parsing.combinator.RegexParsers
-import scala.util.parsing.input.Positional
 
 object CLexer extends RegexParsers {
   override def skipWhitespace = true

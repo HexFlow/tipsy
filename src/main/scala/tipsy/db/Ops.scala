@@ -1,18 +1,14 @@
 package tipsy.db
 
-import scala.concurrent.{Future, Await}
-import scala.concurrent.duration.Duration
+import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
 
 import tipsy.db.TipsyPostgresProfile.api._
-import slick.backend.DatabasePublisher
 import scala.util.{ Success, Failure }
 
-import scala.reflect._
 
 trait Ops {
   import Constraints._
-  import schema._
 
   implicit val driver: Driver
   implicit val executionContext: ExecutionContext

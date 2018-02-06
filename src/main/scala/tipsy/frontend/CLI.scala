@@ -1,21 +1,16 @@
 package tipsy.frontend
 
-import scala.io.Source
 import tipsy.compiler._
 import tipsy.compare._
-import tipsy.parser._
-import tipsy.cluster._
 import tipsy.db.TipsyPostgresProfile.api._
 import tipsy.db.schema._
 
-import java.nio.file.Paths
 import java.io.File
 import java.io.PrintWriter
 
 import scala.concurrent.{ Future, Await }
 import scala.concurrent.duration.Duration
 
-import scala.util.{Try, Success, Failure}
 import scalaz._, Scalaz._
 
 sealed trait CLIMode

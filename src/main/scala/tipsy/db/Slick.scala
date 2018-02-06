@@ -1,9 +1,7 @@
 package tipsy.db
 
 import tipsy.db.TipsyPostgresProfile.api._
-import org.postgresql.ds.PGSimpleDataSource
-import scala.concurrent.{Future, Await}
-import scala.concurrent.duration.Duration
+import scala.concurrent.Future
 
 case class Driver(db: Database) {
   def close() {

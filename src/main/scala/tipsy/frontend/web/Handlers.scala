@@ -12,7 +12,8 @@ import tipsy.frontend._
 import akka.http.scaladsl.model.StatusCodes._
 import scala.concurrent.Future
 
-import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
+import io.circe.generic.auto._
+import io.circe.syntax._
 
 trait Handlers extends JsonSupport with TableHandlers with Helpers {
 

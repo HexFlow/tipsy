@@ -1,15 +1,12 @@
 package tipsy.db
 
 import com.github.tminglei.slickpg._
-import slick.driver.PostgresDriver.api._
-import slick.jdbc.{GetResult, PostgresProfile}
+import slick.jdbc.PostgresProfile
 
 import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
 
 import schema.Stats
-import tipsy.parser.CFEnum
 import tipsy.compare._
-import scala.util.parsing.input.{ NoPosition, OffsetPosition }
 
 trait TipsyPostgresProfile extends PostgresProfile
     with PgCirceJsonSupport

@@ -2,7 +2,7 @@ name := "tipsy"
 
 version := "0.1"
 
-scalaVersion := "2.11.8"
+scalaVersion := "2.12.4"
 
 resolvers ++= Seq(
   Resolver.bintrayRepo("stanch", "maven"),
@@ -13,15 +13,13 @@ resolvers ++= Seq(
   Resolver.bintrayRepo("Sonatype Releases", "https://oss.sonatype.org/content/repositories/releases/")
 )
 
-addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
+// scalacOptions += "-Ywarn-unused-import"
 
 libraryDependencies ++= Seq(
-  "org.scalatest"           %% "scalatest"                % "2.2.6" % "test",
   "org.scala-lang.modules"  %% "scala-parser-combinators" % "1.0.4",
   "com.propensive"          % "rapture-io"                % "0.7.2",
   "com.typesafe.akka"       %% "akka-http"                % "10.1.0-RC1",
   "com.typesafe.slick"      %% "slick"                    % "3.2.0",
-  "org.slf4j"               % "slf4j-nop"                 % "1.6.4",
   "com.typesafe.slick"      %% "slick-hikaricp"           % "3.2.0",
   "org.postgresql"          % "postgresql"                % "42.0.0",
   "org.scalaz"              %% "scalaz-core"              % "7.2.10",
@@ -37,3 +35,8 @@ libraryDependencies ++= Seq(
   "io.circe" %% "circe-generic",
   "io.circe" %% "circe-parser"
 ).map(_ % "0.9.1")
+
+addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
+
+scalafixSettings
+sbtfixSettings

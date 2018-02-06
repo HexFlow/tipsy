@@ -1,8 +1,5 @@
 package tipsy.frontend
 
-import tipsy.compiler._
-import tipsy.compare._
-import tipsy.parser._
 import tipsy.actors._
 import tipsy.db._
 import tipsy.db.schema._
@@ -15,13 +12,11 @@ import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.server.directives.FileAndResourceDirectives
 
-import slick.backend.DatabasePublisher
 
 import de.heikoseeberger.akkahttpcirce._
-import io.circe.syntax._, io.circe.generic.auto._
+import io.circe.generic.auto._
 
 import scala.io.StdIn
 

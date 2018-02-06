@@ -2,7 +2,6 @@ package tipsy.compare
 
 import tipsy.parser._
 
-import scala.math._
 
 sealed trait DiffChange {
   def string(): String = {

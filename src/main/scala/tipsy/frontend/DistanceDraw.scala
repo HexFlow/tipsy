@@ -1,13 +1,9 @@
 package tipsy.frontend
 
-import tipsy.lexer._
-import tipsy.parser._
 
 
 import java.awt.Dimension
 import javax.swing.{ JFrame, JLabel, ImageIcon  }
-import java.io.File
-import javax.imageio.ImageIO
 import javax.swing.JFrame;
 
 import forcelayout.renderer.ImageRenderer

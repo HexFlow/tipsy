@@ -1,9 +1,7 @@
 package tipsy.compiler
 
-import tipsy.compiler._
 import tipsy.compare.{ProgStats, NormalizeParseTree}
 import tipsy.db.schema._
-import tipsy.frontend._
 import tipsy.db.Requests._
 
 import java.io._

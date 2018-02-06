@@ -2,10 +2,8 @@ package tipsy.compare
 
 import tipsy.parser._
 import tipsy.lexer._
-import tipsy.frontend._
 import tipsy.compiler._
 
-import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
 
 case class NormFxn(name: String, cf: List[CFEnum])
 

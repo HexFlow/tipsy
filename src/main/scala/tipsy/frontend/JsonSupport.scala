@@ -1,12 +1,11 @@
 package tipsy.frontend
 
 import tipsy.compare._
-import tipsy.db.schema._
-import tipsy.db.Requests._
 import tipsy.parser._
 
-import io.circe._, io.circe.generic.semiauto._, io.circe.generic.JsonCodec, io.circe.syntax._
-import io.circe.{ Decoder, Encoder, HCursor, Json }
+import io.circe._
+import io.circe.syntax._
+import io.circe.{Encoder, Json }
 
 /**
   * Collect your json format instances into a support trait

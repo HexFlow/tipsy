@@ -1,14 +1,11 @@
 package tipsy.compare
 
-import tipsy.parser._
-import tipsy.lexer._
 import tipsy.frontend._
 import tipsy.db._
 import tipsy.db.schema._
 import tipsy.db.TipsyPostgresProfile.api._
 
 import scala.concurrent.Future
-import scala.math._
 
 object Correct extends TipsyDriver with Ops {
   val repCntInCluster = 2

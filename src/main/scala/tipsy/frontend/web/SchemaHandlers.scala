@@ -2,19 +2,15 @@ package tipsy.frontend.web
 
 import tipsy.db.Requests
 import tipsy.compiler._
-import tipsy.compare._
-import tipsy.parser._
 import tipsy.db._
-import tipsy.db.schema._
 import tipsy.db.TipsyPostgresProfile.api._
-import tipsy.frontend._
 
 import akka.http.scaladsl.model.StatusCodes._
 import scala.concurrent.Future
 
 import scala.util.{Success, Failure}
 
-import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
+import io.circe.syntax._
 
 trait TableHandlers extends Helpers {
 
