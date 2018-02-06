@@ -25,7 +25,16 @@ trait TipsyPostgresProfile extends PostgresProfile
     implicit val statsColumnType =
       MappedColumnType.base[Stats, Json](
         { s => s.asJson },
-        { j => decode[Stats](j.toString).right.get }
+        { j =>
+          {
+            decode[Stats](j.toString) match {
+              case Left(err) =>
+                println("Decoding stats error: " ++ err.toString)
+                throw new Exception("DAMN")
+              case Right(x) => x
+            }
+          }
+        }
       )
 
     implicit val llIntColumnType =
