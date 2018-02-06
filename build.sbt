@@ -27,7 +27,9 @@ libraryDependencies ++= Seq(
   "com.github.tminglei"     %% "slick-pg_circe-json"      % "0.15.7",
   "com.typesafe.akka"       %% "akka-actor"               % "2.5.8",
   "org.scalanlp"            %% "breeze"                   % "0.13.1",
-  "de.heikoseeberger"       %% "akka-http-circe"          % "1.20.0-RC1"
+  "de.heikoseeberger"       %% "akka-http-circe"          % "1.20.0-RC1",
+  "org.slf4j"               % "slf4j-api"                 % "1.7.25",
+  "org.slf4j"               % "slf4j-simple"              % "1.7.25"
 )
 
 libraryDependencies ++= Seq(
@@ -35,6 +37,7 @@ libraryDependencies ++= Seq(
   "io.circe" %% "circe-generic",
   "io.circe" %% "circe-parser"
 ).map(_ % "0.9.1")
+
 
 addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
 

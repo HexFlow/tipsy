@@ -14,6 +14,8 @@ import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.directives.FileAndResourceDirectives
 
+import scala.concurrent.Await
+import scala.concurrent.duration._
 
 import de.heikoseeberger.akkahttpcirce._
 import io.circe.generic.auto._
@@ -96,20 +98,8 @@ object Web extends JsonSupport with Ops with FailFastCirceSupport
     val bindingFuture = Http().bindAndHandle(route, "0.0.0.0", 8070)
     println(s"Server online at http://localhost:8070/")
 
-    StdIn.readLine()
-
-    // TODO: This still does not shutdown the cluster, and keeps resources stuck.
-    bindingFuture
-      .flatMap(_.unbind())
-      .onComplete (_ => {
-        println("Shutting down HTTP")
-        Http().shutdownAllConnectionPools()
-        driver.close()
-        println("Shutting down actor system")
-        updateDists ! PoisonPill
-        updateClusters ! PoisonPill
-        system.terminate()
-        println("Cleanup successful")
-      })
+    Await.result(system.whenTerminated, Duration.Inf)
+    driver.close()
+    println("Cleanup successful")
   }
 }
