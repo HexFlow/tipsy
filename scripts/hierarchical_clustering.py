@@ -66,6 +66,8 @@ if method in ['centroid', 'median', 'ward']:
 
 print(method, mx, file = sys.stderr)
 
+linked = linkage(compressedMatrixNetwork, method)
+
 def fancy_dendrogram(*args, **kwargs):
     max_d = kwargs.pop('max_d', None)
     if max_d and 'color_threshold' not in kwargs:
@@ -91,27 +93,24 @@ def fancy_dendrogram(*args, **kwargs):
             plt.axhline(y = max_d, c = 'k')
     return ddata
 
-linked = linkage(compressedMatrixNetwork, method)
-plt.figure(figsize=(25,10))
-plt.title('Dendrogram for Matrix')
-plt.xlabel('codes')
-plt.ylabel('distance')
-dend = fancy_dendrogram(linked,
-                        leaf_rotation = 90,
-                        leaf_font_size = 8,
-                      # truncate_mode = 'lastp',
-                      # p = 12,
-                        show_contracted = True,
-                        annotate_above = 1000,
-                        max_d = 600)
-
 if SHOWPLOT == 1:
+    plt.figure(figsize=(25,10))
+    plt.title('Dendrogram for Matrix')
+    plt.xlabel('codes')
+    plt.ylabel('distance')
+    dend = fancy_dendrogram(linked,
+                            leaf_rotation = 90,
+                            leaf_font_size = 8,
+                        # truncate_mode = 'lastp',
+                        # p = 12,
+                            show_contracted = True,
+                            annotate_above = 1000,
+                            max_d = 600)
     plt.show()
 
 hierarchicalTree = to_tree(linked)
 
 clusters = [(i, -1) for i in range(0, len(matrixNetwork))]
-outliers = []
 clusterCount = 0
 thresholdDist = 300.0
 thresholdCount = int(cnt ** 0.5) # (min, max)
@@ -125,50 +124,34 @@ def assign(rootnode):
         assign(rootnode.left)
         assign(rootnode.right)
 
-def markAsOutlier(rootnode):
-    if rootnode is None:
-        return
-    elif rootnode.count == 1:
-        outliers.append(rootnode.id)
-    else:
-        markAsOutlier(rootnode.left)
-        markAsOutlier(rootnode.right)
-
-def dfs(rootnode, parentnode = None):
+def dfs(rootnode = None):
     global clusterCount
     if rootnode is None:
         return
     elif rootnode.dist > thresholdDist or rootnode.count >= 2*thresholdCount:
-        dfs(rootnode.left, rootnode)
-        dfs(rootnode.right, rootnode)
+        dfs(rootnode.left)
+        dfs(rootnode.right)
+    elif rootnode.count <= thresholdCount:
+        assign(rootnode)
+        clusterCount += 1
     elif rootnode.left is None:
-        dfs(rootnode.right, rootnode)
+        dfs(rootnode.right)
     elif rootnode.right is None:
-        dfs(rootnode.left, rootnode)
+        dfs(rootnode.left)
     elif rootnode.left.count <= thresholdCount:
         assign(rootnode.left)
         clusterCount += 1
-        dfs(rootnode.right, rootnode)
+        dfs(rootnode.right)
     else:
         assign(rootnode.right)
         clusterCount += 1
-        dfs(rootnode.left, rootnode)
+        dfs(rootnode.left)
 
 dfs(hierarchicalTree)
 
 print(clusterCount, file = sys.stderr)
 print(thresholdDist, thresholdCount, file = sys.stderr)
 print(clusters, file = sys.stderr)
-print(outliers, file = sys.stderr)
-
-for i in outliers:
-    clusters[i] = (i, clusterCount)
-if len(outliers) > 0:
-    clusterCount += 1
-
-def mkFinal(a):
-    id, cnt = a
-    return (idRevMap[id], cnt)
 
 finalclusters = [[] for i in range(clusterCount)]
 for cluster in clusters:
