@@ -8,12 +8,6 @@ import tipsy.cluster._
 import tipsy.db.TipsyPostgresProfile.api._
 import tipsy.db.schema._
 
-import reftree.render._
-import reftree.contrib._
-import reftree.diagram._
-import reftree.core._
-import reftree.contrib.SimplifiedInstances.list
-
 import java.nio.file.Paths
 import java.io.File
 import java.io.PrintWriter
@@ -35,17 +29,6 @@ case object CLUSTER extends CLIMode
 case object EQUALCLUSTER extends CLIMode
 case object CORRECTION extends CLIMode
 case object DUMPMATRIX extends CLIMode
-
-trait FlowDraw {
-  implicit def cfListDrawer: ToRefTree[List[CFEnum]] = ToRefTree[List[CFEnum]] {
-    case x::xs => RefTree.Ref(x, xs.map(_.refTree)).rename(x.flowName)
-    case Nil => RefTree.Ref("", Seq()).rename("End")
-  }
-
-  implicit def cfDrawer: ToRefTree[CFEnum] = ToRefTree[CFEnum] {
-    case x => RefTree.Ref(x, Seq()).rename(x.flowName)
-  }
-}
 
 /**
   * CLI: Frontend to handle command line compilations.

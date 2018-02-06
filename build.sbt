@@ -18,7 +18,6 @@ addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.fu
 libraryDependencies ++= Seq(
   "org.scalatest"           %% "scalatest"                % "2.2.6" % "test",
   "org.scala-lang.modules"  %% "scala-parser-combinators" % "1.0.4",
-  "org.stanch"              %% "reftree"                  % "0.8.2",
   "com.propensive"          % "rapture-io"                % "0.7.2",
   "com.typesafe.akka"       %% "akka-http"                % "10.1.0-RC1",
   "com.typesafe.slick"      %% "slick"                    % "3.2.0",

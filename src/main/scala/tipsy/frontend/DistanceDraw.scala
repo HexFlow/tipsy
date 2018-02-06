@@ -10,7 +10,6 @@ import java.io.File
 import javax.imageio.ImageIO
 import javax.swing.JFrame;
 
-
 import forcelayout.renderer.ImageRenderer
 import forcelayout.renderer._
 import forcelayout.{ Node, Edge, SpringGraph }
