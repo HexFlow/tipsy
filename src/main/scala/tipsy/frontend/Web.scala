@@ -25,18 +25,20 @@ import io.circe.syntax._, io.circe.generic.auto._
 
 import scala.io.StdIn
 
-trait TipsyDriverWithoutActors {
+trait TipsyDriverWithoutAllActors {
   implicit val system = ActorSystem("web-tipsy")
   implicit val materializer = ActorMaterializer()
   implicit val executionContext = system.dispatcher
 
   implicit val driver: Driver = TipsySlick()
 
-  val updateClusters = system.actorOf(Props(classOf[UpdateClustersActor]), "updateClustersActor")
-
   val progTable: TableQuery[Programs] = TableQuery[Programs]
   val clusterTable: TableQuery[Clusters] = TableQuery[Clusters]
   val distTable: TableQuery[Dists] = TableQuery[Dists]
+}
+
+trait TipsyDriverWithoutActors extends TipsyDriverWithoutAllActors {
+  val updateClusters = system.actorOf(Props(classOf[UpdateClustersActor]), "updateClustersActor")
 }
 
 trait TipsyDriver extends TipsyDriverWithoutActors {

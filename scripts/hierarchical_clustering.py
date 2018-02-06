@@ -81,7 +81,7 @@ def fancy_dendrogram(*args, **kwargs):
         for i, d, c in zip(ddata['icoord'], ddata['dcoord'], ddata['color_list']):
             x = 0.5 * sum(i[1:3])
             y = d[1]
-            if y > annotate_above:
+            # if y > annotate_above:
                 # plt.plot(x, y, 'o', c = c)
                 # plt.annotate("%.3g" % y, (x, y), xytext = (0, -5),
                              # textcoords = 'offset points',
@@ -141,9 +141,9 @@ def dfs(rootnode, parentnode = None):
     elif rootnode.dist > thresholdDist or rootnode.count >= 2*thresholdCount:
         dfs(rootnode.left, rootnode)
         dfs(rootnode.right, rootnode)
-    elif rootnode.left == None:
+    elif rootnode.left is None:
         dfs(rootnode.right, rootnode)
-    elif rootnode.right == None:
+    elif rootnode.right is None:
         dfs(rootnode.left, rootnode)
     elif rootnode.left.count <= thresholdCount:
         assign(rootnode.left)

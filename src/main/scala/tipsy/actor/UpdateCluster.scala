@@ -17,7 +17,7 @@ import tipsy.compare._
 import tipsy.db.schema._
 import tipsy.db.TipsyPostgresProfile.api._
 
-class UpdateClustersActor extends TipsyActor with TipsyDriverWithoutActors {
+class UpdateClustersActor extends TipsyActor with TipsyDriverWithoutAllActors {
   def receive = {
     case (quesId: String) =>
       val action = for {
