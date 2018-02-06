@@ -4,7 +4,7 @@ import tipsy.compiler._
 import tipsy.compare.{ProgStats, NormalizeParseTree}
 import tipsy.db.schema._
 import tipsy.frontend._
-import tipsy.frontend.Requests._
+import tipsy.db.Requests._
 
 import java.io._
 import scala.sys.process._

@@ -1,6 +1,6 @@
 package tipsy.frontend.web
 
-import tipsy.frontend.Requests
+import tipsy.db.Requests
 import tipsy.compiler._
 import tipsy.compare._
 import tipsy.parser._

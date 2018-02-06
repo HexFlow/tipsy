@@ -1,7 +1,8 @@
 package tipsy.frontend
 
-import tipsy.db.schema._
 import tipsy.compare._
+import tipsy.db.schema._
+import tipsy.db.Requests._
 import tipsy.parser._
 
 import io.circe._, io.circe.generic.semiauto._, io.circe.generic.JsonCodec, io.circe.syntax._
@@ -11,20 +12,16 @@ import io.circe.{ Decoder, Encoder, HCursor, Json }
   * Collect your json format instances into a support trait
   */
 trait JsonSupport {
-  import Requests._
 
   implicit val encodeCF: Encoder[CFEnum] = new Encoder[CFEnum] {
     final def apply(a: CFEnum): Json = a match {
       case POSTEXPR(e) => ("Expr: " + e mkString "").asJson
-      // case EXPR(e) => (a.flowName + ": " + e.toString).asJson
       case _ => a.flowName.asJson
     }
   }
 
   implicit val encodeDiff: Encoder[Diff] = new Encoder[Diff] {
     final def apply(a: Diff): Json =
-      // ("foo", Json.fromString(a.foo)),
-      // ("bar", Json.fromInt(a.bar))
       a match {
         case Diff(ADD_d, Some(x), None, f) => Json.obj (
           "change" -> "Add+".asJson,
@@ -47,24 +44,4 @@ trait JsonSupport {
         )
       }
   }
-
-  // implicit val progReqFormat = jsonFormat4(ProgramInsertReq)
-  // implicit val progRespFormat = jsonFormat9(Program)
-
-  // implicit val cfenumFormat = lazyFormat(CFEnumFormat)
-  // implicit val diffFormat = lazyFormat(DiffFormat)
-  // implicit val editRetFormat = lazyFormat(jsonFormat2(EditRet))
-}
-
-/**
-  * Includes case classes for expected data bodies in web requests
-  */
-object Requests {
-  @JsonCodec case class ProgramInsertReq (
-    id: Option[Int],
-    userId: String,
-    quesId: String,
-    code: String,
-    updateClusters: Option[Boolean]
-  )
 }
