@@ -20,13 +20,9 @@ import scalaz._, Scalaz._
 
 sealed trait CLIMode
 case object LEASTEDIT extends CLIMode
-case object LEASTEDITLIMIT extends CLIMode
-case object DRAWPARSE extends CLIMode
+case object LIMIT extends CLIMode
 case object PRINTPARSE extends CLIMode
-case object DRAWFLOW extends CLIMode
 case object PRINTFLOW extends CLIMode
-case object CLUSTER extends CLIMode
-case object EQUALCLUSTER extends CLIMode
 case object CORRECTION extends CLIMode
 case object DUMPMATRIX extends CLIMode
 
@@ -35,13 +31,7 @@ case object DUMPMATRIX extends CLIMode
   * There may be more frontends later, for instance
   * a web based one.
   */
-object CLI extends TreeDraw with FlowDraw with TipsyDriverWithoutActors {
-
-  val renderer = Renderer(
-    renderingOptions = RenderingOptions(density = 75),
-    directory = Paths.get("."),
-    format = "ps"
-  )
+object CLI extends TipsyDriverWithoutActors {
 
   def expandDir(name: String): List[String] = {
     val fl = new File(name)
@@ -54,9 +44,9 @@ object CLI extends TreeDraw with FlowDraw with TipsyDriverWithoutActors {
 
   def apply(filesOrig: Array[String], modes: Map[CLIMode, String]): Unit = {
     val files =
-      if (modes contains LEASTEDITLIMIT) {
-        println("Value is " + Integer.parseInt(modes(LEASTEDITLIMIT)))
-        filesOrig.map(expandDir).flatten.take(Integer.parseInt(modes(LEASTEDITLIMIT)))
+      if (modes contains LIMIT) {
+        println("Value is " + Integer.parseInt(modes(LIMIT)))
+        filesOrig.map(expandDir).flatten.take(Integer.parseInt(modes(LIMIT)))
       } else {
         filesOrig.map(expandDir).flatten
       }
@@ -67,11 +57,7 @@ object CLI extends TreeDraw with FlowDraw with TipsyDriverWithoutActors {
         WorkflowCompiler(file) match {
           case Right(tree) => {
             if (modes contains PRINTPARSE) println(Right(tree))
-            if (modes contains PRINTFLOW) println(FlowGraphTweaks(tree.compress))
-            if (modes contains DRAWPARSE)
-              renderer.render(s"parsetree-$count", Diagram(tree))
-            if (modes contains DRAWFLOW)
-              renderer.render(s"flowgraph-$count", Diagram(tree.compress))
+            if (modes contains PRINTFLOW) println(tree.compress)
             (Some(tree), file)
           }
           case Left(err) => {
@@ -82,6 +68,7 @@ object CLI extends TreeDraw with FlowDraw with TipsyDriverWithoutActors {
         }
       }
     }.toList
+    lazy val validTrees = trees.collect { case (Some(x), y) => (x, y) }
 
     if (modes contains DUMPMATRIX) {
       val quesId = modes(DUMPMATRIX)
@@ -98,7 +85,6 @@ object CLI extends TreeDraw with FlowDraw with TipsyDriverWithoutActors {
       Await.result(action, Duration.Inf)
     }
 
-    lazy val validTrees = trees.collect { case (Some(x), y) => (x, y) }
     if (modes contains LEASTEDIT) {
       validTrees.map(x => NormalizeParseTree(x._1)).sequenceU match {
         case Left(err) => println("ERROR: Could not normalize some trees: " ++ err.toString)

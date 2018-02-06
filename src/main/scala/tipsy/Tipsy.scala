@@ -16,17 +16,12 @@ object Tipsy {
       args(i) match {
         case "-pp" => optset put (PRINTPARSE, "")
         case "-pf" => optset put (PRINTFLOW, "")
-        case "-dp" => optset put (DRAWPARSE, "")
-        case "-df" => optset put (DRAWFLOW, "")
         case "-le" => optset put (LEASTEDIT, "")
-        case "-eq" => optset put (EQUALCLUSTER, "")
         case msg if msg.startsWith("-dm=") =>
           optset put (DUMPMATRIX, msg.split('=')(1))
         case "-cr" => optset put (CORRECTION, "")
         case msg if msg.startsWith("-len=") =>
-          optset put (LEASTEDITLIMIT, msg.split('=')(1))
-        case msg if msg.startsWith("-cluster=") =>
-          optset put (CLUSTER, msg.split('=')(1))
+          optset put (LIMIT, msg.split('=')(1))
         case "-web" => web = true
         case msg if msg.startsWith("-") =>
           println("[Warning] Ignoring unknown argument: " + msg)
