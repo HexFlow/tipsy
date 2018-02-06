@@ -25,7 +25,9 @@ case class UpdateReq(
   shouldUpdateClusters: Boolean
 )
 
-class UpdateDistsActor extends TipsyActor with TipsyDriverWithoutActors {
+class UpdateDistsActor extends TipsyActor with TipsyDriver with TipsyActors {
+  implicit override val executionContext = system.dispatchers.lookup("my-pinned-dispatcher")
+
   def receive = {
     case UpdateReq(id, quesId, newNormCode, otherProgs, shouldUpdateClusters) =>
       println(s"Adding ${id} to dists table.")

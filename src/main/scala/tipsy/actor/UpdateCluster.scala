@@ -12,7 +12,9 @@ import tipsy.frontend._
 import tipsy.db.schema._
 import tipsy.db.TipsyPostgresProfile.api._
 
-class UpdateClustersActor extends TipsyActor with TipsyDriverWithoutAllActors {
+class UpdateClustersActor extends TipsyActor with TipsyDriver with TipsyActors {
+  implicit override val executionContext = system.dispatchers.lookup("my-pinned-dispatcher")
+
   def receive = {
     case (quesId: String) =>
       val action = for {

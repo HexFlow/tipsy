@@ -15,6 +15,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.directives.FileAndResourceDirectives
 
 import scala.concurrent.Await
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
 import de.heikoseeberger.akkahttpcirce._
@@ -22,11 +23,8 @@ import io.circe.generic.auto._
 
 import scala.io.StdIn
 
-trait TipsyDriverWithoutAllActors {
-  implicit val system = ActorSystem("web-tipsy")
-  implicit val materializer = ActorMaterializer()
-  implicit val executionContext = system.dispatcher
-
+trait TipsyDriver {
+  implicit val executionContext: ExecutionContext
   implicit val driver: Driver = TipsySlick()
 
   val progTable: TableQuery[Programs] = TableQuery[Programs]
@@ -34,12 +32,17 @@ trait TipsyDriverWithoutAllActors {
   val distTable: TableQuery[Dists] = TableQuery[Dists]
 }
 
-trait TipsyDriverWithoutActors extends TipsyDriverWithoutAllActors {
-  val updateClusters = system.actorOf(Props(classOf[UpdateClustersActor]), "updateClustersActor")
+trait TipsyActors {
+  implicit val system: ActorSystem = ActorSystem("web-tipsy")
+  implicit val executionContext = system.dispatcher
+  val updateDists = system.actorSelection("/user/updateDistsActor")
+  val updateClusters = system.actorSelection("/user/updateClustersActor")
 }
 
-trait TipsyDriver extends TipsyDriverWithoutActors {
-  val updateDists = system.actorOf(Props(classOf[UpdateDistsActor]), "updateDistsActor")
+trait TipsyActorsCreation extends TipsyActors {
+  implicit val materializer: ActorMaterializer = ActorMaterializer()
+  val updateDistsActor = system.actorOf(Props(classOf[UpdateDistsActor]), "updateDistsActor")
+  val updateClustersActor = system.actorOf(Props(classOf[UpdateClustersActor]), "updateClustersActor")
 }
 
 /**
@@ -48,7 +51,8 @@ trait TipsyDriver extends TipsyDriverWithoutActors {
   * information/corrections
   */
 object Web extends JsonSupport with Ops with FailFastCirceSupport
-    with FileAndResourceDirectives with Handlers {
+    with FileAndResourceDirectives with Handlers with TipsyActorsCreation
+    with TipsyDriver {
 
   // modes is currently not used
   def apply(modes: Set[CLIMode]): Unit = {

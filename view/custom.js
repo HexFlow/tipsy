@@ -30,7 +30,13 @@ function findCorr() {
         return;
     }
 
-    var prog = {userId: "sakshams", quesId: "1", code: editor.getValue()};
+    var q = document.getElementById("quesID").value.trim();
+    if (!q) {
+        window.alert("Missing question ID")
+        return;
+    }
+
+    var prog = {userId: "sakshams", quesId: q, code: editor.getValue()};
 
     console.log("Finding corrections for program");
     $.ajax({

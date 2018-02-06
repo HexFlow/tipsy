@@ -26,7 +26,7 @@ case object DUMPMATRIX extends CLIMode
   * There may be more frontends later, for instance
   * a web based one.
   */
-object CLI extends TipsyDriverWithoutActors {
+object CLI extends TipsyDriver with TipsyActorsCreation {
 
   def expandDir(name: String): List[String] = {
     val fl = new File(name)

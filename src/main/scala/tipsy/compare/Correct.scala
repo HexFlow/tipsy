@@ -7,7 +7,7 @@ import tipsy.db.TipsyPostgresProfile.api._
 
 import scala.concurrent.Future
 
-object Correct extends TipsyDriver with Ops {
+object Correct extends TipsyDriver with Ops with TipsyActors {
   val repCntInCluster = 2
 
   def suggestCorrections(code: NormCode)(implicit quesId: String): Future[List[EditRet]] = {
@@ -28,7 +28,7 @@ object Correct extends TipsyDriver with Ops {
     } yield
       idCumNCList.map {
         case (id, ref) => (id, Compare.findDist(code, ref))
-      }.sortWith(_._2 > _._2).take(n)
+      }.sortWith(_._2 <= _._2).take(n)
   }
 
   def getProgOfId(id: Int): Future[Option[Program]] = {

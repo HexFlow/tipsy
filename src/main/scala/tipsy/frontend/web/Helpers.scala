@@ -11,7 +11,7 @@ import scala.concurrent.Future
 
 import io.circe.Json
 
-trait Helpers extends Ops with TipsyDriver {
+trait Helpers extends Ops with TipsyDriver with TipsyActors {
   type HandleResp = Future[(StatusCode, Json)]
 
   // Inserts provided program into database, or updates existing program.
