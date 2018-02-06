@@ -23,6 +23,7 @@ case object PRINTFLOW extends CLIMode
 case object CORRECTION extends CLIMode
 case object DUMPMATRIX extends CLIMode
 case object UPDATECLUSTER extends CLIMode
+case object CLUSTERVARIANCE extends CLIMode
 
 /**
   * CLI: Frontend to handle command line compilations.
@@ -85,6 +86,37 @@ object CLI extends TipsyDriver with TipsyActorsCreation {
 
     if (modes contains UPDATECLUSTER) {
       updateClusters ! modes(UPDATECLUSTER)
+    }
+
+    if (modes contains CLUSTERVARIANCE) {
+      def mean(l: List[Double]) = {
+        l.sum / l.length
+      }
+      def sqr(x: Double) = {
+        x*x
+      }
+      val quesId = modes(CLUSTERVARIANCE)
+      val action = for {
+        clusters <- driver.runDB {
+          clusterTable.filter(_.quesId === quesId).map(_.cluster).result
+        }.map(_.headOption.getOrElse(throw new Exception(s"Cluster for ${quesId} not found in database.")))
+
+        _ <- Future.sequence(
+          clusters.map { cluster =>
+            for {
+              scores <- Future.sequence(cluster.map(progId =>
+                driver.runDB {
+                  progTable.filter(_.id === progId).map(_.score).result
+                }.map(_.headOption.getOrElse(throw new Exception(s"Could not find program ${progId}")).toDouble)
+              ))
+
+              variance = (mean(scores.map(sqr)) - sqr(mean(scores))) / scores.length
+              _ <- Future(println(scores.length.toString ++ " -> " ++ variance.toString))
+            } yield ()
+          }
+        )
+      } yield ()
+      Await.result(action, Duration.Inf)
     }
 
     if (modes contains LEASTEDIT) {
