@@ -117,37 +117,22 @@ object CLI extends TreeDraw with FlowDraw with TipsyDriverWithoutActors {
 
     lazy val validTrees = trees.collect { case (Some(x), y) => (x, y) }
     if (modes contains LEASTEDIT) {
-      if (modes contains CLUSTER) {
-        lazy val leastEdited = LeastEdit(validTrees.map(_._1), true)
-        val len = validTrees.length
-        val matrixNetwork: Array[Array[Double]] = Array.fill(len)(Array.fill(len)(0.0))
-        for (i <- leastEdited) {
-          matrixNetwork(i._1)(i._2) = i._3
-          matrixNetwork(i._2)(i._1) = i._3
-        }
-        val equalSized = if (modes contains EQUALCLUSTER) true else false
-        println(validTrees)
-        Clusterify(matrixNetwork.map(_.toList).toList, leastEdited.map(x =>  (x._1, x._2, 10/(x._3+0.1))), len, validTrees.map(_._2), Integer.parseInt(modes(CLUSTER)), equalSized)
-      }
-      else {
-        // DistanceDraw(LeastEdit(validTrees.map(_._1), false), validTrees.length, validTrees.map(_._2))
-        validTrees.map(x => NormalizeParseTree(x._1)).sequenceU match {
-          case Left(err) => println("ERROR: Could not normalize some trees: " ++ err.toString)
-          case Right(cfList) =>
-            val pairs = cfList.zipWithIndex.combinations(2).map {
-              case Seq((cf1, idx1), (cf2, idx2)) =>
-                val force = 1.0/(0.1+NewLeastEdit.findDist(cf1, cf2).dist)
-                (idx1, idx2, force)
-            }.toList
-            DistanceDraw(pairs, cfList.length, validTrees.map(_._2))
-        }
+      validTrees.map(x => NormalizeParseTree(x._1)).sequenceU match {
+        case Left(err) => println("ERROR: Could not normalize some trees: " ++ err.toString)
+        case Right(cfList) =>
+          val pairs = cfList.zipWithIndex.combinations(2).map {
+            case Seq((cf1, idx1), (cf2, idx2)) =>
+              val force = 1.0/(0.1+Compare.findDist(cf1, cf2).dist)
+              (idx1, idx2, force)
+          }.toList
+          DistanceDraw(pairs, cfList.length, validTrees.map(_._2))
       }
     } else if (modes contains CORRECTION) {
       if (validTrees.length == 2) {
         val res = for {
           cf1 <- NormalizeParseTree(validTrees(0)._1).right
           cf2 <- NormalizeParseTree(validTrees(1)._1).right
-        } yield NewLeastEdit.findDist(cf1, cf2)
+        } yield Compare.findDist(cf1, cf2)
 
         res match {
           case Left(err) => println("Error while fetching corrections: " ++ err.toString)

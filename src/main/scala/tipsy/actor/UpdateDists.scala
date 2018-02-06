@@ -37,7 +37,8 @@ class UpdateDistsActor extends TipsyActor with TipsyDriverWithoutActors {
       println(s"Adding ${id} to dists table.")
 
       val newDists = otherProgs.map {
-        case (otherId, normCode) => (otherId -> NewLeastEdit.findDist(newNormCode, normCode).dist)
+        case (otherId, normCode) =>
+          (otherId -> Compare.findDist(newNormCode, normCode).dist)
       }.toMap
 
       val d = Dist (

@@ -21,20 +21,6 @@ trait Handlers extends JsonSupport with TableHandlers with Helpers {
     Future((OK, "Cluster update process started".asJson))
   }
 
-  def similarFromDB(id: Int): HandleResp = {
-    val r = getFromDB(id)
-    getFromDB(id).flatMap(_ match {
-      case None => Future((NotFound, "Program not found".asJson))
-      case Some(prog) =>
-        val progsFuture = SimilarProgs(prog)
-        progsFuture.map { progs =>
-          val res = Map("similar" -> progs.toString.asJson,
-            "count" -> progs.length.asJson).asJson
-            (OK, res)
-        }
-    })
-  }
-
   def progFromDB(id: Int): HandleResp = {
     getFromDB(id).map(_ match {
       case None => ((NotFound, "Program not found".asJson))
@@ -80,7 +66,7 @@ trait Handlers extends JsonSupport with TableHandlers with Helpers {
         NormalizeParseTree(mainTree) match {
           case Left(err) => Future((BadRequest, ("Normalization failed: " ++ err.toString).asJson))
           case Right(nc) => for {
-            res <- Compare.suggestCorrections(nc)(prog.quesId)
+            res <- Correct.suggestCorrections(nc)(prog.quesId)
           } yield (OK, res.asJson)
         }
     }

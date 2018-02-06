@@ -75,8 +75,6 @@ object Web extends JsonSupport with Ops with FailFastCirceSupport
             complete (progFromDB(id))
           } ~ path ("getCompiled" / IntNumber) { id => // Retreive a parse tree given the ID
             complete (compiledFromDB(id))
-          } ~ path ("similar" / IntNumber) { id =>
-            complete (similarFromDB(id))
           } ~ path ("corrections" / IntNumber) { id =>
             complete (correctProgramFromDB(id))
           } ~ path ("createSchema") { // Create the postgres schema

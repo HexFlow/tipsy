@@ -3,124 +3,61 @@ package tipsy.compare
 import tipsy.parser._
 import tipsy.lexer._
 import tipsy.frontend._
+import tipsy.db._
+import tipsy.db.schema._
+import tipsy.db.TipsyPostgresProfile.api._
 
-case class Corrections(line: Int)
+import scala.concurrent.Future
+import scala.math._
 
-/**
-  * Takes functions of 2 programs, and pairs them up based on similarity.
-  * Returns an error, or a list of (Function name, EditRet value for that function).
-  * The EditRet component contains the diff lines required to transform the first
-  * function into the second.
-  *
-  * Criteria used:
-  * 1. Similarity of name.
-  * 2. Order of use in program.
-  *
-  * It is possible for some functions to not have any similar function,
-  * or two functions to have the same similar function
-  */
-object Correct {
-  type CorrError = String
+object Correct extends TipsyDriver with Ops {
+  val repCntInCluster = 2
 
-  // Helper to allow simple statements inside for...yield block
-  def simpleDecl[T](value: T) = Right(value).right
-
-  def apply(t1: ParseTree, t2: ParseTree)
-      : Either[CorrError, List[(String, EditRet)]] = {
-
+  def suggestCorrections(code: NormCode)(implicit quesId: String): Future[List[EditRet]] = {
     for {
-      tli <- getTopListItems(t1, t2).right
-      fxns <- (getFunctions _).tupled(tli).right // Passing tuple as args
-
-      // stats1 <- simpleDecl(ProgStats(main1)) // Convert normalfxn to either
-      // stats2 <- simpleDecl(ProgStats(main2))
-
-      similarFxnList <- simpleDecl(getMatchingFxns(fxns._1, fxns._2))
-      similarFxnsWithNames <- simpleDecl(getNamesHelper(similarFxnList))
-
-    } yield similarFxnsWithNames.map(x =>
-      (x._1, LeastEdit.compareTwoTrees(x._2, x._3)))
+      repIds <- fetchClusterRepIds
+      minDistRepIdsAndEditRet <- getBestN(code, 4, repIds)
+      progIdsToConsider <- Future.sequence(
+        minDistRepIdsAndEditRet.map(x => fetchClusterFromRepId(x._1))
+      )
+      minDistEditRet <- getBestN(code, 4, progIdsToConsider.flatten.distinct).map(_.map(_._2))
+    } yield minDistEditRet
   }
 
-  // Helper to fetch the shared name of two functions from their definition.
-  private def getNamesHelper(k: List[(FxnDefinition, FxnDefinition)]) = {
-    k.map {
-      case (f1 @ FxnDefinition(TypedIdent(_, IDENT(name)), _, _), f2) =>
-        (name, f1, f2)
-    }
+  def getBestN(code: NormCode, n: Int, ids: List[Int]): Future[List[(Int, EditRet)]] = {
+    for {
+      progs <- Future.sequence(ids.map (getProgOfId(_)))
+      idCumNCList = progs.collect { case Some(x) => (x.id, x.cf) }
+    } yield
+      idCumNCList.map {
+        case (id, ref) => (id, Compare.findDist(code, ref))
+      }.sortWith(_._2 > _._2).take(n)
   }
 
-  // Helper to extract the TopList element from a program's parsetree
-  private def getTopListItems(x1: ParseTree, x2: ParseTree) = {
-    (x1, x2) match {
-      case (TopList(tl1), TopList(tl2)) => Right((tl1, tl2))
-      case _ => Left("Bad parse trees")
-    }
+  def getProgOfId(id: Int): Future[Option[Program]] = {
+    driver.runDB {
+      progTable.filter(_.id === id).result
+    }.map(_.headOption)
   }
 
-  // Helper to return list of functions from two programs
-  private def getFunctions(i1: List[ParseTree], i2: List[ParseTree]) = {
-    def getFxns(arg: List[ParseTree]) = {
-      arg collect { case x @ FxnDefinition(_, _, _) => x }
-    }
-
-    Right((getFxns(i1), getFxns(i2)))
+  def fetchClusterRepIds(implicit quesId: String): Future[List[Int]] = {
+    // Fetch clusters of this question. Take `repCntInCluster` from each and return that list.
+    for {
+      cluster <- driver.runDB {
+        clusterTable.filter(_.quesId === quesId).result
+      }.map(_.headOption.map(_.cluster).getOrElse(List()))
+    } yield cluster.flatMap(_.take(repCntInCluster))
   }
 
-  // Helper to convert Options to Eithers with added error messages
-  private def optToEither[T, E](opt: Option[T], err: E): Either[E, T] = {
-    opt match {
-      case Some(x) => Right(x)
-      case _ => Left(err)
-    }
+  def fetchClusterFromRepId(id: Int)(implicit quesId: String): Future[List[Int]] = {
+    // Given a representative of a cluster, fetch that full cluster.
+    for {
+      cluster <- driver.runDB {
+        clusterTable.filter(_.quesId === quesId).result
+      }.map(_.headOption.map(_.cluster).getOrElse(List()))
+    } yield
+      cluster.collect {
+        case x if x.take(repCntInCluster).contains(id) => x
+      }.headOption.getOrElse(List())
   }
-
-  // Takes functions of 2 programs, and pairs them up based on similarity.
-  // See docstring of this package for more details.
-  private def getMatchingFxns(f1: List[FxnDefinition], f2: List[FxnDefinition])
-      : List[(FxnDefinition, FxnDefinition)] = {
-
-    def strComp(a: String, b: String): Int = {
-      val dist = LeastEdit.levenshteinDist(a, b)
-        (dist / a.length * 100).toInt
-    }
-
-    // Convert List[FxnDefinition] to List[(FxnDefinition, Int)]
-    val userFxns = f1.zipWithIndex
-    val compFxns = f2.zipWithIndex
-
-    // Convert List[FxnDefinition] to List[(FxnDefinition, FxnDefinition)]
-    userFxns.map {
-      case ufunc @ (FxnDefinition(TypedIdent(_, IDENT(uname)), _, _), upos) =>
-
-        // Find a similar function
-        val simfunc: Option[FxnDefinition] = compFxns.map {
-
-          // Calculate score for each function to be compared
-          case newfunc @ (FxnDefinition(TypedIdent(_, IDENT(nname)), _, _), npos) =>
-            val nameDist = strComp(uname, nname)
-            val posDist  = math.abs(upos - npos) * 30
-            (newfunc._1, nameDist + posDist)
-
-        }.reduceOption { (e1, e2) =>
-
-          // Select the one with min score
-          if (e1._2 > e2._2) e2
-          else e1
-        }.map(_._1)
-
-        (ufunc._1, simfunc)
-    }.collect {
-      // Remove functions which did not have similar fxn
-      // This will remove those of type (f, None)
-      // Converts List[(FxnDefinition, Option[FxnDefinition])] to
-      // List[(FxnDefinition, FxnDefinition)] with None elements dropped
-      //
-      // Reason: list.collect takes as argument a partial function.
-      // Such functions are only defined on certain inputs.
-      // All other functions are dropped.
-      case x @ (f, Some(g)) => (f, g)
-    }
-  }
-
 }
