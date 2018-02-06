@@ -27,12 +27,13 @@ case class UpdateReq(
   id: Int,
   quesId: String,
   newNormCode: NormCode,
-  otherProgs: Seq[(Int, NormCode)]
+  otherProgs: Seq[(Int, NormCode)],
+  shouldUpdateClusters: Boolean
 )
 
 class UpdateDistsActor extends TipsyActor with TipsyDriverWithoutActors {
   def receive = {
-    case UpdateReq(id, quesId, newNormCode, otherProgs) =>
+    case UpdateReq(id, quesId, newNormCode, otherProgs, shouldUpdateClusters) =>
       println(s"Adding ${id} to dists table.")
 
       val newDists = otherProgs.map {
@@ -67,35 +68,13 @@ class UpdateDistsActor extends TipsyActor with TipsyDriverWithoutActors {
           }
         }
 
-        matrix <- driver.runDB {
-          distTable.filter(_.quesId === quesId).map(e => (e.id, e.dists)).result
-        }
+        msg = if (shouldUpdateClusters) {
+          updateClusters ! quesId
+        } else ()
+
+        _ <- Future(msg)
 
         _ <- Future(println(s"Finished updating dists after ${id}."))
-
-        matrixStr = Dists.getAsDump(matrix)
-
-        writer = new PrintWriter(new File(s"matrix_${quesId}"))
-        _ <- Future(writer.write(matrixStr))
-        _ <- Future(writer.close())
-
-        // Ugly way to get output of clustering.
-        cmd = List("bash", "-c", "python2 scripts/hierarchical_clustering.py 2> errlog")
-        is = new java.io.ByteArrayInputStream(matrixStr.getBytes("UTF-8"))
-        out = (cmd #< is).lines_!
-        res = out.mkString("")
-        clusterList = res.split('|').map(_.split(',').map(_.toInt).toList).toList
-        _ <- Future(println(clusterList))
-
-        _ <- driver.runDB {
-          clusterTable.insertOrUpdate(Cluster(
-            quesId = quesId,
-            cluster = clusterList
-          ))
-        }
-
-        _ <- Future(println(s"Finished updating clusters after ${id}."))
-
       } yield ()
 
       Await.result(action, Duration.Inf)

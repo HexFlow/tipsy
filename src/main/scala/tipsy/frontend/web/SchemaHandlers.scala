@@ -40,7 +40,7 @@ trait TableHandlers extends Helpers {
         Future((BadRequest, ("Compilation failed: " ++ err.toString).asJson))
       case Right(compiledProg) => // Compiled fine, index it
         for {
-          id <- insertProg(compiledProg)
+          id <- insertProg(compiledProg, prog.updateClusters.getOrElse(false))
         } yield (OK, id.asJson)
     }
   }

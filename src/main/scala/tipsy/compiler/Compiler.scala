@@ -58,7 +58,8 @@ object Compiler {
       id     = Some(p.id),
       userId = p.userId,
       quesId = p.quesId,
-      code   = p.code
+      code   = p.code,
+      updateClusters = None
     ))
   }
 }

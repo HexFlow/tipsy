@@ -19,7 +19,7 @@ trait Helpers extends Ops with TipsyDriver {
   type HandleResp = Future[(StatusCode, Json)]
 
   // Inserts provided program into database, or updates existing program.
-  def insertProg(prog: Program) = {
+  def insertProg(prog: Program, updateClusters: Boolean) = {
     // Operation depends on whether an ID was provided
     for {
       id <- prog.id match {
@@ -39,10 +39,11 @@ trait Helpers extends Ops with TipsyDriver {
       }.map(_.headOption.getOrElse(throw new Exception("no such program found")))
 
       otherProgs <- driver.runDB {
-        progTable.filter(e => e.id =!= id && e.quesId === prog.quesId).map(e => (e.id, e.cf))result
+        progTable.filter(e => e.id =!= id && e.quesId === prog.quesId).
+          map(e => (e.id, e.cf)).result
       }
 
-      _ <- Future(updateDists ! UpdateReq(id, prog.quesId, newNormCode, otherProgs))
+      _ <- Future(updateDists ! UpdateReq(id, prog.quesId, newNormCode, otherProgs, updateClusters))
     } yield id // Return the ID to sender parent
   }
 

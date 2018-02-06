@@ -64,6 +64,7 @@ object Requests {
     id: Option[Int],
     userId: String,
     quesId: String,
-    code: String
+    code: String,
+    updateClusters: Option[Boolean]
   )
 }

@@ -16,6 +16,11 @@ import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
 
 trait Handlers extends JsonSupport with TableHandlers with Helpers {
 
+  def updateClusterHandler(quesId: String): HandleResp = {
+    updateClusters ! quesId
+    Future((OK, "Cluster update process started".asJson))
+  }
+
   def similarFromDB(id: Int): HandleResp = {
     val r = getFromDB(id)
     getFromDB(id).flatMap(_ match {

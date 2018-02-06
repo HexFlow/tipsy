@@ -32,6 +32,8 @@ trait TipsyDriverWithoutActors {
 
   implicit val driver: Driver = TipsySlick()
 
+  val updateClusters = system.actorOf(Props(classOf[UpdateClustersActor]), "updateClustersActor")
+
   val progTable: TableQuery[Programs] = TableQuery[Programs]
   val clusterTable: TableQuery[Clusters] = TableQuery[Clusters]
   val distTable: TableQuery[Dists] = TableQuery[Dists]
@@ -81,6 +83,8 @@ object Web extends JsonSupport with Ops with FailFastCirceSupport
             complete (dropSchema())
           } ~ path ("dropQuestion" / Segment) { quesId =>
             complete (dropQuestion(quesId))
+          } ~ path ("updateClusters" / Segment) { quesId =>
+            complete (updateClusterHandler(quesId))
           } ~ path ("progCount") { // Get list of program IDs
             complete (getProgCount())
           }
@@ -108,6 +112,7 @@ object Web extends JsonSupport with Ops with FailFastCirceSupport
         driver.close()
         println("Shutting down actor system")
         updateDists ! PoisonPill
+        updateClusters ! PoisonPill
         system.terminate()
         println("Cleanup successful")
       })
