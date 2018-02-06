@@ -3,18 +3,19 @@ from base64 import b64decode
 import pymysql.cursors
 import pymysql
 
-connection = pymysql.connect(host='localhost', user='root', db='its2ndSem', password='')
-labNo = 'Lab-11'
+connection = pymysql.connect(host='localhost', user='root', db='its-ques', password='')
+labNo = 'LAB-8'
 queNo = 2
+probId = '2143'
 
 try:
     with connection.cursor() as cursor:
         sql2 = """
-        SELECT code_id, user_id, contents FROM prutor3.code as C JOIN
-          (SELECT code_id, verdict FROM prutor3.evaluation as E JOIN
-            (SELECT id, score FROM prutor3.assignment as A)
+        SELECT code_id, user_id, contents FROM code as C JOIN
+          (SELECT code_id, verdict FROM evaluation as E JOIN
+            (SELECT id, score FROM assignment as A)
            WHERE assignment_id IN
-             (SELECT id FROM prutor3.assignment
+             (SELECT id FROM assignment
               WHERE event_name = "{0}"
               AND question = {1})
            GROUP BY code_id
@@ -29,15 +30,13 @@ try:
                    (a.score is not NULL));
         """.format(labNo, queNo)
         sql = """
-             ( select c.id, c.user_id, c.contents, a.score
-            from code c, assignment a, account ac
+             ( select c.id, c.user_id, c.contents
+            from code c, assignment a
             where ((c.id = a.submission) and
-                   (a.event_name = "{0}" and a.question = {1}) and
-                   (a.score is not NULL) and
-                   (a.user_id=ac.id) and
-                   (ac.section rlike 'B[0-9]+'))
+                   (a.event_name = "{0}" and a.problem_id = {1}) and
+                   (a.score is not NULL))
             group by c.id );
-        """.format(labNo, queNo)
+        """.format(labNo, probId)
         cursor.execute(sql)
         result = cursor.fetchall()
         with open('output.csv', 'w') as f:

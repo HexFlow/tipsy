@@ -7,5 +7,6 @@
       (matplotlib.override { enableQt = true;  })
       scipy
       pyqt4
+      pymysql
     ]);
   }

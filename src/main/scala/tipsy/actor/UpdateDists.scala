@@ -23,29 +23,29 @@ trait TipsyActor extends Actor {
   }
 }
 
+case class UpdateReq(
+  id: Int,
+  quesId: String,
+  newNormCode: NormCode,
+  otherProgs: Seq[(Int, NormCode)]
+)
+
 class UpdateDistsActor extends TipsyActor with TipsyDriverWithoutActors {
   def receive = {
-    case (id: Int, quesId: String) =>
+    case UpdateReq(id, quesId, newNormCode, otherProgs) =>
       println(s"Adding ${id} to dists table.")
+
+      val newDists = otherProgs.map {
+        case (otherId, normCode) => (otherId -> NewLeastEdit.findDist(newNormCode, normCode).dist)
+      }.toMap
+
+      val d = Dist (
+        id = id,
+        quesId = quesId,
+        dists = newDists
+      )
+
       val action = for {
-        newNormCode <- driver.runDB {
-          progTable.filter(_.id === id).map(_.cf).result
-        }.map(_.headOption.getOrElse(throw new Exception("no such program found")))
-
-        otherProgs <- driver.runDB {
-          progTable.filter(e => e.id =!= id && e.quesId === quesId).map(e => (e.id, e.cf))result
-        }
-
-        newDists = otherProgs.map {
-          case (otherId, normCode) => (otherId -> NewLeastEdit.findDist(newNormCode, normCode).dist)
-        }.toMap
-
-        d = Dist (
-          id = id,
-          quesId = quesId,
-          dists = newDists
-        )
-
         _ <- driver.runDB {
           distTable.insertOrUpdate(d)
         }
@@ -80,7 +80,7 @@ class UpdateDistsActor extends TipsyActor with TipsyDriverWithoutActors {
         _ <- Future(writer.close())
 
         // Ugly way to get output of clustering.
-        cmd = List("bash", "-c", "nix-shell scripts/shell.nix --run \"python2 scripts/hierarchical_clustering.py\" 2> errlog")
+        cmd = List("bash", "-c", "python2 scripts/hierarchical_clustering.py 2> errlog")
         is = new java.io.ByteArrayInputStream(matrixStr.getBytes("UTF-8"))
         out = (cmd #< is).lines_!
         res = out.mkString("")
