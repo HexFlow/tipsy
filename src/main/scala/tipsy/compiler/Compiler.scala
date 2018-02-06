@@ -45,19 +45,9 @@ object Compiler {
         quesId  = prog.quesId,
         code    = prog.code,
         cf      = cf,
-        score   = "0",
+        score   = prog.score,
         correct = false,
         props   = ProgStats(tree)
       )
-  }
-
-  def compileWithStatsProgram(p: Program) = {
-    compileWithStats(ProgramInsertReq(
-      id     = Some(p.id),
-      userId = p.userId,
-      quesId = p.quesId,
-      code   = p.code,
-      updateClusters = None
-    ))
   }
 }

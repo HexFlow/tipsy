@@ -36,7 +36,11 @@ function findCorr() {
         return;
     }
 
-    var prog = {userId: "sakshams", quesId: q, code: editor.getValue()};
+    var prog = { userId: "sakshams",
+                 quesId: q,
+                 code: editor.getValue(),
+                 score: "20"
+               };
 
     console.log("Finding corrections for program");
     $.ajax({

@@ -17,6 +17,8 @@ object Tipsy {
         case "-pp" => optset put (PRINTPARSE, "")
         case "-pf" => optset put (PRINTFLOW, "")
         case "-le" => optset put (LEASTEDIT, "")
+        case msg if msg.startsWith("-uc") =>
+          optset put (UPDATECLUSTER, msg.split("=")(1))
         case msg if msg.startsWith("-dm=") =>
           optset put (DUMPMATRIX, msg.split('=')(1))
         case "-cr" => optset put (CORRECTION, "")

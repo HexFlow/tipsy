@@ -2,11 +2,13 @@
 from base64 import b64decode
 import pymysql.cursors
 import pymysql
+import sys
 
 connection = pymysql.connect(host='localhost', user='root', db='its-ques', password='')
-labNo = 'LAB-8'
+assert(len(sys.argv) >= 3)
+labNo = sys.argv[1] # 'LAB-8'
 queNo = 2
-probId = '2143'
+probId = sys.argv[2] # '2143'
 
 try:
     with connection.cursor() as cursor:
@@ -30,7 +32,7 @@ try:
                    (a.score is not NULL));
         """.format(labNo, queNo)
         sql = """
-             ( select c.id, c.user_id, c.contents
+             ( select c.id, c.user_id, c.contents, a.score
             from code c, assignment a
             where ((c.id = a.submission) and
                    (a.event_name = "{0}" and a.problem_id = {1}) and
@@ -39,7 +41,7 @@ try:
         """.format(labNo, probId)
         cursor.execute(sql)
         result = cursor.fetchall()
-        with open('output.csv', 'w') as f:
+        with open('output-{}-{}.csv'.format(labNo, probId), 'w') as f:
             for r in result:
                 f.write(','.join([str(a) for a in r]))
                 f.write('\n')

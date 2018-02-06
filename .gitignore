@@ -8,7 +8,8 @@ test/realdata
 scripts/.python-version
 *.swp
 scripts/parsedCodes
-scripts/output.csv
+scripts/Codes-*
+scripts/output*.csv
 scripts/Lab*
 analysis
 todo

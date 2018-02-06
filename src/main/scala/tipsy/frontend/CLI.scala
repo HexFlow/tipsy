@@ -11,6 +11,8 @@ import java.io.PrintWriter
 import scala.concurrent.{ Future, Await }
 import scala.concurrent.duration.Duration
 
+import akka.actor.PoisonPill
+
 import scalaz._, Scalaz._
 
 sealed trait CLIMode
@@ -20,6 +22,7 @@ case object PRINTPARSE extends CLIMode
 case object PRINTFLOW extends CLIMode
 case object CORRECTION extends CLIMode
 case object DUMPMATRIX extends CLIMode
+case object UPDATECLUSTER extends CLIMode
 
 /**
   * CLI: Frontend to handle command line compilations.
@@ -80,6 +83,10 @@ object CLI extends TipsyDriver with TipsyActorsCreation {
       Await.result(action, Duration.Inf)
     }
 
+    if (modes contains UPDATECLUSTER) {
+      updateClusters ! modes(UPDATECLUSTER)
+    }
+
     if (modes contains LEASTEDIT) {
       validTrees.map(x => NormalizeParseTree(x._1)).sequenceU match {
         case Left(err) => println("ERROR: Could not normalize some trees: " ++ err.toString)
@@ -112,5 +119,9 @@ object CLI extends TipsyDriver with TipsyActorsCreation {
         }
       }
     }
+
+    updateClusters ! PoisonPill
+    Await.result(system.whenTerminated, Duration.Inf)
+    driver.close()
   }
 }

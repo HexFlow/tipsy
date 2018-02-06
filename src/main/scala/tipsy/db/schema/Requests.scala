@@ -12,6 +12,7 @@ object Requests {
     userId: String,
     quesId: String,
     code: String,
+    score: String,
     updateClusters: Option[Boolean]
   )
 }
