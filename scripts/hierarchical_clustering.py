@@ -113,8 +113,8 @@ hierarchicalTree = to_tree(linked)
 clusters = [(i, -1) for i in range(0, len(matrixNetwork))]
 outliers = []
 clusterCount = 0
-thresholdDist = 700.0
-thresholdCount = (4, 15) # (min, max)
+thresholdDist = 300.0
+thresholdCount = int(cnt ** 0.5) # (min, max)
 
 def assign(rootnode):
     if rootnode is None:
@@ -138,20 +138,21 @@ def dfs(rootnode, parentnode = None):
     global clusterCount
     if rootnode is None:
         return
-    elif rootnode.count >= 1 and rootnode.count <= 3:
-        if parentnode is not None and parentnode.dist >= thresholdDist:
-            markAsOutlier(rootnode)
-        else:
-            assign(rootnode)
-            clusterCount += 1
-    elif rootnode.count >= thresholdCount[0] and rootnode.count <= thresholdCount[1]:
-        assign(rootnode)
-        clusterCount += 1
-        if parentnode is not None and parentnode.dist >= thresholdDist:
-            print("[warning] a cluster was made before thresholdDist", file = sys.stderr)
-    else:
+    elif rootnode.dist > thresholdDist or rootnode.count >= 2*thresholdCount:
         dfs(rootnode.left, rootnode)
         dfs(rootnode.right, rootnode)
+    elif rootnode.left == None:
+        dfs(rootnode.right, rootnode)
+    elif rootnode.right == None:
+        dfs(rootnode.left, rootnode)
+    elif rootnode.left.count <= thresholdCount:
+        assign(rootnode.left)
+        clusterCount += 1
+        dfs(rootnode.right, rootnode)
+    else:
+        assign(rootnode.right)
+        clusterCount += 1
+        dfs(rootnode.left, rootnode)
 
 dfs(hierarchicalTree)
 
