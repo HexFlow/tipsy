@@ -10,6 +10,7 @@ import java.io.PrintWriter
 
 import scala.concurrent.{ Future, Await }
 import scala.concurrent.duration.Duration
+import scala.concurrent.ExecutionContext
 
 import akka.actor.PoisonPill
 
@@ -30,7 +31,8 @@ case object CLUSTERVARIANCE extends CLIMode
   * There may be more frontends later, for instance
   * a web based one.
   */
-object CLI extends TipsyDriver with TipsyActorsCreation {
+object CLI extends TipsyDriver with ClusterActions {
+  implicit val executionContext = ExecutionContext.global
 
   def expandDir(name: String): List[String] = {
     val fl = new File(name)
@@ -85,7 +87,8 @@ object CLI extends TipsyDriver with TipsyActorsCreation {
     }
 
     if (modes contains UPDATECLUSTER) {
-      updateClusters ! modes(UPDATECLUSTER)
+      val action = doUpdateClusters(modes(UPDATECLUSTER))
+      Await.result(action, Duration.Inf)
     }
 
     if (modes contains CLUSTERVARIANCE) {
@@ -103,16 +106,20 @@ object CLI extends TipsyDriver with TipsyActorsCreation {
 
         _ <- Future.sequence(
           clusters.map { cluster =>
-            for {
-              scores <- Future.sequence(cluster.map(progId =>
-                driver.runDB {
-                  progTable.filter(_.id === progId).map(_.score).result
-                }.map(_.headOption.getOrElse(throw new Exception(s"Could not find program ${progId}")).toDouble)
-              ))
-
-              variance = (mean(scores.map(sqr)) - sqr(mean(scores))) / scores.length
-              _ <- Future(println(scores.length.toString ++ " -> " ++ variance.toString))
-            } yield ()
+            if (cluster.length > 1) {
+              for {
+                progs <- Future.sequence(cluster.map(progId =>
+                  driver.runDB {
+                    progTable.filter(_.id === progId).result
+                  }.map(_.headOption.getOrElse(throw new Exception(s"Could not find program ${progId}")))
+                ))
+                scores = progs.map(_.score.toDouble)
+                variance = (mean(scores.map(sqr)) - sqr(mean(scores))) / scores.length
+                _ <- Future(println(scores.length.toString ++ " -> " ++ variance.toString ++
+                  "\t --> " ++ progs.map(_.props.file.getOrElse("")).mkString(",") ++
+                  "\t --> " ++ progs.map(_.id).mkString(",")))
+              } yield ()
+            } else Future()
           }
         )
       } yield ()
@@ -152,8 +159,6 @@ object CLI extends TipsyDriver with TipsyActorsCreation {
       }
     }
 
-    updateClusters ! PoisonPill
-    Await.result(system.whenTerminated, Duration.Inf)
     driver.close()
   }
 }

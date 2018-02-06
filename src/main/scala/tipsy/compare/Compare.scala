@@ -56,6 +56,8 @@ object Compare {
             val multFactor: Double = ((cfEnum1(i-1), cfEnum2(j-1)) match {
               case (BLOCKOPEN(), _) => 3
               case (_, BLOCKOPEN()) => 3
+              case (BLOCKCLOSE(), _) => 3
+              case (_, BLOCKCLOSE()) => 3
               case _ => 1
             })
 
