@@ -45,9 +45,9 @@ object Compiler {
         quesId  = prog.quesId,
         code    = prog.code,
         cf      = cf,
-        score   = prog.score,
+        score   = prog.score.getOrElse("0"),
         correct = false,
-        props   = ProgStats(tree)
+        props   = ProgStats(tree, prog.file)
       )
   }
 }

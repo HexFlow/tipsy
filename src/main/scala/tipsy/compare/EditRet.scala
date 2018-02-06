@@ -30,24 +30,18 @@ case class EditRet (diffs: List[Diff], dist: Double) {
   }
 
   def +(v: Double): EditRet = {
-    this match {
-      case EditRet(x, y) => EditRet(x, y + v)
-    }
+    EditRet(diffs, dist + v)
+  }
+  def *(v: Double): EditRet = {
+    EditRet(diffs, dist * v)
   }
 
   def +(v: EditRet): EditRet = {
-    this match {
-      case EditRet(x, y) => EditRet(x ++ v.diffs, y + v.dist)
-    }
+    EditRet(diffs ++ v.diffs, dist + v.dist)
   }
 
-
   def /(v: Double) = {
-    this match {
-      case EditRet(x, y) => {
-        EditRet(x, y/v)
-      }
-    }
+    EditRet(diffs, dist/v)
   }
   def >(x: EditRet): Boolean = {
     dist > x.dist

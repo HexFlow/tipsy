@@ -93,7 +93,7 @@ object CLI extends TipsyDriver with TipsyActorsCreation {
         case Right(cfList) =>
           val pairs = cfList.zipWithIndex.combinations(2).map {
             case Seq((cf1, idx1), (cf2, idx2)) =>
-              val force = 1.0/(0.1+Compare.findDist(cf1, cf2).dist)
+              val force = 100/(0.1+Compare.findDist(cf1, cf2).dist)
               (idx1, idx2, force)
           }.toList
           DistanceDraw(pairs, cfList.length, validTrees.map(_._2))

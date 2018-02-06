@@ -6,32 +6,27 @@ import scala.math._
 
 object Compare {
   val INF: Double = 1000000
-  val deletedFxnPerEntryPenalty = 20 // TODO: Fix this.
-  val addedFxnPerEntryPenalty = 20
-  val fxnOrderingPenaltyScaling = 20
+  val deletedFxnPerLinePenalty = 20 // TODO: Fix this.
+  val addedFxnPerLinePenalty = 25
+  val fxnOrderingPenaltyScaling = 25
   val pairingUpPenaltyThreshold = 0.5
 
   def findDist(n1: NormCode, n2: NormCode): EditRet = {
     (n1, n2) match {
       case (NormCode(fxns1), NormCode(fxns2)) =>
         val fdiff = math.abs(fxns1.length - fxns2.length)
-        if (fdiff > 1) {
-          EditRet(List(), INF)
-        } else {
-          val pairsToTry = pairUpFxnsList(fxns1, fxns2)
-          pairsToTry.map { pairedResult =>
+        val pairsToTry = pairUpFxnsList(fxns1, fxns2)
+        pairsToTry.map { pairedResult =>
+          val pairedDists = pairedResult.paired.map {
+            case (f1, f2) => compareTwoFxns(f1, f2)
+          }.reduceLeft(_ + _)
+          val deletionCost = pairedResult.deleted.map(_.cf.length).sum * deletedFxnPerLinePenalty
+          val additionCost = pairedResult.added.map(_.cf.length).sum * addedFxnPerLinePenalty
+          val fxnOrderingCost = pairedResult.penalty * fxnOrderingPenaltyScaling
 
-            val pairedDists = pairedResult.paired.map {
-              case (f1, f2) => compareTwoFxns(f1, f2)
-            }.reduceLeft(_ + _)
-            val deletionCost = pairedResult.deleted.map(_.cf.length).sum * deletedFxnPerEntryPenalty
-            val additionCost = pairedResult.added.map(_.cf.length).sum * addedFxnPerEntryPenalty
-            val fxnOrderingCost = pairedResult.penalty * fxnOrderingPenaltyScaling
-
-            pairedDists + deletionCost + additionCost + fxnOrderingCost
-          }.foldLeft(EditRet(List(), INF)) {
-            case (a, b) => if (a.dist <= b.dist) a else b
-          }
+          pairedDists + deletionCost + additionCost + fxnOrderingCost
+        }.foldLeft(EditRet(List(), INF)) {
+          case (a, b) => if (a.dist <= b.dist) a else b
         }
     }
   }
@@ -52,10 +47,20 @@ object Compare {
         case (0, j) => go(0, j - 1, Some(ADD_d))
         case (i, j) => {
           if (cfEnum1(i - 1) == cfEnum2(j - 1)) go(i - 1, j - 1, None)
-          else Seq( go(i - 1, j, Some(DEL_d))
-                  , go(i, j - 1, Some(ADD_d))
-                  , go(i - 1, j - 1, Some(REPLACE_d))
-               ).minBy(_._1.dist)
+          else {
+            val pen = Seq( go(i - 1, j, Some(DEL_d))
+              , go(i, j - 1, Some(ADD_d))
+              , go(i - 1, j - 1, Some(REPLACE_d))
+            ).minBy(_._1.dist)
+
+            val multFactor: Double = ((cfEnum1(i-1), cfEnum2(j-1)) match {
+              case (BLOCKOPEN(), _) => 3
+              case (_, BLOCKOPEN()) => 3
+              case _ => 1
+            })
+
+            (pen._1 * multFactor, pen._2)
+          }
         }
       }
     }

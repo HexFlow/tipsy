@@ -3,9 +3,9 @@
 from __future__ import print_function
 
 import PyQt4
-# import matplotlib
+import matplotlib
 
-# from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt
 from scipy.cluster.hierarchy import dendrogram, linkage, cophenet, to_tree
 import numpy as np
 import json
@@ -75,27 +75,27 @@ def fancy_dendrogram(*args, **kwargs):
     ddata = dendrogram(*args, **kwargs)
 
     if not kwargs.get('no_plot', False):
-        # plt.title('Dendrogram for matrixNetwork')
-        # plt.xlabel('cluster size')
-        # plt.ylabel('distance')
+        plt.title('Dendrogram for matrixNetwork')
+        plt.xlabel('cluster size')
+        plt.ylabel('distance')
         for i, d, c in zip(ddata['icoord'], ddata['dcoord'], ddata['color_list']):
             x = 0.5 * sum(i[1:3])
             y = d[1]
-            # if y > annotate_above:
-                # plt.plot(x, y, 'o', c = c)
-                # plt.annotate("%.3g" % y, (x, y), xytext = (0, -5),
-                             # textcoords = 'offset points',
-                             # va = 'top', ha='center')
+            if y > annotate_above:
+                plt.plot(x, y, 'o', c = c)
+                plt.annotate("%.3g" % y, (x, y), xytext = (0, -5),
+                             textcoords = 'offset points',
+                             va = 'top', ha='center')
 
-        # if max_d:
-            # plt.axhline(y = max_d, c = 'k')
+        if max_d:
+            plt.axhline(y = max_d, c = 'k')
     return ddata
 
 linked = linkage(compressedMatrixNetwork, method)
-#plt.figure(figsize=(25,10))
-#plt.title('Dendrogram for Matrix')
-#plt.xlabel('codes')
-#plt.ylabel('distance')
+plt.figure(figsize=(25,10))
+plt.title('Dendrogram for Matrix')
+plt.xlabel('codes')
+plt.ylabel('distance')
 dend = fancy_dendrogram(linked,
                         leaf_rotation = 90,
                         leaf_font_size = 8,
@@ -105,8 +105,8 @@ dend = fancy_dendrogram(linked,
                         annotate_above = 1000,
                         max_d = 600)
 
-# if SHOWPLOT == 1:
-    # plt.show()
+if SHOWPLOT == 1:
+    plt.show()
 
 hierarchicalTree = to_tree(linked)
 

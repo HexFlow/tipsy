@@ -12,7 +12,8 @@ object Requests {
     userId: String,
     quesId: String,
     code: String,
-    score: String,
+    file: Option[String],
+    score: Option[String],
     updateClusters: Option[Boolean]
   )
 }

@@ -42,9 +42,12 @@ try:
         cursor.execute(sql)
         result = cursor.fetchall()
         with open('output-{}-{}.csv'.format(labNo, probId), 'w') as f:
+            cnt = 0
             for r in result:
+                cnt+=1
                 f.write(','.join([str(a) for a in r]))
                 f.write('\n')
+            print("Result: " + str(cnt) + " rows.")
 except Exception as e:
     print(str(e))
 finally:

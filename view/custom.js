@@ -38,8 +38,7 @@ function findCorr() {
 
     var prog = { userId: "sakshams",
                  quesId: q,
-                 code: editor.getValue(),
-                 score: "20"
+                 code: editor.getValue()
                };
 
     console.log("Finding corrections for program");

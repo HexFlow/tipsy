@@ -4,7 +4,7 @@ import tipsy.db.schema._
 import tipsy.parser._
 
 object ProgStats {
-  def apply(code: ParseTree): Stats = {
+  def apply(code: ParseTree, file: Option[String]): Stats = {
 
     val counts = code.compress.collect {
       case x @ (IFCOND() | FUNC() | LOOPCOND()) => x
@@ -27,7 +27,8 @@ object ProgStats {
       ifs = Some(counts get IFCOND() getOrElse 0),
       loops = Some(counts get LOOPCOND() getOrElse 0),
       fxns = Some(counts get FUNC() getOrElse 0),
-      depth = Some(maxdepth)
+      depth = Some(maxdepth),
+      file = file
     )
   }
 }
