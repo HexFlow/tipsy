@@ -19,6 +19,7 @@ for line in lines:
             "code": b(line[2].strip()).decode("utf-8"),
             "score": line[3].strip(),
             "file": "scripts/Codes-{}-{}/code{}.c".format(labNo, probId, str(cnt))
+            # "updateClusters": True
             }
     headers = {'Content-type': 'application/json', 'Accept': 'application/json'}
     req = r.post('http://localhost:8070/api/submit', data=json.dumps(body), headers=headers)

@@ -3,6 +3,8 @@ package tipsy.db.schema
 import tipsy.db.Constraints._
 import tipsy.db.TipsyPostgresProfile.api._
 
+import io.circe.syntax._
+
 case class Dist (
   id: Int,
   quesId: String,
@@ -20,12 +22,16 @@ class Dists(tag: Tag) extends Table[Dist](tag, "DISTS") with WithPrimaryKey {
 }
 
 object Dists {
-  def getAsDump(matrix: Seq[(Int, Map[Int, Double])]): String = {
+  def getAsDump[A](matrix: Seq[(A, Map[A, Double])]): String = {
     matrix.map {
       case (id, distMap) => s"${id}: " ++
         distMap.toList.map {
           case (nid, dist) => s"(${nid}, ${dist})"
         }.mkString(" | ")
     }.mkString("\n")
+  }
+
+  def getAsJson(matrix: Map[String, (Int, Map[String, Double])]): String = {
+    matrix.asJson.toString
   }
 }

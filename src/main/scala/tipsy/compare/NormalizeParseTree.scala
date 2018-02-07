@@ -5,9 +5,17 @@ import tipsy.lexer._
 import tipsy.compiler._
 
 
-case class NormFxn(name: String, cf: List[CFEnum])
+case class NormFxn(name: String, cf: List[CFEnum]) {
+  def length(): Int = {
+    cf.length
+  }
+}
 
-case class NormCode(fxns: List[NormFxn])
+case class NormCode(fxns: List[NormFxn]) {
+  def length(): Int = {
+    fxns.map(_.length).sum
+  }
+}
 
 object NormalizeParseTree {
 

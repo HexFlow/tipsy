@@ -53,15 +53,15 @@ object Compare {
               , go(i - 1, j - 1, Some(REPLACE_d))
             ).minBy(_._1.dist)
 
-            val multFactor: Double = ((cfEnum1(i-1), cfEnum2(j-1)) match {
-              case (BLOCKOPEN(), _) => 3
-              case (_, BLOCKOPEN()) => 3
-              case (BLOCKCLOSE(), _) => 3
-              case (_, BLOCKCLOSE()) => 3
-              case _ => 1
+            val anchorFactor: Double = ((cfEnum1(i-1), cfEnum2(j-1)) match {
+              case (BLOCKOPEN(), _) => 40
+              case (_, BLOCKOPEN()) => 40
+              case (BLOCKCLOSE(), _) => 40
+              case (_, BLOCKCLOSE()) => 40
+              case _ => 0
             })
 
-            (pen._1 * multFactor, pen._2)
+            (pen._1 + anchorFactor, pen._2)
           }
         }
       }
