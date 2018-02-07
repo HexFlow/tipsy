@@ -112,7 +112,7 @@ hierarchicalTree = to_tree(linked)
 
 clusters = [(i, -1) for i in range(0, len(matrixNetwork))]
 clusterCount = 0
-thresholdDist = 300.0
+thresholdDist = 400.0
 thresholdCount = int(cnt ** 0.5) # (min, max)
 
 def assign(rootnode):
