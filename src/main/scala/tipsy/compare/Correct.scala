@@ -6,6 +6,8 @@ import tipsy.db.schema._
 import tipsy.db.TipsyPostgresProfile.api._
 
 import scala.concurrent.Future
+import scala.concurrent.duration.Duration
+import scala.collection.parallel.immutable.ParVector
 
 object Correct extends TipsyDriver with Ops with TipsyActors {
   val repCntInCluster = 2
@@ -26,9 +28,9 @@ object Correct extends TipsyDriver with Ops with TipsyActors {
       progs <- Future.sequence(ids.map (getProgOfId(_)))
       idCumNCList = progs.collect { case Some(x) => (x.id, x.cf) }
     } yield
-      idCumNCList.map {
+      idCumNCList.toVector.par.map {
         case (id, ref) => (id, Compare.findDist(code, ref))
-      }.sortWith(_._2 <= _._2).take(n)
+      }.toList.sortWith(_._2 <= _._2).take(n)
   }
 
   def getProgOfId(id: Int): Future[Option[Program]] = {

@@ -132,6 +132,7 @@ object CLI extends TipsyDriver with ClusterActions {
           clusterTable.filter(_.quesId === quesId).map(_.cluster).result
         }.map(_.headOption.getOrElse(throw new Exception(s"Cluster for ${quesId} not found in database.")))
 
+        _ <- Future(println("SINGLETON CLUSTER COUNT: " ++ clusters.filter(_.length == 1).length.toString))
         _ <- Future(println("CLUSTER COUNT: " ++ clusters.length.toString))
 
         _ <- Future.sequence(

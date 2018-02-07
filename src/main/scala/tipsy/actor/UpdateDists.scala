@@ -25,7 +25,7 @@ case class UpdateReq(
   id: Int,
   quesId: String,
   newNormCode: NormCode,
-  otherProgs: Seq[(Int, NormCode)],
+  otherProgs: Vector[(Int, NormCode)],
   shouldUpdateClusters: Boolean
 )
 

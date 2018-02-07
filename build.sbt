@@ -29,7 +29,8 @@ libraryDependencies ++= Seq(
   "org.scalanlp"            %% "breeze"                   % "0.13.1",
   "de.heikoseeberger"       %% "akka-http-circe"          % "1.20.0-RC1",
   "org.slf4j"               % "slf4j-api"                 % "1.7.25",
-  "org.slf4j"               % "slf4j-simple"              % "1.7.25"
+  "org.slf4j"               % "slf4j-simple"              % "1.7.25",
+  "org.scala-lang"          % "scala-compiler"            % "2.8.1"
 )
 
 libraryDependencies ++= Seq(

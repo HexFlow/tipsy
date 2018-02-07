@@ -21,13 +21,11 @@ class UpdateDistsParActor extends TipsyActor with TipsyDriver with TipsyActors {
 
   val updateClustersActor = system.actorOf(Props(classOf[UpdateClustersActor]), "updateClustersActor")
 
-  val writer = new PrintWriter(new File(s"dist_times"))
-
   def receive = {
     case UpdateReq(id, quesId, newNormCode, otherProgs, shouldUpdateClusters) =>
       val st = System.currentTimeMillis()
 
-      val newDists = otherProgs.toVector.par.map {
+      val newDists = otherProgs.par.map {
         case (otherId, normCode) =>
           (otherId -> Compare.findDist(newNormCode, normCode).dist)
       }.toList.toMap
@@ -60,9 +58,8 @@ class UpdateDistsParActor extends TipsyActor with TipsyDriver with TipsyActors {
           }
         }
 
-        _ <- Future(writer.write((System.currentTimeMillis() - st).toString ++ "\n"))
-        _ <- Future(writer.flush)
-
+        _ <- Future(scala.tools.nsc.io.Path(s"dist_time_${quesId}").createFile()
+          .appendAll((System.currentTimeMillis() - st).toString ++ "\n"))
 
         _ <- if (shouldUpdateClusters) {
           for {

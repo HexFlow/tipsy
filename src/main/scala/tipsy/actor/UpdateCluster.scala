@@ -19,16 +19,14 @@ class UpdateClustersActor extends TipsyActor with TipsyDriver with TipsyActors
 
   implicit override val executionContext = system.dispatchers.lookup("my-pinned-dispatcher")
 
-  val writer = new PrintWriter(new File(s"clust_times"))
-
   def receive = {
     case x: UpdateClusterMsg =>
       println(s"Updating clusters. Time: " ++ System.currentTimeMillis().toString)
       val st = System.currentTimeMillis()
       Await.result(doUpdateClusters(x.matrix, x.quesId), Duration.Inf)
       println(s"Finished updating clusters. Time: " ++ System.currentTimeMillis().toString)
-      writer.write((System.currentTimeMillis() - st).toString ++ "\n")
-      writer.flush()
+      scala.tools.nsc.io.Path(s"clust_time_${x.quesId}").createFile()
+        .appendAll((System.currentTimeMillis() - st).toString ++ "\n")
 
     case _ => println("Unknown type of message received in updateClusters actor.")
   }
