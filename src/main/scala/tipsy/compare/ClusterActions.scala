@@ -14,33 +14,37 @@ import tipsy.frontend._
 
 trait ClusterActions extends TipsyDriver {
 
-  def doUpdateClusters(quesId: String) = {
+  var cnt = 0
+
+  def doUpdateClusters(matrix: Seq[(Int, Map[Int, Double])], quesId: String) = {
+    cnt = cnt + 1
+
+    val matrixStr = Dists.getAsDump(matrix)
+
+    val writer = new PrintWriter(new File(s"matrix_${quesId}"))
+    writer.write(matrixStr)
+    writer.close()
+
+    val writer2 = new PrintWriter(new File(s"errors/matrix_${cnt.toString}"))
+    writer2.write(matrixStr)
+    writer2.close()
+
+    // Ugly way to get output of clustering.
+    val cmd = List("bash", "-c", s"python2 scripts/hierarchical_clustering.py 2> errors/clust_errlog-${cnt.toString}")
+    val is = new java.io.ByteArrayInputStream(matrixStr.getBytes("UTF-8"))
+    val out = (cmd #< is).lines_!
+    val res = out.mkString("")
+    println("Output is: " ++ res)
+    val clusterList = res.split('|').map(_.split(',').map(_.toInt).toList).toList
+    println(clusterList)
+
     for {
-      matrix <- driver.runDB {
-        distTable.filter(_.quesId === quesId).map(e => (e.id, e.dists)).result
-      }
-
-      matrixStr = Dists.getAsDump(matrix)
-
-      writer = new PrintWriter(new File(s"matrix_${quesId}"))
-      _ <- Future(writer.write(matrixStr))
-      _ <- Future(writer.close())
-
-      // Ugly way to get output of clustering.
-      cmd = List("bash", "-c", "python2 scripts/hierarchical_clustering.py 2> errlog")
-      is = new java.io.ByteArrayInputStream(matrixStr.getBytes("UTF-8"))
-      out = (cmd #< is).lines_!
-      res = out.mkString("")
-      clusterList = res.split('|').map(_.split(',').map(_.toInt).toList).toList
-      _ <- Future(println(clusterList))
-
       _ <- driver.runDB {
         clusterTable.insertOrUpdate(Cluster(
           quesId = quesId,
           cluster = clusterList
         ))
       }
-
       _ <- Future(println(s"Finished updating clusters."))
     } yield ()
   }

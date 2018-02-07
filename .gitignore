@@ -16,3 +16,8 @@ todo
 matrix_*
 test/db
 errlog
+.*.c
+data/
+errors/
+dist_times*
+clust_times*

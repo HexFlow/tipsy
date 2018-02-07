@@ -42,7 +42,6 @@ trait TipsyActors {
 trait TipsyActorsCreation extends TipsyActors {
   implicit val materializer: ActorMaterializer = ActorMaterializer()
   val updateDistsActor = system.actorOf(Props(classOf[UpdateDistsActor]), "updateDistsActor")
-  val updateClustersActor = system.actorOf(Props(classOf[UpdateClustersActor]), "updateClustersActor")
 }
 
 /**

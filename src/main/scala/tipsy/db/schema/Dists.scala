@@ -10,9 +10,11 @@ case class Dist (
 )
 
 class Dists(tag: Tag) extends Table[Dist](tag, "DISTS") with WithPrimaryKey {
-  def id: Rep[Int] = column[Int]("DIST_ID", O.PrimaryKey)
+  def id: Rep[Int] = column[Int]("DIST_ID")
   def quesId: Rep[String] = column[String]("QUES_ID")
   def dists: Rep[Map[Int, Double]] = column [Map[Int, Double]]("DISTS")
+
+  def pk = primaryKey("DIST_pkey", (id, quesId))
 
   def * = (id, quesId, dists) <> ((Dist.apply _).tupled, Dist.unapply)
 }

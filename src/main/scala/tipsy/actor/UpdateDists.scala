@@ -1,10 +1,14 @@
 package tipsy.actors
 
-import akka.actor.Actor
+import akka.actor._
+import akka.pattern.ask
+import akka.util.Timeout
 
 import scala.concurrent.{ Future, Await }
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration._
 
+import java.io.File
+import java.io.PrintWriter
 
 import tipsy.frontend._
 import tipsy.compare._
@@ -27,54 +31,15 @@ case class UpdateReq(
 
 class UpdateDistsActor extends TipsyActor with TipsyDriver with TipsyActors {
   implicit override val executionContext = system.dispatchers.lookup("my-pinned-dispatcher")
+  implicit val timeout = new Timeout(100 seconds)
+
+  val updateDistsParActor = system.actorOf(Props(classOf[UpdateDistsParActor]), "updateDistsParActor")
 
   def receive = {
-    case UpdateReq(id, quesId, newNormCode, otherProgs, shouldUpdateClusters) =>
-      println(s"Adding ${id} to dists table.")
-
-      val newDists = otherProgs.map {
-        case (otherId, normCode) =>
-          (otherId -> Compare.findDist(newNormCode, normCode).dist)
-      }.toMap
-
-      val d = Dist (
-        id = id,
-        quesId = quesId,
-        dists = newDists
-      )
-
-      val action = for {
-        _ <- driver.runDB {
-          distTable.insertOrUpdate(d)
-        }
-
-        _ <- Future.sequence {
-          newDists.map {
-            case (otherId, distFromNew) => for {
-              otherDists <- driver.runDB {
-                distTable.filter(_.id === otherId).result
-              }.map(_.headOption.getOrElse(throw new Exception(s"program ${otherId} did not have distance entry")))
-
-              updatedOtherDists = otherDists.copy(
-                dists = otherDists.dists + (id -> distFromNew))
-
-              _ <- driver.runDB {
-                distTable.insertOrUpdate(updatedOtherDists)
-              }
-            } yield ()
-          }
-        }
-
-        msg = if (shouldUpdateClusters) {
-          updateClusters ! quesId
-        } else ()
-
-        _ <- Future(msg)
-
-        _ <- Future(println(s"Finished updating dists after ${id}."))
-      } yield ()
-
-      Await.result(action, Duration.Inf)
+    case x: UpdateReq =>
+      println(s"Adding ${x.id} to dists table. Time: " ++ System.currentTimeMillis().toString)
+      updateDistsParActor ? x
+      println(s"Finished updating dists after ${x.id}. Time: " ++ System.currentTimeMillis().toString)
 
     case _ => println("Unknown type of message received in updateDists actor.")
   }

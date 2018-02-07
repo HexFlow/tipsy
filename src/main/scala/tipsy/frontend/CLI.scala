@@ -87,8 +87,19 @@ object CLI extends TipsyDriver with ClusterActions {
     }
 
     if (modes contains UPDATECLUSTER) {
-      val action = doUpdateClusters(modes(UPDATECLUSTER))
-      Await.result(action, Duration.Inf)
+      val its = 1
+      val st = System.currentTimeMillis()
+      1 to its foreach { _ =>
+        val action = for {
+          matrix <- driver.runDB {
+            distTable.filter(_.quesId === modes(UPDATECLUSTER)).map(e => (e.id, e.dists)).result
+          }
+          _ <- doUpdateClusters(matrix, modes(UPDATECLUSTER))
+        } yield ()
+        Await.result(action, Duration.Inf)
+      }
+      val total = System.currentTimeMillis() - st
+      println("Time needed per clustering call: " ++ (total.toDouble/its).toString)
     }
 
     if (modes contains CLUSTERVARIANCE) {
@@ -114,7 +125,7 @@ object CLI extends TipsyDriver with ClusterActions {
                   }.map(_.headOption.getOrElse(throw new Exception(s"Could not find program ${progId}")))
                 ))
                 scores = progs.map(_.score.toDouble)
-                variance = (mean(scores.map(sqr)) - sqr(mean(scores))) / scores.length
+                variance = scala.math.sqrt(mean(scores.map(sqr)) - sqr(mean(scores)))
                 _ <- Future(println(scores.length.toString ++ " -> " ++ variance.toString ++
                   "\t --> " ++ progs.map(_.props.file.getOrElse("")).mkString(",") ++
                   "\t --> " ++ progs.map(_.id).mkString(",")))
