@@ -18,7 +18,7 @@ import io.circe.syntax._
 trait Handlers extends JsonSupport with TableHandlers with Helpers {
 
   def updateClusterHandler(quesId: String): HandleResp = {
-    updateClusters ! quesId
+    updateClustersActorRef ! quesId
     Future((OK, "Cluster update process started".asJson))
   }
 

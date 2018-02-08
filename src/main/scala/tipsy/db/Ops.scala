@@ -6,7 +6,6 @@ import scala.concurrent.ExecutionContext
 import tipsy.db.TipsyPostgresProfile.api._
 import scala.util.{ Success, Failure }
 
-
 trait Ops {
   import Constraints._
 

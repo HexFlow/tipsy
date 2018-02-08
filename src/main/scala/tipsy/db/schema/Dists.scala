@@ -3,35 +3,39 @@ package tipsy.db.schema
 import tipsy.db.Constraints._
 import tipsy.db.TipsyPostgresProfile.api._
 
+import scala.math._
+
 import io.circe.syntax._
 
 case class Dist (
-  id: Int,
+  id1: Int,
+  id2: Int,
   quesId: String,
-  dists: Map[Int, Double]
+  dist: Double
 )
 
-class Dists(tag: Tag) extends Table[Dist](tag, "DISTS") with WithPrimaryKey {
-  def id: Rep[Int] = column[Int]("DIST_ID")
+class Dists(tag: Tag) extends Table[Dist](tag, "DISTS") {
+  def id1: Rep[Int] = column[Int]("ID1")
+  def id2: Rep[Int] = column[Int]("ID2")
   def quesId: Rep[String] = column[String]("QUES_ID")
-  def dists: Rep[Map[Int, Double]] = column [Map[Int, Double]]("DISTS")
+  def dist: Rep[Double] = column [Double]("DISTS")
 
-  def pk = primaryKey("DIST_pkey", (id, quesId))
+  def pk = primaryKey("DIST_pkey", (id1, id2))
 
-  def * = (id, quesId, dists) <> ((Dist.apply _).tupled, Dist.unapply)
+  def * = (id1, id2, quesId, dist) <> ((Dist.apply _).tupled, Dist.unapply)
 }
 
 object Dists {
-  def getAsDump[A](matrix: Seq[(A, Map[A, Double])]): String = {
-    matrix.map {
-      case (id, distMap) => s"${id}: " ++
-        distMap.toList.map {
-          case (nid, dist) => s"(${nid}, ${dist})"
-        }.mkString(" | ")
-    }.mkString("\n")
+  def createDistEntry(id1: Int, id2: Int, quesId: String, dist: Double) = {
+    Dist(
+      id1 = min(id1, id2),
+      id2 = max(id2, id1),
+      quesId = quesId,
+      dist = dist
+    )
   }
 
-  def getAsJson(matrix: Map[String, (Int, Map[String, Double])]): String = {
+  def getAsJson(matrix: Seq[(Int, Int, Double)]): String = {
     matrix.asJson.toString
   }
 }

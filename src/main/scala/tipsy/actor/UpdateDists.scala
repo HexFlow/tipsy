@@ -37,9 +37,12 @@ class UpdateDistsActor extends TipsyActor with TipsyDriver with TipsyActors {
 
   def receive = {
     case x: UpdateReq =>
-      println(s"Adding ${x.id} to dists table. Time: " ++ System.currentTimeMillis().toString)
-      updateDistsParActor ? x
-      println(s"Finished updating dists after ${x.id}. Time: " ++ System.currentTimeMillis().toString)
+      val action = for {
+        _ <- Future(println(s"Adding ${x.id} to dists table. Time: " ++ System.currentTimeMillis().toString))
+        _ <- updateDistsParActor ? x
+        _ <- Future(println(s"Finished updating dists after ${x.id}. Time: " ++ System.currentTimeMillis().toString))
+      } yield ()
+      Await.result(action, Duration.Inf)
 
     case _ => println("Unknown type of message received in updateDists actor.")
   }

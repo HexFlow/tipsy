@@ -75,26 +75,9 @@ object CLI extends TipsyDriver with ClusterActions {
       val quesId = modes(DUMPMATRIX)
       val action = for {
         matrix <- driver.runDB {
-          distTable.filter(_.quesId === quesId).map(e => (e.id, e.dists)).result
+          distTable.filter(_.quesId === quesId).map(e => (e.id1, e.id2, e.dist)).result
         }
-        fileNameMatrix <- Future.sequence {
-          matrix.map {
-            case (id, _) =>
-              for {
-                elem <- driver.runDB {
-                  progTable.filter(_.id === id).result
-                }.map(_.headOption.getOrElse(throw new Exception(s"id ${id} not found")))
-              } yield (elem.id -> (elem.cf.length, elem.props.file.getOrElse("nofilegiven")))
-          }
-        }.map(_.toMap)
-        newMatrix = matrix.map {
-          case (id, dists) => (fileNameMatrix(id)._2,
-            (fileNameMatrix(id)._1, dists.map {
-              case (nid, dist) => fileNameMatrix(nid)._2 -> dist
-            }.toMap)
-          )
-        }.toMap
-        matrixStr = Dists.getAsJson(newMatrix)
+        matrixStr = Dists.getAsJson(matrix)
         writer = new PrintWriter(new File(s"matrix_${quesId}"))
         _ <- Future(writer.write(matrixStr))
         _ <- Future(writer.close())
@@ -109,7 +92,7 @@ object CLI extends TipsyDriver with ClusterActions {
       1 to its foreach { _ =>
         val action = for {
           matrix <- driver.runDB {
-            distTable.filter(_.quesId === modes(UPDATECLUSTER)).map(e => (e.id, e.dists)).result
+            distTable.filter(_.quesId === modes(UPDATECLUSTER)).map(e => (e.id1, e.id2, e.dist)).result
           }
           _ <- doUpdateClusters(matrix, modes(UPDATECLUSTER))
         } yield ()

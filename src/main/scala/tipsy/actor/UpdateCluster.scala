@@ -11,7 +11,7 @@ import tipsy.compare.ClusterActions
 
 case class UpdateClusterMsg(
   quesId: String,
-  matrix: Seq[(Int, Map[Int, Double])]
+  matrix: Seq[(Int, Int, Double)]
 )
 
 class UpdateClustersActor extends TipsyActor with TipsyDriver with TipsyActors

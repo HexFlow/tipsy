@@ -16,34 +16,34 @@ SHOWPLOT = 0
 if len(sys.argv) >= 2 and sys.argv[1] == "showplot":
     SHOWPLOT = 1
 
-forId = {}
 idMap = {}
 idRevMap = {}
 cnt = 0
 
-def extract(d):
-    a = d.strip()[1:-1].split(',')
-    return (int(a[0].strip()), float(a[1].strip()))
-
-for line in sys.stdin.readlines():
-    sp = line.split(':')
-    id = int(sp[0].strip())
-    res = sp[1].strip().split('|')
-    matches = map(extract, res)
-    forId[id] = dict(matches)
-
-for key in forId.keys():
-    idRevMap[cnt] = key
-    idMap[key] = cnt
-    cnt += 1
+di = {}
+inp = sys.stdin.read()
+j = json.loads(inp)
+for entry in j:
+    if entry[0] not in di:
+        di[entry[0]] = {}
+    if entry[1] not in di:
+        di[entry[1]] = {}
+    di[entry[0]][entry[1]] = entry[2]
+    di[entry[1]][entry[0]] = entry[2]
+    if entry[0] not in idMap:
+        idMap[entry[0]] = cnt
+        idRevMap[cnt] = entry[0]
+        cnt += 1
+    if entry[1] not in idMap:
+        idMap[entry[1]] = cnt
+        idRevMap[cnt] = entry[1]
+        cnt += 1
 
 matrixNetwork = np.zeros(shape=(cnt, cnt))
-for i in range(0, cnt):
-    for j in range(0, cnt):
-        if i == j:
-            matrixNetwork[i][j] = 0
-        else:
-            matrixNetwork[i][j] = forId[idRevMap[i]][idRevMap[j]]
+for i in range(cnt):
+    for j in range(cnt):
+        if i is not j:
+            matrixNetwork[i][j] = di[idRevMap[i]][idRevMap[j]]
 
 print(matrixNetwork, file = sys.stderr)
 
@@ -171,5 +171,6 @@ def reorder(lis):
     a.sort()
     return [i[1] for i in a]
 
-res = map(lambda x: ','.join(map(str, reorder(x))), finalclusters)
-print('|'.join(res))
+print(json.dumps(map(reorder, finalclusters)))
+# res = map(lambda x: ','.join(map(str, reorder(x))), finalclusters)
+# print('|'.join(res))

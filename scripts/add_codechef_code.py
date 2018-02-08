@@ -19,8 +19,8 @@ for line in os.listdir(sys.argv[2]):
                 "quesId": quesId,
                 "code": f.read(),
                 "score": "20",
+                # "updateClusters": True,
                 "file": line
-                # "updateClusters": True
                 }
         headers = {'Content-type': 'application/json', 'Accept': 'application/json'}
         req = r.post('http://localhost:8070/api/submit', data=json.dumps(body), headers=headers)

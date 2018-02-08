@@ -35,13 +35,13 @@ trait TipsyDriver {
 trait TipsyActors {
   implicit val system: ActorSystem = ActorSystem("web-tipsy")
   implicit val executionContext = system.dispatcher
-  val updateDists = system.actorSelection("/user/updateDistsActor")
-  val updateClusters = system.actorSelection("/user/updateClustersActor")
+  val insertProgActorRef = system.actorSelection("/user/insertProgActor")
+  val updateClustersActorRef = system.actorSelection("/user/updateClustersActor")
 }
 
 trait TipsyActorsCreation extends TipsyActors {
   implicit val materializer: ActorMaterializer = ActorMaterializer()
-  val updateDistsActor = system.actorOf(Props(classOf[UpdateDistsActor]), "updateDistsActor")
+  val insertProgActor = system.actorOf(Props(classOf[InsertProgActor]), "insertProgActor")
 }
 
 /**
