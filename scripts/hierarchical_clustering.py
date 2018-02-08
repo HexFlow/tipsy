@@ -12,6 +12,8 @@ import json
 import sys
 import os
 
+matplotlib.rcParams.update({'font.size': 18})
+
 SHOWPLOT = 0
 if len(sys.argv) >= 2 and sys.argv[1] == "showplot":
     SHOWPLOT = 1
@@ -77,9 +79,9 @@ def fancy_dendrogram(*args, **kwargs):
     ddata = dendrogram(*args, **kwargs)
 
     if not kwargs.get('no_plot', False):
-        plt.title('Dendrogram for matrixNetwork')
-        plt.xlabel('cluster size')
-        plt.ylabel('distance')
+        plt.title('Dendrogram: Clusters before running PruneTree')
+        plt.xlabel('Program ID')
+        plt.ylabel('Distance')
         for i, d, c in zip(ddata['icoord'], ddata['dcoord'], ddata['color_list']):
             x = 0.5 * sum(i[1:3])
             y = d[1]
@@ -95,17 +97,17 @@ def fancy_dendrogram(*args, **kwargs):
 
 if SHOWPLOT == 1:
     plt.figure(figsize=(25,10))
-    plt.title('Dendrogram for Matrix')
-    plt.xlabel('codes')
-    plt.ylabel('distance')
+    plt.title('Dendrogram: Clusters before running PruneTree')
+    # plt.xlabel('Program ID')
+    plt.ylabel('Distance')
     dend = fancy_dendrogram(linked,
                             leaf_rotation = 90,
                             leaf_font_size = 8,
                         # truncate_mode = 'lastp',
                         # p = 12,
                             show_contracted = True,
-                            annotate_above = 1000,
-                            max_d = 600)
+                            annotate_above = 400,
+                            max_d = 300)
     plt.show()
 
 hierarchicalTree = to_tree(linked)

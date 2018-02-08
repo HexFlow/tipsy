@@ -14,10 +14,10 @@ with open(sys.argv[1]) as f:
 
 fig, ax = plt.subplots(1, 1)
 out = ax.plot(lines)
-plt.xlabel("Number of programs in database")
+# plt.xlabel("Number of programs in database")
 
 # plt.ylabel("Time to form clusters (s)")
-plt.ylabel("Time to recompute distances on program addition (s)")
+# plt.ylabel("Time to recompute distances on program addition (s)")
 
 fig.savefig(sys.argv[1] + ".png")
 plt.show()

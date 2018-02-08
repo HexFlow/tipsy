@@ -102,12 +102,6 @@ object CLI extends TipsyDriver with ClusterActions {
     }
 
     if (modes contains CLUSTERVARIANCE) {
-      def mean(l: List[Double]) = {
-        l.sum / l.length
-      }
-      def sqr(x: Double) = {
-        x*x
-      }
       val quesId = modes(CLUSTERVARIANCE)
       val action = for {
         clusters <- driver.runDB {
@@ -117,7 +111,7 @@ object CLI extends TipsyDriver with ClusterActions {
         _ <- Future(println("SINGLETON CLUSTER COUNT: " ++ clusters.filter(_.length == 1).length.toString))
         _ <- Future(println("CLUSTER COUNT: " ++ clusters.length.toString))
 
-        _ <- Future.sequence(
+        varsAndLen <- Future.sequence(
           clusters.map { cluster =>
             if (cluster.length > 1) {
               for {
@@ -127,16 +121,28 @@ object CLI extends TipsyDriver with ClusterActions {
                   }.map(_.headOption.getOrElse(throw new Exception(s"Could not find program ${progId}")))
                 ))
                 scores = progs.map(_.score.toDouble)
-                variance = scala.math.sqrt(mean(scores.map(sqr)) - sqr(mean(scores)))
-                _ <- Future(println(scores.length.toString ++ " -> " ++ variance.toString ++
-                  "\t --> " ++ progs.map(_.props.file.getOrElse("")).mkString(",") ++
-                  "\t --> " ++ progs.map(_.id).mkString(",")))
-              } yield ()
-            } else Future()
+                variance = getVariance(scores)
+                _ <- Future(println(s"${scores.length.toString} -> ${variance.toString}"))
+                // _ <- Future(println(scores.length.toString ++ " -> " ++ variance.toString ++
+                //   "\t --> " ++ progs.map(_.props.file.getOrElse("")).mkString(",") ++
+                //   "\t --> " ++ progs.map(_.id).mkString(",")))
+              } yield (variance, scores.length, scores)
+            } else Future(0.0, 0, List())
           }
         )
+
+        _ <- Future(println("Weighted average of non-singleton variance: " ++
+          (varsAndLen.map(x => x._1 * x._2).sum / varsAndLen.map(_._2).sum).toString
+        ))
+        _ <- Future(println("Non-singleton overall: " ++
+          getVariance(varsAndLen.flatMap(_._3)).toString
+        ))
+        _ <- Future(println("Non-singleton count: " ++
+          varsAndLen.map(_._2).sum.toString
+        ))
       } yield ()
       Await.result(action, Duration.Inf)
+      println("Overall: " ++ Await.result(findVarianceOfQues(quesId), Duration.Inf).toString)
     }
 
     if (modes contains LEASTEDIT) {

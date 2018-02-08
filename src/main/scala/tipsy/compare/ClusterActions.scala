@@ -14,6 +14,24 @@ trait ClusterActions extends TipsyDriver {
 
   var cnt = 0
 
+  def mean(l: List[Double]) = {
+    l.sum / l.length
+  }
+  def sqr(x: Double) = {
+    x*x
+  }
+  def getVariance(x: List[Double]) = {
+    scala.math.sqrt(mean(x.map(sqr)) - sqr(mean(x)))
+  }
+
+  def findVarianceOfQues(quesId: String): Future[Double] = {
+    for {
+      progScores <-driver.runDB {
+        progTable.filter(_.quesId === quesId).map(_.score).result
+      }.map(_.map(_.toDouble))
+    } yield getVariance(progScores.toList)
+  }
+
   def doUpdateClusters(matrix: Seq[(Int, Int, Double)], quesId: String): Future[Unit] = {
     cnt = cnt + 1
 
