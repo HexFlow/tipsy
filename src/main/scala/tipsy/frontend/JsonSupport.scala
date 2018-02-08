@@ -41,6 +41,7 @@ trait JsonSupport {
           "position" -> a.position.toString.asJson,
           "function" -> f.asJson
         )
+        case _ => ???
       }
   }
 }

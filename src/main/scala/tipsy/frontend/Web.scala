@@ -33,14 +33,10 @@ trait TipsyDriver {
 
 trait TipsyActors {
   implicit val system: ActorSystem = ActorSystem("web-tipsy")
+  implicit val materializer: ActorMaterializer = ActorMaterializer()
   implicit val executionContext = system.dispatcher
   val insertProgActorRef = system.actorSelection("/user/insertProgActor")
   val updateClustersActorRef = system.actorSelection("/user/updateClustersActor")
-}
-
-trait TipsyActorsCreation extends TipsyActors {
-  implicit val materializer: ActorMaterializer = ActorMaterializer()
-  val insertProgActor = system.actorOf(Props(classOf[InsertProgActor]), "insertProgActor")
 }
 
 /**
@@ -49,11 +45,11 @@ trait TipsyActorsCreation extends TipsyActors {
   * information/corrections
   */
 object Web extends JsonSupport with Ops with FailFastCirceSupport
-    with FileAndResourceDirectives with Handlers with TipsyActorsCreation
-    with TipsyDriver {
+    with FileAndResourceDirectives with Handlers with TipsyDriver {
 
-  // modes is currently not used
-  def apply(modes: Set[CLIMode]): Unit = {
+  val insertProgActor = system.actorOf(Props(classOf[InsertProgActor]), "insertProgActor")
+
+  def apply(config: Config): Unit = {
     implicit val blockingDispatcher = system.dispatchers.lookup("tipsy-blocking-dispatcher")
 
     val route: Route =
@@ -97,8 +93,8 @@ object Web extends JsonSupport with Ops with FailFastCirceSupport
         complete ("System is up")
       } ~ getFromDirectory("view")
 
-    val bindingFuture = Http().bindAndHandle(route, "0.0.0.0", 8070)
-    println(s"Server online at http://localhost:8070/")
+    val bindingFuture = Http().bindAndHandle(route, config.host, config.port)
+    println(s"Server online at http://${config.host}:${config.port}/")
 
     Await.result(system.whenTerminated, Duration.Inf)
     driver.close()
