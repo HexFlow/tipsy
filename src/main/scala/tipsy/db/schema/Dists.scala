@@ -1,6 +1,5 @@
 package tipsy.db.schema
 
-import tipsy.db.Constraints._
 import tipsy.db.TipsyPostgresProfile.api._
 
 import scala.math._

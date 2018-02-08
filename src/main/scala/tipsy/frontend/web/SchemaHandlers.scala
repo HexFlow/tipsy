@@ -7,7 +7,6 @@ import tipsy.db.TipsyPostgresProfile.api._
 import tipsy.actors.InsertProgMsg
 
 import akka.http.scaladsl.model.StatusCodes._
-import akka.actor._
 import akka.pattern.ask
 import akka.util.Timeout
 

@@ -1,10 +1,8 @@
 package tipsy.actors
 
-import scala.concurrent.{ Future, Await }
+import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
-import java.io.File
-import java.io.PrintWriter
 
 import tipsy.frontend._
 import tipsy.compare.ClusterActions

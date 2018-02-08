@@ -12,7 +12,6 @@ import scala.concurrent.{ Future, Await }
 import scala.concurrent.duration.Duration
 import scala.concurrent.ExecutionContext
 
-import akka.actor.PoisonPill
 
 import scalaz._, Scalaz._
 

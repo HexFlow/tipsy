@@ -21,7 +21,6 @@ import scala.concurrent.duration._
 import de.heikoseeberger.akkahttpcirce._
 import io.circe.generic.auto._
 
-import scala.io.StdIn
 
 trait TipsyDriver {
   implicit val executionContext: ExecutionContext

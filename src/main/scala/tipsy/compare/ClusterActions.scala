@@ -1,20 +1,14 @@
 package tipsy.compare
 
-import scala.concurrent.{ Future, Await }
-import scala.concurrent.duration.Duration
+import scala.concurrent.Future
 import scala.sys.process._
 
-import java.io.File
-import java.io.PrintWriter
 
 import tipsy.db.schema._
 import tipsy.db.TipsyPostgresProfile.api._
 import tipsy.frontend._
 
-import io.circe._
-import io.circe.generic.auto._
 import io.circe.parser._
-import io.circe.syntax._
 
 trait ClusterActions extends TipsyDriver {
 

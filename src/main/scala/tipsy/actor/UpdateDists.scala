@@ -7,13 +7,9 @@ import akka.util.Timeout
 import scala.concurrent.{ Future, Await }
 import scala.concurrent.duration._
 
-import java.io.File
-import java.io.PrintWriter
 
 import tipsy.frontend._
 import tipsy.compare._
-import tipsy.db.schema._
-import tipsy.db.TipsyPostgresProfile.api._
 
 trait TipsyActor extends Actor {
   def runInf[T](f: => Future[T]): T = {

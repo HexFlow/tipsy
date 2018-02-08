@@ -1,11 +1,10 @@
 package tipsy.actors
 
 import akka.actor._
-import akka.util.Timeout
 
 import scala.concurrent.{ Future, Await }
 import scala.concurrent.duration.Duration
-import scala.collection.mutable.{Map => mMap, Stack}
+import scala.collection.mutable.{Map => mMap}
 
 import tipsy.frontend._
 import tipsy.db.TipsyPostgresProfile.api._

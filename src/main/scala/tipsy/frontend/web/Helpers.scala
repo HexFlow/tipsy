@@ -1,11 +1,9 @@
 package tipsy.frontend.web
 
 import tipsy.db._
-import tipsy.actors._
 import tipsy.db.schema._
 import tipsy.db.TipsyPostgresProfile.api._
 import tipsy.frontend._
-import tipsy.compare.NormCode
 
 import akka.http.scaladsl.model.StatusCode
 import scala.concurrent.Future

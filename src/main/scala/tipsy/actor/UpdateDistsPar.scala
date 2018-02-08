@@ -1,14 +1,10 @@
 package tipsy.actors
 
-import akka.actor.Actor
 
 import scala.concurrent.{ Future, Await }
 import scala.concurrent.duration.Duration
-import scala.collection.parallel.immutable.ParVector
 import scala.util.{ Try, Success, Failure }
 
-import java.io.File
-import java.io.PrintWriter
 
 import akka.actor._
 

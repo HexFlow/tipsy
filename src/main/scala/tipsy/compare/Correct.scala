@@ -6,8 +6,6 @@ import tipsy.db.schema._
 import tipsy.db.TipsyPostgresProfile.api._
 
 import scala.concurrent.Future
-import scala.concurrent.duration.Duration
-import scala.collection.parallel.immutable.ParVector
 
 object Correct extends TipsyDriver with Ops with TipsyActors {
   val repCntInCluster = 2
