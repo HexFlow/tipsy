@@ -19,19 +19,6 @@ object Tipsy {
         opt[Seq[String]]("files").valueName("<file1>,<file2>...").action( (x,c) =>
           c.copy(files = x) ).text("files to run analysis on"),
 
-        cmd("dir").action( (_, c) => c ).
-          text("directory to run analysis on").
-          children(
-            opt[Seq[String]]('n', "names").action( (x, c) =>
-              c.copy(dirs= x)),
-            opt[Int]('l', "limit").action( (x, c) =>
-              c.copy(limit = x) ).text("limit on programs to analyse"),
-            checkConfig( c =>
-              if (c.dirs.length == 0) failure("no directory name specified in dir mode")
-              else success
-            )
-          ),
-
         opt[Seq[Int]]("ids").valueName("<id1>,<id2>...").action( (x,c) =>
           c.copy(ids = x) ).text("program IDs to run analysis on"),
 
@@ -47,11 +34,14 @@ object Tipsy {
         opt[Unit]("linearRep").action( (_, c) =>
           c.copy(linearRep = true) ).text("whether to show LinearRepresentation"),
 
-        checkConfig( c =>
-          if (c.files.length == 0 && (c.dirs.length == 0 || c.limit == 0) && c.ids.length == 0)
-            failure("no input programs provided to exec mode")
-          else success
-        )
+        cmd("dir").action( (_, c) => c ).
+          text("directory to run analysis on").
+          children(
+            opt[Seq[String]]('n', "names").action( (x, c) =>
+              c.copy(dirs= x)),
+            opt[Int]('l', "limit").action( (x, c) =>
+              c.copy(limit = x) ).text("limit on programs to analyse")
+          )
       )
 
     cmd("cluster").action( (_, c) => c.copy(cluster = true) ).
@@ -67,15 +57,8 @@ object Tipsy {
           c.copy(variance = true) ).text("whether to print cluster variance"),
 
         opt[Unit]("dumpmatrix").abbr("dm").action( (_, c) =>
-          c.copy(matrixdump = true) ).text("whether to dump distance matrix"),
-
-        checkConfig( c =>
-          if (c.web || c.exec) failure("cluster mode cannot work with exec or web mode")
-          else if (c.ques == "") failure("providing question name is required in cluster mode")
-          else success
-        )
+          c.copy(matrixdump = true) ).text("whether to dump distance matrix")
       )
-
 
     cmd("web").action( (_, c) => c.copy(web = true) ).
       text("whether to serve as a web backend").
@@ -84,13 +67,25 @@ object Tipsy {
           c.copy(host = x) ).text("address to listen on"),
 
         opt[Int]("port").action( (x, c) =>
-          c.copy(port = x) ).text("port to listen on"),
+          c.copy(port = x) ).text("port to listen on")
+      )
 
-        checkConfig( c =>
+    checkConfig( c =>
+      if (c.exec) {
+        if (c.files.length == 0 && (c.dirs.length == 0 || c.limit == 0) && c.ids.length == 0)
+          failure("no input programs provided to exec mode")
+        else success
+      } else if (c.cluster) {
+          if (c.web || c.exec) failure("cluster mode cannot work with exec or web mode")
+          else if (c.ques == "") failure("providing question name is required in cluster mode")
+          else success
+      } else if (c.web) {
           if (c.cluster || c.exec) failure("web mode cannot work with exec or cluster mode")
           else success
-        )
-      )
+      } else {
+        failure("no mode specified. Please specify one mode among exec/cluster/web")
+      }
+    )
   }
 
   // def main(args: Array[String]): Unit = {

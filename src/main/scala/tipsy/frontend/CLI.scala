@@ -19,7 +19,7 @@ class CLI(c: Config) extends TipsyDriver
     }
 
     if (exec) { // EXEC actions
-      lazy implicit val validTrees = cliValidTrees
+      implicit val validTrees = cliValidTrees
 
       if (distance) cliDistance
       if (corrections) cliCorrections
