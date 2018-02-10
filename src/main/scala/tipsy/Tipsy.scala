@@ -34,6 +34,9 @@ object Tipsy {
         opt[Unit]("linearRep").action( (_, c) =>
           c.copy(linearRep = true) ).text("whether to show LinearRepresentation"),
 
+        opt[Unit]("normalRep").action( (_, c) =>
+          c.copy(normalRep = true) ).text("whether to show Normalized Linear Representation"),
+
         cmd("dir").action( (_, c) => c ).
           text("directory to run analysis on").
           children(

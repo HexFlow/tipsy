@@ -9,6 +9,7 @@ case class Config(
   exec: Boolean = false,
   parseTree: Boolean = false,
   linearRep: Boolean = false,
+  normalRep: Boolean = false,
   distance: Boolean = false,
   corrections: Boolean = false,
 

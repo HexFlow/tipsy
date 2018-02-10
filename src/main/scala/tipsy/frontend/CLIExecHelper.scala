@@ -64,6 +64,19 @@ trait CLIExecHelpers extends TipsyDriver {
           case Right(tree) => {
             if (parseTree) println(tree)
             if (linearRep) println(tree.compress)
+            if (normalRep) {
+              NormalizeParseTree(tree) match {
+                case Left(err) => println("There was an error in normalization: " ++ err.toString)
+                case Right(NormCode(nfxns)) =>
+                  nfxns.map {
+                    case NormFxn(name, cfs) =>
+                      println("Function: " ++ name)
+                      cfs.map { cf =>
+                        println(cf.line.toString + ":" + cf.column.toString + "\t" + cf.toString)
+                      }
+                  }
+              }
+            }
             (Some(tree), file)
           }
           case Left(err) => {
