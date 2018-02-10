@@ -19,25 +19,25 @@ trait Handlers extends JsonSupport with TableHandlers with Helpers {
 
   def updateClusterHandler(quesId: String): HandleResp = {
     updateClustersActorRef ! quesId
-    Future((OK, "Cluster update process started".asJson))
+    Future((OK, "Cluster update process started"))
   }
 
   def progFromDB(id: Int): HandleResp = {
     getFromDB(id).map(_ match {
-      case None => ((NotFound, "Program not found".asJson))
-      case Some(x) => (OK, x.asJson)
+      case None => ((NotFound, "Program not found"))
+      case Some(x) => (OK, x)
     })
   }
 
   def compiledFromDB(id: Int): HandleResp = {
     getFromDB(id).map(_ match {
-      case None => ((NotFound, "Program not found".asJson))
+      case None => ((NotFound, "Program not found"))
       case Some(p: Program) =>
         Compiler(p.code) match {
-          case Left(err) => (BadRequest, err.toString.asJson)
+          case Left(err) => (BadRequest, err)
           case Right(tree: ParseTree) =>
-            val res = Map("tree" -> tree.toString.asJson,
-              "flow" -> tree.compress.toString.asJson).asJson
+            val res = Map("tree" -> tree.toString,
+              "flow" -> tree.compress.toString)
             (OK, res)
         }
     })
@@ -45,7 +45,7 @@ trait Handlers extends JsonSupport with TableHandlers with Helpers {
 
   def correctProgramFromReq(progreq: Requests.ProgramInsertReq): HandleResp = {
     Compiler.compileWithStats(progreq) match {
-      case Left(err) => Future(BadRequest, ("Compilation failed: " ++ err.toString).asJson)
+      case Left(err) => Future(BadRequest, ("Compilation failed: " ++ err.toString))
       case Right(prog) => correctGivenCode(prog)
     }
   }
@@ -62,13 +62,13 @@ trait Handlers extends JsonSupport with TableHandlers with Helpers {
 
   private def correctGivenCode(prog: Program): HandleResp = {
     Compiler(prog.code) match {
-      case Left(err) => Future((BadRequest, ("Compilation failed: " ++ err.toString).asJson))
+      case Left(err) => Future((BadRequest, ("Compilation failed: " ++ err.toString)))
       case Right(mainTree: ParseTree) =>
         NormalizeParseTree(mainTree) match {
-          case Left(err) => Future((BadRequest, ("Normalization failed: " ++ err.toString).asJson))
+          case Left(err) => Future((BadRequest, ("Normalization failed: " ++ err.toString)))
           case Right(nc) => for {
             res <- Correct.suggestCorrections(nc)(prog.quesId)
-          } yield (OK, res.asJson)
+          } yield (OK, res)
         }
     }
   }
@@ -77,10 +77,9 @@ trait Handlers extends JsonSupport with TableHandlers with Helpers {
     val myQuery: Query[Rep[Int], Int, Seq] = progTable.map(_.id)
     for {
       progs <- driver.runDB(myQuery.result)
-      res = Map(
-        "Available programs" -> progs.asJson,
-        "Count" -> progs.length.asJson
-      ).asJson
-    } yield (OK, res)
+    } yield (OK, Map(
+      "Available programs" -> progs.asJson,
+      "Count" -> progs.length.asJson
+    ))
   }
 }

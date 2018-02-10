@@ -12,6 +12,8 @@ import io.circe.{Encoder, Json }
   */
 trait JsonSupport {
 
+  implicit def allToJson[T](x: T)(implicit encoder: io.circe.Encoder[T]) = x.asJson
+
   implicit val encodeCF: Encoder[CFEnum] = new Encoder[CFEnum] {
     final def apply(a: CFEnum): Json = a match {
       case POSTEXPR(e) => ("Expr: " + e mkString "").asJson
