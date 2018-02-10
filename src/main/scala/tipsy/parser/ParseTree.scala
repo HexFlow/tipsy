@@ -1,7 +1,7 @@
 package tipsy.parser
 
 import tipsy.lexer._
-import tipsy.compare.FlowGraphTweaks.{ renameIdentsInExpr => r }
+import tipsy.compare.FlowGraphTweaks.post
 import scala.util.parsing.input.{Positional, Position}
 
 @SerialVersionUID(100L)
@@ -53,12 +53,6 @@ case class BRK() extends CFEnum {
   val flowName = "Break"
 }
 
-// Used for storing types
-case class QualifiedType(qualifiers: List[String], name: CType) extends ParseTree {
-  override def toString(): String = (qualifiers :+ name.toString).mkString(" ")
-}
-case class TypedIdent(qt: QualifiedType, name: IDENT) extends ParseTree
-
 /**
   * All other ParseTree constructs derive from this superclass.
   * This is a positioned type, and contains the structure of the parsed
@@ -73,6 +67,12 @@ sealed trait ParseTree extends Positional {
   lazy val compress: List[CFEnum] = rawCompress.map(_.setPos(pos))
   lazy val rawCompress: List[CFEnum] = List()
 }
+
+// Used for storing types
+case class QualifiedType(qualifiers: List[String], name: CType) extends ParseTree {
+  override def toString(): String = (qualifiers :+ name.toString).mkString(" ")
+}
+case class TypedIdent(qt: QualifiedType, name: IDENT) extends ParseTree
 
 // ParseTree constructs follow =>
 // --------------------------- =>
@@ -133,14 +133,14 @@ sealed trait Statement extends ParseTree
 case class IfStatement(cond: Expression, body: BlockList,
   elsebody: BlockList) extends Statement {
   override lazy val rawCompress = {
-    IFCOND() :: POSTEXPR(r(cond)) :: body.compress ++ elsebody.compress
+    IFCOND() :: post(cond) :: body.compress ++ elsebody.compress
   }
 }
 
 case class SwitchStatement(value: Expression, caseBlocks: List[(Expression, BlockList)],
   defaultBlock: BlockList) extends Statement {
   override lazy val rawCompress = {
-    SWITCHCOND() :: POSTEXPR(r(value)) :: caseBlocks.flatMap(x => POSTEXPR(r(x._1)) ::
+    SWITCHCOND() :: post(value) :: caseBlocks.flatMap(x => post(x._1) ::
       x._2.compress) ++ defaultBlock.compress
   }
 }
@@ -148,19 +148,19 @@ case class SwitchStatement(value: Expression, caseBlocks: List[(Expression, Bloc
 case class ForStatement(e1: Expression, e2: Expression,
   e3: Expression, body: BlockList) extends Statement {
   override lazy val rawCompress =
-    POSTEXPR(r(e1)) :: LOOPCOND() :: POSTEXPR(r(e2)) ::
+    post(e1) :: LOOPCOND() :: post(e2) ::
   body.copy(items = body.items :+ e3).compress
 }
 
 case class WhileStatement(cond: Expression,
   body: BlockList) extends Statement {
-  override lazy val rawCompress = LOOPCOND() :: POSTEXPR(r(cond)) :: body.compress
+  override lazy val rawCompress = LOOPCOND() :: post(cond) :: body.compress
 }
 
 case class DoWhileStatement(body: BlockList,
   cond: Expression) extends Statement {
   lazy val compressedBody: List[CFEnum] = body.compress
-  override lazy val rawCompress = compressedBody ++ List(LOOPCOND(), POSTEXPR(r(cond))) ++ compressedBody
+  override lazy val rawCompress = compressedBody ++ List(LOOPCOND(), post(cond)) ++ compressedBody
 }
 
 case class ReturnStatement(code: Expression) extends Statement {
@@ -171,7 +171,7 @@ case class ReturnStatement(code: Expression) extends Statement {
 // ---------------------------- =>
 
 sealed trait Expression extends ParseTree {
-  override lazy val rawCompress = List(POSTEXPR(r(this)))
+  override lazy val rawCompress = List(post(this))
 
   // Provide list of functions used in this expression in order of use
   val getFxns: List[String] = {

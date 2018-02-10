@@ -23,6 +23,11 @@ object FlowGraphTweaks {
     }
   }
 
+  def post(e: Expression): CFEnum = {
+    val p = POSTEXPR(renameIdentsInExpr(e))
+    return p.setPos(e.pos)
+  }
+
   def renameIdentsInExpr(e: Expression): List[String] = {
     var gcnt = 0
     var varsUsed: Map[String, Int] = Map()
