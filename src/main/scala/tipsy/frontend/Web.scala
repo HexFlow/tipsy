@@ -10,6 +10,7 @@ import akka.actor.ActorSystem
 import akka.actor._
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
+import akka.http.scaladsl.model.StatusCodes.Forbidden
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.directives.FileAndResourceDirectives
@@ -73,11 +74,14 @@ object Web extends JsonSupport with Ops with FailFastCirceSupport
           } ~ path ("corrections" / IntNumber) { id =>
             complete (correctProgramFromDB(id))
           } ~ path ("createSchema") { // Create the postgres schema
-            complete (createSchema())
+            if (config.admin) complete (createSchema())
+            else complete((Forbidden, "Are you lost?"))
           } ~ path ("dropSchema") { // Drop the table schema
-            complete (dropSchema())
+            if (config.admin) complete (dropSchema())
+            else complete((Forbidden, "Are you lost?"))
           } ~ path ("dropQuestion" / Segment) { quesId =>
-            complete (dropQuestion(quesId))
+            if (config.admin) complete (dropQuestion(quesId))
+            else complete((Forbidden, "Are you lost?"))
           } ~ path ("updateClusters" / Segment) { quesId =>
             complete (updateClusterHandler(quesId))
           } ~ path ("progCount") { // Get list of program IDs
@@ -85,7 +89,8 @@ object Web extends JsonSupport with Ops with FailFastCirceSupport
           }
         } ~ delete {
           path (IntNumber) { id =>
-            complete (deleteProgram(id))
+            if (config.admin) complete (deleteProgram(id))
+            else complete((Forbidden, "Are you lost?"))
           }
         }
 

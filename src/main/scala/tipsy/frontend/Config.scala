@@ -22,5 +22,6 @@ case class Config(
 
   web: Boolean = false,
   host: String = "0.0.0.0",
-  port: Int = 8070
+  port: Int = 8070,
+  admin: Boolean = false
 )
