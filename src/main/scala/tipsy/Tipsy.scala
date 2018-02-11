@@ -70,7 +70,10 @@ object Tipsy {
           c.copy(host = x) ).text("address to listen on"),
 
         opt[Int]("port").action( (x, c) =>
-          c.copy(port = x) ).text("port to listen on")
+          c.copy(port = x) ).text("port to listen on"),
+
+        opt[Unit]("admin").action( (_, c) =>
+            c.copy(admin = true) ).text("allow to do admin operations")
       )
 
     checkConfig( c =>
