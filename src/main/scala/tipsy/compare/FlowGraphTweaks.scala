@@ -79,10 +79,10 @@ object FlowGraphTweaks {
     }
 
     lenums.map {
-      case POSTEXPR(e) => POSTEXPR(e.map {
+      case orig@(POSTEXPR(e)) => POSTEXPR(e.map {
         case x if x.startsWith("func:") => renameIdent(x)
         case y => y
-      })
+      }).setPos(orig)
       case x => x
     }
   }

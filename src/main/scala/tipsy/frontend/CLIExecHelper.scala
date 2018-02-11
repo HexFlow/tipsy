@@ -5,12 +5,12 @@ import tipsy.compiler.WorkflowCompiler
 import tipsy.parser.ParseTree
 
 import java.io.File
-
 import scala.concurrent.ExecutionContext
 
 import scalaz._, Scalaz._
+import io.circe.syntax._
 
-trait CLIExecHelpers extends TipsyDriver {
+trait CLIExecHelpers extends TipsyDriver with JsonSupport {
   implicit val config: Config
   implicit val executionContext: ExecutionContext
 
@@ -42,11 +42,7 @@ trait CLIExecHelpers extends TipsyDriver {
           println("Edit ret:")
           println("Distance: " ++ dist.toString)
           println("Diffs:")
-          diffs.map {
-            case Diff(change, addEntry, delEntry, fxn) =>
-              println(change.string ++ ": " ++ addEntry.toString ++ " ====>> " ++
-                delEntry.toString ++ " in " ++ fxn)
-          }
+          diffs.map(diff => println(diff.asJson))
       }
     }
   }
@@ -72,7 +68,7 @@ trait CLIExecHelpers extends TipsyDriver {
                     case NormFxn(name, cfs) =>
                       println("Function: " ++ name)
                       cfs.map { cf =>
-                        println(cf.line.toString + ":" + cf.column.toString + "\t" + cf.toString)
+                        println(cf.position + "\t" + cf.toString)
                       }
                   }
               }

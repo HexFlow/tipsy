@@ -88,16 +88,16 @@ object Compare {
       val (editRet, (b, c)) = editDistTable(i)(j)
       if (!action.isDefined) (editRet, (b, c))
       else action.get match {
-             case DEL_d => (editRet.correct(Diff(DEL_d, None, Some(cfEnum1(i))), cost(i, j, DEL_d, 3 * b)), (b + 1, c))
-             case ADD_d => (editRet.correct(Diff(ADD_d, Some(cfEnum2(j)), None), cost(i, j, ADD_d, 3 * b)), (b + 1, c))
+             case DEL_d => (editRet.correct(DelDiff(cfEnum1(i)), cost(i, j, DEL_d, 3 * b)), (b + 1, c))
+             case ADD_d => (editRet.correct(AddDiff(cfEnum2(j), cfEnum1(i).position), cost(i, j, ADD_d, 3 * b)), (b + 1, c))
              case _     => {
-               (editRet.correct(Diff(REPLACE_d, Some(cfEnum2(j)), Some(cfEnum1(i))), cost(i, j, REPLACE_d, c)), (b, c + 1))
+               (editRet.correct(ReplaceDiff(cfEnum2(j), cfEnum1(i)), cost(i, j, REPLACE_d, c)), (b, c + 1))
              }
            }
     }
 
     val res = editDistTable(l1)(l2)._1
-    res.copy(diffs = res.diffs.reverse.map (_.copy(fxn = tree1.name)))
+    res.copy(diffs = res.diffs.reverse.map (_.setFxn(tree1.name)))
   }
 
   def compareTwoExpr(expr1: Vector[String], expr2: Vector[String], param: Int): Double = {

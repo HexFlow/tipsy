@@ -10,10 +10,25 @@ sealed trait CFEnum extends Serializable {
 
   var line: Int = 0
   var column: Int = 0
+  var isAfter = false
   def setPos(p: Position): CFEnum = {
     if (line == 0) line = p.line
     if (column == 0) column = p.column
     return this
+  }
+  def setPos(p: CFEnum): CFEnum = {
+    if (line == 0) line = p.line
+    if (column == 0) column = p.column
+    return this
+  }
+  def after(): CFEnum = {
+    isAfter = true
+    return this
+  }
+  def position(): String = {
+    val res = s"${line}:${column}"
+    if (isAfter) res ++ "*"
+    else res
   }
 }
 case class FUNC() extends CFEnum {
@@ -81,7 +96,10 @@ case class TopList(items: List[ParseTree]) extends ParseTree {
   override lazy val rawCompress = items.flatMap(_.compress)
 }
 case class BlockList(items: List[ParseTree]) extends ParseTree {
-  override lazy val rawCompress =
+  override lazy val rawCompress = {
+    val citems = items.flatMap(_.compress)
+    BLOCKOPEN() :: citems ++ List(BLOCKCLOSE().setPos(citems.last).after)
+  }
     (BLOCKOPEN() :: items.flatMap(_.compress) ++ List(BLOCKCLOSE()))
 }
 

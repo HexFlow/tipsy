@@ -16,12 +16,33 @@ case object ADD_d     extends DiffChange
 case object DEL_d     extends DiffChange
 case object REPLACE_d extends DiffChange
 
-case class Diff (
-  change: DiffChange,
-  addEntry: Option[CFEnum],
-  delEntry: Option[CFEnum],
-  fxn: String = "") {
-  lazy val position = delEntry.map(x => (x.line, x.column))
+trait Diff {
+  val fxn: String
+  lazy val stringWithFxn: String = this.toString ++ " in " ++ fxn
+  def setFxn(name: String): Diff
+  def position(): String
+}
+
+case class AddDiff(add: CFEnum, prevPos: String, fxn: String = "") extends Diff {
+  override def toString() = {
+    "Add    : " ++ add.toString
+  }
+  def setFxn(name: String): Diff = this.copy(fxn = name)
+  def position() = prevPos
+}
+case class DelDiff(del: CFEnum, fxn: String = "") extends Diff {
+  override def toString() = {
+    "Del    : " ++ del.toString
+  }
+  def setFxn(name: String): Diff = this.copy(fxn = name)
+  def position() = del.position
+}
+case class ReplaceDiff(add: CFEnum, del: CFEnum, fxn: String = "") extends Diff {
+  override def toString() = {
+    "Replace: " ++ del.toString ++ " with " ++ add.toString
+  }
+  def setFxn(name: String): Diff = this.copy(fxn = name)
+  def position() = del.position
 }
 
 case class EditRet (diffs: List[Diff], dist: Double) {

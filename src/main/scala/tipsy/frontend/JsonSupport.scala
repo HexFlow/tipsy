@@ -24,26 +24,25 @@ trait JsonSupport {
   implicit val encodeDiff: Encoder[Diff] = new Encoder[Diff] {
     final def apply(a: Diff): Json =
       a match {
-        case Diff(ADD_d, Some(x), None, f) => Json.obj (
-          "change" -> "Add+".asJson,
-          "addEntry" -> x.asJson,
-          "position" -> a.position.toString.asJson,
-          "function" -> f.asJson
+        case AddDiff(add, _, fxn) => Json.obj (
+          "change" -> "Add",
+          "addition" -> add.asJson,
+          "position" -> a.position,
+          "function" -> fxn
         )
-        case Diff(DEL_d, None, Some(x), f) => Json.obj (
-          "change" -> "Remove-".asJson,
-          "removeEntry" -> x.asJson,
-          "position" -> a.position.toString.asJson,
-          "function" -> f.asJson
+        case DelDiff(del, fxn) => Json.obj (
+          "change" -> "Delete",
+          "deletion" -> del.asJson,
+          "position" -> a.position,
+          "function" -> fxn
         )
-        case Diff(REPLACE_d, Some(x), Some(y), f) => Json.obj (
-          "change" -> "Replace+-".asJson,
-          "addEntry" -> x.asJson,
-          "removeEntry" -> y.asJson,
-          "position" -> a.position.toString.asJson,
-          "function" -> f.asJson
+        case ReplaceDiff(add, del, fxn) => Json.obj (
+          "change" -> "Replace",
+          "addition" -> add.asJson,
+          "deletion" -> del.asJson,
+          "position" -> a.position,
+          "function" -> fxn
         )
-        case _ => ???
       }
   }
 }
