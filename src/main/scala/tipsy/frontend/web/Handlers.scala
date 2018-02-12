@@ -10,16 +10,23 @@ import tipsy.db.TipsyPostgresProfile.api._
 import tipsy.frontend._
 
 import akka.http.scaladsl.model.StatusCodes._
-import scala.concurrent.Future
+import scala.concurrent.{ Future, Await }
+import scala.concurrent.duration._
 
 import io.circe.generic.auto._
 import io.circe.syntax._
 
-trait Handlers extends JsonSupport with TableHandlers with Helpers {
+trait Handlers extends JsonSupport with TableHandlers with Helpers with ClusterActions {
 
   def updateClusterHandler(quesId: String): HandleResp = {
-    updateClustersActorRef ! quesId
-    Future((OK, "Cluster update process started"))
+    val action = for {
+      matrix <- driver.runDB {
+        distTable.filter(_.quesId === quesId).map(e => (e.id1, e.id2, e.dist)).result
+      }
+      _ <- doUpdateClusters(matrix, quesId)
+    } yield ()
+    Await.result(action, Duration.Inf)
+    Future((OK, "Clusters updated"))
   }
 
   def progFromDB(id: Int): HandleResp = {

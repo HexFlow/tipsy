@@ -6,6 +6,7 @@ services:
      - "7080:7080"
     links:
     - tipsy-db
+    - cluster
     env_file:
     - .env_file
     networks:
@@ -17,12 +18,18 @@ services:
      - "7081:7080"
     links:
     - tipsy-db
+    - cluster
     env_file:
     - .env_file
     networks:
     - mynet
     environment:
     - TIPSY_WEB_ADMIN=true
+
+  cluster:
+    image: "sakshamsharma/tipsy-cluster"
+    networks:
+    - mynet
 
   tipsy-db:
     image: "postgres"

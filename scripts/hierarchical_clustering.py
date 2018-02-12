@@ -2,7 +2,6 @@
 
 from __future__ import print_function
 
-import PyQt4
 import matplotlib
 
 from matplotlib import pyplot as plt

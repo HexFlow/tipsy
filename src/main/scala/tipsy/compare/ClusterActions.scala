@@ -1,8 +1,6 @@
 package tipsy.compare
 
 import scala.concurrent.Future
-import scala.sys.process._
-
 
 import tipsy.db.schema._
 import tipsy.db.TipsyPostgresProfile.api._
@@ -37,11 +35,7 @@ trait ClusterActions extends TipsyDriver {
 
     val matrixStr = Dists.getAsJson(matrix)
 
-    // Ugly way to get output of clustering.
-    val cmd = List("bash", "-c", s"python2 scripts/hierarchical_clustering.py 2> errors/clust_errlog-${cnt.toString}")
-    val is = new java.io.ByteArrayInputStream(matrixStr.getBytes("UTF-8"))
-    val out = (cmd #< is).lines_!
-    val res = out.mkString("")
+    val res = SimpleTcpClient(matrixStr)
 
     decode[List[List[Int]]](res) match {
       case Left(err) =>

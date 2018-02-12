@@ -72,6 +72,11 @@ def getListOfFiles(dir: String, d: File): Array[String] = {
 
 mappings in Universal ++= getFiles("view").map(f => file(f) -> f).toSeq
 
+dockerCommands := dockerCommands.value.patch(2, Seq(
+  Cmd("RUN", "apt-get update"),
+  Cmd("RUN", "apt-get install -y gcc netcat-openbsd")
+), 0)
+
 scalafixSettings
 sbtfixSettings
 scalacOptions += "-Ywarn-unused-import"
