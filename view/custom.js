@@ -24,7 +24,7 @@ function getQuesIDs() {
       }
     },
     error: function(data) {
-      Snackbar.show({text: 'Error fetching new questions: ' + data});
+      Snackbar.show({text: 'Error fetching new questions: ' + data.responseText});
       console.error(data);
     }
   })

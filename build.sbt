@@ -1,4 +1,8 @@
+import com.typesafe.sbt.packager.docker._
+
 name := "tipsy"
+
+organization := "sakshamsharma"
 
 version := "0.1"
 
@@ -44,8 +48,29 @@ libraryDependencies ++= Seq(
 
 addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
 enablePlugins(JavaAppPackaging)
-enablePlugins(DockerPlugin)
 mainClass in Compile := Some("tipsy.Tipsy")
+
+maintainer in Docker := "Saksham Sharma <saksham0808@gmail.com>"
+dockerExposedPorts := Seq(7080)
+dockerUsername := Some("sakshamsharma")
+
+def getFiles(dname: String): List[String] = {
+  val d = new File(dname)
+  if (d.exists && d.isDirectory) {
+    getListOfFiles(dname + "/", d).toList
+  } else {
+    List()
+  }
+}
+
+def getListOfFiles(dir: String, d: File): Array[String] = {
+  val these = d.listFiles
+  these.filter(_.isFile).map(x => dir + x.getName) ++ these.filter(_.isDirectory).flatMap(
+    ndir => getListOfFiles(dir + ndir.getName + "/", ndir)
+  )
+}
+
+mappings in Universal ++= getFiles("view").map(f => file(f) -> f).toSeq
 
 scalafixSettings
 sbtfixSettings

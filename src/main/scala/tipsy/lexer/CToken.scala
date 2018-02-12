@@ -25,7 +25,7 @@ case class QUESTION() extends CToken
 
 sealed trait Literal extends Positional
 case class StrLiteral(s: String) extends Literal {
-  override def toString(): String = s"\"${s}\""
+  override def toString(): String = '"' + s + '"'
 }
 case class IntLiteral(i: Int) extends Literal {
   override def toString(): String = i.toString
