@@ -3,12 +3,9 @@ Tipsy
 
 Tipsy, a tool to parse, analyze, cluster programming MOOC submissions,  in order to tackle the problems such as bias in grading by TAs, helping students by providing relevant tips and suggestions.
 
-[Sample parse tree](https://raw.githubusercontent.com/sakshamsharma/tipsy/master/sample.png)
-
 ## Requirements
 * JVM
 * sbt
-* graphviz/dot (optional, for graphical parse tree)
 
 That's it. You just need to download `sbt` (Scala Build Tool), and place it in your path. It will automatically download the required version of Scala.
 
