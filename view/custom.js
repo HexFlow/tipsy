@@ -67,6 +67,19 @@ function addToDB() {
   });
 }
 
+function updateQuesCnt(q) {
+  $.ajax({
+    url: '/api/progCount/' + q,
+    type: 'GET',
+    success: function(data) {
+      $('#quesCnt').html('Program count: ' + data);
+    },
+    error: function(data) {
+      Snackbar.show({text: 'Error fetching question count'});
+    }
+  });
+}
+
 function findCorr() {
   if (!editor.getValue().trim()) {
     Snackbar.show({text: 'Missing code in editor'});
@@ -90,6 +103,8 @@ function findCorr() {
     contentType: "application/json; charset=utf-8",
     traditional: true,
     success: function (data) {
+      $('#quesCnt').html('');
+      updateQuesCnt(q);
       $('#results').html('');
       if (data.length > 0) {
         for (let i=0; i<data.length; i++) {

@@ -73,14 +73,12 @@ trait Handlers extends JsonSupport with TableHandlers with Helpers {
     }
   }
 
-  def getProgCount(): HandleResp = {
-    val myQuery: Query[Rep[Int], Int, Seq] = progTable.map(_.id)
+  def getProgCount(quesId: String): HandleResp = {
     for {
-      progs <- driver.runDB(myQuery.result)
-    } yield (OK, Map(
-      "Available programs" -> progs.asJson,
-      "Count" -> progs.length.asJson
-    ))
+      len <- driver.runDB(
+        progTable.filter(_.quesId === quesId).map(_.id).length.result
+      )
+    } yield (OK, len)
   }
 
   def getQuestions(): HandleResp = {

@@ -90,8 +90,8 @@ object Web extends JsonSupport with Ops with FailFastCirceSupport
             else complete((Forbidden, "Operation only for admins"))
           } ~ path ("updateClusters" / Segment) { quesId =>
             complete (updateClusterHandler(quesId))
-          } ~ path ("progCount") { // Get list of program IDs
-            complete (getProgCount())
+          } ~ path ("progCount" / Segment) { quesId => // Get list of program IDs
+            complete (getProgCount(quesId))
           } ~ path ("questions") { // Get list of question IDs
             complete (getQuestions())
           } ~ path ("getSimpleSolution" / Segment) { quesId =>
