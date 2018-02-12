@@ -9,7 +9,14 @@ function getQuesIDs() {
     for (let i=0; i<len; i++) {
       $('#question-dropdown').append('<a class="dropdown-item">' + data[i] + '</a>');
       $(".dropdown-item").on("click", function (e) {
-        $("#dropdownMenuLink").html(e.target.innerHTML);
+        if (e.target.innerHTML != "") {
+          $("#dropdownMenuLink").html(e.target.innerHTML);
+        }
+      });
+      $(".dropdown-item").keypress(function (e) {
+        if (e.keyCode == 13) {
+          $("#dropdownMenuLink").html(e.target.value);
+        }
       });
     }
   });
