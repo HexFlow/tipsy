@@ -15,10 +15,7 @@ case class Driver(db: Database) {
 }
 
 object TipsySlick {
-  // val db = Database.forConfig("tipsydb")
-  val db = Database.forURL(
-    url = "jdbc:postgresql://localhost/TIPSY?user=saksham&password=saksham",
-    driver = "org.postgresql.Driver")
+  val db = Database.forConfig("tipsydb")
 
   def apply(): Driver = {
     Driver(db)

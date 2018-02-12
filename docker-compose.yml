@@ -1,0 +1,40 @@
+version: '3'
+services:
+  web:
+    image: "sakshamsharma/tipsy:0.1"
+    ports:
+     - "7080:7080"
+    links:
+    - tipsy-db
+    env_file:
+    - .env_file
+    networks:
+    - mynet
+
+  admin:
+    image: "sakshamsharma/tipsy:0.1"
+    ports:
+     - "7081:7080"
+    links:
+    - tipsy-db
+    env_file:
+    - .env_file
+    networks:
+    - mynet
+    environment:
+    - TIPSY_WEB_ADMIN=true
+
+  tipsy-db:
+    image: "postgres"
+    env_file:
+    - .env_file
+    networks:
+    - mynet
+    volumes:
+    - tipsy-db-volume:/var/lib/postgresql
+
+networks:
+  mynet:
+
+volumes:
+  tipsy-db-volume:

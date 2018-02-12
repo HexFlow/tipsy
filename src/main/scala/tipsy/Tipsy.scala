@@ -14,6 +14,7 @@ object Tipsy {
             config
           } else {
             val confFile = ConfigFactory.load()
+            println("Web Admin mode: " ++ confFile.getBoolean("web.admin").toString)
             config.copy(
               web = true,
               admin = confFile.getBoolean("web.admin"),
