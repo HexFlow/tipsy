@@ -30,8 +30,9 @@ libraryDependencies ++= Seq(
   "de.heikoseeberger"       %% "akka-http-circe"          % "1.20.0-RC1",
   "org.slf4j"               % "slf4j-api"                 % "1.7.25",
   "org.slf4j"               % "slf4j-simple"              % "1.7.25",
-  "org.scala-lang"          % "scala-compiler"            % "2.8.1",
-  "com.github.scopt"        %% "scopt"                    % "3.7.0"
+  "org.scala-lang"          % "scala-compiler"            % "2.12.4",
+  "com.github.scopt"        %% "scopt"                    % "3.7.0",
+  "com.typesafe"            % "config"                    % "1.3.1"
 )
 
 libraryDependencies ++= Seq(
@@ -42,6 +43,9 @@ libraryDependencies ++= Seq(
 
 
 addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
+enablePlugins(JavaAppPackaging)
+enablePlugins(DockerPlugin)
+mainClass in Compile := Some("tipsy.Tipsy")
 
 scalafixSettings
 sbtfixSettings

@@ -2,10 +2,26 @@ package tipsy
 
 import tipsy.frontend._
 
+import com.typesafe.config.ConfigFactory
+
 object Tipsy {
   def main(args: Array[String]): Unit = {
     parser.parse(args, Config()) match {
-      case Some(config) => new CLI(config).run()
+      case Some(config) =>
+        import config._
+        val finalConfig =
+          if (exec || cluster || web) {
+            config
+          } else {
+            val confFile = ConfigFactory.load()
+            config.copy(
+              web = true,
+              admin = confFile.getBoolean("web.admin"),
+              port = confFile.getInt("web.port"),
+              host = confFile.getString("web.host")
+            )
+          }
+        new CLI(finalConfig).run()
       case None =>
     }
   }
@@ -89,46 +105,8 @@ object Tipsy {
           if (c.cluster || c.exec) failure("web mode cannot work with exec or cluster mode")
           else success
       } else {
-        failure("no mode specified. Please specify one mode among exec/cluster/web")
+        success
       }
     )
   }
-
-  // def main(args: Array[String]): Unit = {
-  //   val files = args.filter(!_.startsWith("-"))
-
-  //   var optset: mMap[CLIMode, String] = mMap()
-  //   var web: Boolean = false
-
-  //   var i = 0
-  //   var mFiles: Stack[String] = Stack()
-  //   while (i < args.length) {
-  //     args(i) match {
-  //       case "-pp" => optset put (PRINTPARSE, "")
-  //       case "-pf" => optset put (PRINTFLOW, "")
-  //       case "-le" => optset put (LEASTEDIT, "")
-  //       case msg if msg.startsWith("-uc") =>
-  //         optset put (UPDATECLUSTER, msg.split("=")(1))
-  //       case msg if msg.startsWith("-cv") =>
-  //         optset put (CLUSTERVARIANCE, msg.split("=")(1))
-  //       case msg if msg.startsWith("-dm=") =>
-  //         optset put (DUMPMATRIX, msg.split('=')(1))
-  //       case "-cr" => optset put (CORRECTION, "")
-  //       case msg if msg.startsWith("-len=") =>
-  //         optset put (LIMIT, msg.split('=')(1))
-  //       case "-web" => web = true
-  //       case msg if msg.startsWith("-") =>
-  //         println("[Warning] Ignoring unknown argument: " + msg)
-  //       case file => mFiles = mFiles.push(file)
-  //     }
-  //     i += 1
-  //   }
-
-  //   // The toList thing is Scala-fu to convert mutable to immutable
-  //   if (web) {
-  //     Web(Set())
-  //   } else {
-  //     CLI(mFiles.toArray, Map(optset.toList: _*))
-  //   }
-  // }
 }

@@ -36,8 +36,8 @@ trait TipsyActors {
   implicit val system: ActorSystem = ActorSystem("web-tipsy")
   implicit val materializer: ActorMaterializer = ActorMaterializer()
   implicit val executionContext = system.dispatcher
-  val insertProgActorRef = system.actorSelection("/user/insertProgActor")
-  val updateClustersActorRef = system.actorSelection("/user/updateClustersActor")
+  lazy val insertProgActorRef = system.actorSelection("/user/insertProgActor")
+  lazy val updateClustersActorRef = system.actorSelection("/user/updateClustersActor")
 }
 
 /**
@@ -48,10 +48,15 @@ trait TipsyActors {
 object Web extends JsonSupport with Ops with FailFastCirceSupport
     with FileAndResourceDirectives with Handlers with TipsyDriver {
 
-  val insertProgActor = system.actorOf(Props(classOf[InsertProgActor]), "insertProgActor")
-
   def apply(config: Config): Unit = {
     implicit val blockingDispatcher = system.dispatchers.lookup("tipsy-blocking-dispatcher")
+
+    import config._
+
+    val insertProgActor = if (admin)
+      system.actorOf(Props(classOf[InsertProgActor]), "insertProgActor")
+    else
+      system.actorOf(Props.empty, "shouldNotBeUsed")
 
     val route: Route =
       pathPrefix ("api") {
@@ -60,8 +65,8 @@ object Web extends JsonSupport with Ops with FailFastCirceSupport
           // entity is post body.
           entity(as[Requests.ProgramInsertReq]) { prog =>
             path("submit") {
-              if (config.admin) complete (insertProgram(prog))
-              else complete((Forbidden, "Are you lost?"))
+              if (admin) complete (insertProgram(prog))
+              else complete((Forbidden, "Operation only for admins"))
             } ~ path("corrections") {
               complete (correctProgramFromReq(prog))
             }
@@ -75,14 +80,14 @@ object Web extends JsonSupport with Ops with FailFastCirceSupport
           } ~ path ("corrections" / IntNumber) { id =>
             complete (correctProgramFromDB(id))
           } ~ path ("createSchema") { // Create the postgres schema
-            if (config.admin) complete (createSchema())
-            else complete((Forbidden, "Are you lost?"))
+            if (admin) complete (createSchema())
+            else complete((Forbidden, "Operation only for admins"))
           } ~ path ("dropSchema") { // Drop the table schema
-            if (config.admin) complete (dropSchema())
-            else complete((Forbidden, "Are you lost?"))
+            if (admin) complete (dropSchema())
+            else complete((Forbidden, "Operation only for admins"))
           } ~ path ("dropQuestion" / Segment) { quesId =>
-            if (config.admin) complete (dropQuestion(quesId))
-            else complete((Forbidden, "Are you lost?"))
+            if (admin) complete (dropQuestion(quesId))
+            else complete((Forbidden, "Operation only for admins"))
           } ~ path ("updateClusters" / Segment) { quesId =>
             complete (updateClusterHandler(quesId))
           } ~ path ("progCount") { // Get list of program IDs
@@ -94,8 +99,8 @@ object Web extends JsonSupport with Ops with FailFastCirceSupport
           }
         } ~ delete {
           path (IntNumber) { id =>
-            if (config.admin) complete (deleteProgram(id))
-            else complete((Forbidden, "Are you lost?"))
+            if (admin) complete (deleteProgram(id))
+            else complete((Forbidden, "Operation only for admins"))
           }
         }
 
@@ -103,8 +108,8 @@ object Web extends JsonSupport with Ops with FailFastCirceSupport
         complete ("System is up")
       } ~ getFromDirectory("view")
 
-    val bindingFuture = Http().bindAndHandle(route, config.host, config.port)
-    println(s"Server online at http://${config.host}:${config.port}/")
+    val bindingFuture = Http().bindAndHandle(route, host, port)
+    println(s"Server online at http://${host}:${port}/")
 
     Await.result(system.whenTerminated, Duration.Inf)
     driver.close()
