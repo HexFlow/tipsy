@@ -4,34 +4,50 @@ editor.getSession().setMode("ace/mode/c_cpp");
 editor.setShowPrintMargin(false);
 
 function getQuesIDs() {
-  $.get('/api/questions', function(data, status) {
-    let len = data.length;
-    for (let i=0; i<len; i++) {
-      $('#question-dropdown').append('<a class="dropdown-item">' + data[i] + '</a>');
-      $(".dropdown-item").on("click", function (e) {
-        if (e.target.innerHTML != "") {
-          $("#dropdownMenuLink").html(e.target.innerHTML);
-        }
-      });
-      $(".dropdown-item").keypress(function (e) {
-        if (e.keyCode == 13) {
-          $("#dropdownMenuLink").html(e.target.value);
-        }
-      });
+  $.ajax({
+    url: '/api/questions',
+    type: 'GET',
+    success: function(data) {
+      let len = data.length;
+      for (let i=0; i<len; i++) {
+        $('#question-dropdown').append('<a class="dropdown-item">' + data[i] + '</a>');
+        $(".dropdown-item").on("click", function (e) {
+          if (e.target.innerHTML != "") {
+            $("#dropdownMenuLink").html(e.target.innerHTML);
+          }
+        });
+        $(".dropdown-item").keypress(function (e) {
+          if (e.keyCode == 13) {
+            $("#dropdownMenuLink").html(e.target.value);
+          }
+        });
+      }
+    },
+    error: function(data) {
+      Snackbar.show({text: 'Error fetching new questions: ' + data});
+      console.error(data);
     }
-  });
+  })
 }
 
 function showSol() {
-  var q = $("#dropdownMenuLink").text();
+  var q = $("#dropdownMenuLink").text().trim();
   if (q === "Select Question ID") {
     Snackbar.show({text: 'Missing question ID'});
     return;
   }
 
-  $.get('/api/getSimpleSolution/' + q, function(data, status) {
-    editor.setValue(data, 1);
-  });
+  $.ajax({
+    url: '/api/getSimpleSolution/' + q,
+    type: 'GET',
+    success: function(data) {
+      editor.setValue(data, 1);
+    },
+    error: function(data) {
+      Snackbar.show({text: 'Error fetching solution: ' + data.responseText});
+      console.error(data);
+    }
+  })
 }
 
 function addToDB() {
@@ -42,7 +58,10 @@ function addToDB() {
     contentType: "application/json; charset=utf-8",
     traditional: true,
     success: function (data) {
-      console.log(data);
+      Snackbar.show({text: data});
+    },
+    error: function(data) {
+      Snackbar.show({text: 'Error submitting to DB: ' + data});
     },
     data: JSON.stringify(prog)
   });
@@ -65,13 +84,13 @@ function findCorr() {
                code: editor.getValue()
              };
 
-  console.log("Finding corrections for program");
   $.ajax({
     url: '/api/corrections',
     type: 'post',
     contentType: "application/json; charset=utf-8",
     traditional: true,
     success: function (data) {
+      $('#results').html('');
       if (data.length > 0) {
         for (let i=0; i<data.length; i++) {
           let dist = data[i].dist;
@@ -86,6 +105,10 @@ function findCorr() {
       } else {
         $('#results').html('<br>' + 'No corrections were found.');
       }
+      Snackbar.show({text: 'Fetched corrections'});
+    },
+    error: function(data) {
+      Snackbar.show({text: 'Error fetching corrections: ' + data});
     },
     data: JSON.stringify(prog)
   });
