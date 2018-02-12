@@ -106,6 +106,8 @@ object Web extends JsonSupport with Ops with FailFastCirceSupport
 
       } ~ path ("health") {
         complete ("System is up")
+      } ~ pathEndOrSingleSlash {
+        getFromFile("view/index.html")
       } ~ getFromDirectory("view")
 
     val bindingFuture = Http().bindAndHandle(route, host, port)
