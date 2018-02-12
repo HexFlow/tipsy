@@ -88,4 +88,11 @@ trait Handlers extends JsonSupport with TableHandlers with Helpers {
       quess <- driver.runDB(progTable.map(_.quesId).distinct.result)
     } yield (OK, quess)
   }
+
+  def getSimpleSolution(quesId: String): HandleResp = {
+    for {
+      prog <- driver.runDB(progTable.filter(_.quesId === quesId).take(1).result)
+    } yield (prog.headOption.map(x => (OK, x.code.asJson))
+      .getOrElse((NotFound, "No program was found for this question.")))
+  }
 }

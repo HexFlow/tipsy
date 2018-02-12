@@ -89,6 +89,8 @@ object Web extends JsonSupport with Ops with FailFastCirceSupport
             complete (getProgCount())
           } ~ path ("questions") { // Get list of question IDs
             complete (getQuestions())
+          } ~ path ("getSimpleSolution" / Segment) { quesId =>
+            complete (getSimpleSolution(quesId))
           }
         } ~ delete {
           path (IntNumber) { id =>

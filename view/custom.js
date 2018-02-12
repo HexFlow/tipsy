@@ -15,12 +15,20 @@ function getQuesIDs() {
   });
 }
 
+function showSol() {
+  var q = $("#dropdownMenuLink").text();
+  if (q === "Select Question ID") {
+    Snackbar.show({text: 'Missing question ID'});
+    return;
+  }
+
+  $.get('/api/getSimpleSolution/' + q, function(data, status) {
+    editor.setValue(data, 1);
+  });
+}
+
 function addToDB() {
-  console.log("The current code is");
-  console.log(editor.getValue());
-
   var prog = {userId: "sakshams", quesId: "1", code: editor.getValue()};
-
   $.ajax({
     url: '/api/submit',
     type: 'post',
@@ -35,13 +43,13 @@ function addToDB() {
 
 function findCorr() {
   if (!editor.getValue().trim()) {
-    window.alert("Missing code");
+    Snackbar.show({text: 'Missing code in editor'});
     return;
   }
 
   var q = $("#dropdownMenuLink").text();
   if (q === "Select Question ID") {
-    window.alert("Missing question ID")
+    Snackbar.show({text: 'Missing question ID'});
     return;
   }
 
@@ -57,8 +65,20 @@ function findCorr() {
     contentType: "application/json; charset=utf-8",
     traditional: true,
     success: function (data) {
-      console.log(data);
-      $('#results').html('<br>' + JSON.stringify(data, null, 4));
+      if (data.length > 0) {
+        for (let i=0; i<data.length; i++) {
+          let dist = data[i].dist;
+          $('#results').append('<br>');
+          $('#results').append('Distance: ' + dist);
+          $('#results').append('<br>');
+          let diffs = JSON.stringify(data[i].diffs, null, 4)
+          $('#results').append(diffs);
+          $('#results').append('<br>');
+          $('#results').append('<hr>');
+        }
+      } else {
+        $('#results').html('<br>' + 'No corrections were found.');
+      }
     },
     data: JSON.stringify(prog)
   });
@@ -66,7 +86,4 @@ function findCorr() {
 
 $(document).ready(function() {
   getQuesIDs();
-  $(".dropdown-item").on("click", function () {
-    console.log("HEHEHEHEH");
-  });
 });

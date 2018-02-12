@@ -8,16 +8,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <base href="/">
 
-    <!-- Bootstrap -->
-    <!-- <link rel="stylesheet" type="text/css" href="node_modules/bootstrap/dist/css/bootstrap.css"> -->
-
-    <!-- Bootstrap Material Design -->
-    <!-- <link rel="stylesheet" type="text/css" href="node_modules/bootstrap-material-design/dist/css/bootstrap-material-design.css"> -->
-    <!-- <link rel="stylesheet" type="text/css" href="node_modules/bootstrap-material-design/dist/css/ripples.min.css"> -->
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/popper.js@1.12.6/dist/umd/popper.js" integrity="sha384-fA23ZRQ3G/J53mElWqVJEGJzU0sTs+SvzG8fXVWP+kJQ1lwFAOkcUOysnlKJC33U" crossorigin="anonymous"></script>
+
     <link rel="stylesheet" href="https://unpkg.com/bootstrap-material-design@4.1.1/dist/css/bootstrap-material-design.min.css" integrity="sha384-wXznGJNEXNG1NFsbm0ugrLFMQPWswR3lds2VeinahP8N0zJw9VWSopbjv2x7WCvX" crossorigin="anonymous">
     <script src="https://unpkg.com/bootstrap-material-design@4.1.1/dist/js/bootstrap-material-design.js" integrity="sha384-CauSuKpEqAFajSpkdjv3z9t8E7RlpJ1UP0lKM/+NdtSarroVKu069AlsRPKkFBz9" crossorigin="anonymous"></script>
+
+    <script type="text/javascript" src="node_modules/node-snackbar/dist/snackbar.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="node_modules/node-snackbar/dist/snackbar.min.css" />
+
+    <script>
+      $('body').bootstrapMaterialDesign();
+    </script>
 
     <body>
       <div class="jumbotron jumbotron-fluid text-center">
@@ -27,18 +29,18 @@
 
       <div class="container">
         <div class="row">
-          <h1 style="margin:auto;"> Submit a program </h1>
+        <h1 style="margin:auto;">Analyze programs</h1>
           <div id="editor" style="width: 100%; min-height: 300px;"></div>
           <div class="row" style="margin:auto;">
             <button class="btn btn-success" onclick="addToDB()">
               Save to database
             </button>
+            <button class="btn btn-success" onclick="showSol()">
+              Show first known solution
+            </button>
             <button class="btn btn-info" onclick="findCorr()">
               Find corrections
             </button>
-            <!-- <input type="text" class="form-control floating-label" -->
-            <!--        id="quesID" placeholder="Question ID" -->
-            <!--        style="width: initial; display: unset;"> -->
 
             <div class="dropdown show">
               <a class="btn btn-secondary dropdown" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
