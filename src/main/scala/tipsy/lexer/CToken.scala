@@ -24,9 +24,15 @@ case class COLON() extends CToken
 case class QUESTION() extends CToken
 
 sealed trait Literal extends Positional
-case class StrLiteral(s: String) extends Literal
-case class IntLiteral(i: Int) extends Literal
-case class FloatLiteral(f: Double) extends Literal
+case class StrLiteral(s: String) extends Literal {
+  override def toString(): String = s"\"${s}\""
+}
+case class IntLiteral(i: Int) extends Literal {
+  override def toString(): String = i.toString
+}
+case class FloatLiteral(f: Double) extends Literal {
+  override def toString(): String = f.toString
+}
 case class SIZEOF(ct: CType) extends Literal
 
 sealed trait CType extends Positional
