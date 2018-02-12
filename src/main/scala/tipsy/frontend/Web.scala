@@ -60,7 +60,8 @@ object Web extends JsonSupport with Ops with FailFastCirceSupport
           // entity is post body.
           entity(as[Requests.ProgramInsertReq]) { prog =>
             path("submit") {
-              complete (insertProgram(prog))
+              if (config.admin) complete (insertProgram(prog))
+              else complete((Forbidden, "Are you lost?"))
             } ~ path("corrections") {
               complete (correctProgramFromReq(prog))
             }
@@ -86,6 +87,8 @@ object Web extends JsonSupport with Ops with FailFastCirceSupport
             complete (updateClusterHandler(quesId))
           } ~ path ("progCount") { // Get list of program IDs
             complete (getProgCount())
+          } ~ path ("questions") { // Get list of question IDs
+            complete (getQuestions())
           }
         } ~ delete {
           path (IntNumber) { id =>

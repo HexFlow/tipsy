@@ -98,9 +98,11 @@ case class TopList(items: List[ParseTree]) extends ParseTree {
 case class BlockList(items: List[ParseTree]) extends ParseTree {
   override lazy val rawCompress = {
     val citems = items.flatMap(_.compress)
-    BLOCKOPEN() :: citems ++ List(BLOCKCLOSE().setPos(citems.last).after)
+    val lastItem = citems.lastOption
+    val blockClose = lastItem.map(item => BLOCKCLOSE().setPos(item).after)
+      .getOrElse(BLOCKCLOSE())
+    BLOCKOPEN() :: citems ++ List(blockClose)
   }
-    (BLOCKOPEN() :: items.flatMap(_.compress) ++ List(BLOCKCLOSE()))
 }
 
 case class Definitions(defs: List[Definition]) extends ParseTree {

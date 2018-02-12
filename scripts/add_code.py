@@ -18,7 +18,7 @@ for line in lines:
             "quesId": '{}-{}'.format(labNo, probId),
             "code": b(line[2].strip()).decode("utf-8"),
             "score": line[3].strip(),
-            "updateClusters": True,
+            # "updateClusters": True,
             "file": "Codes-{}-{}/code{}.c".format(labNo, probId, str(cnt))
             }
     headers = {'Content-type': 'application/json', 'Accept': 'application/json'}

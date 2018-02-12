@@ -82,4 +82,10 @@ trait Handlers extends JsonSupport with TableHandlers with Helpers {
       "Count" -> progs.length.asJson
     ))
   }
+
+  def getQuestions(): HandleResp = {
+    for {
+      quess <- driver.runDB(progTable.map(_.quesId).distinct.result)
+    } yield (OK, quess)
+  }
 }

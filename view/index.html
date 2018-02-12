@@ -1,61 +1,71 @@
 <!DOCTYPE html>
 <html lang="">
-    <head>
-        <title>Tipsy Program Submission Admin Panel</title>
+  <head>
+    <title>Tipsy Program Submission Admin Panel</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <base href="/">
 
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="description" content="">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <base href="/">
+    <!-- Bootstrap -->
+    <!-- <link rel="stylesheet" type="text/css" href="node_modules/bootstrap/dist/css/bootstrap.css"> -->
 
-        <!-- Bootstrap -->
-        <link rel="stylesheet" type="text/css" href="node_modules/bootstrap/dist/css/bootstrap.css">
+    <!-- Bootstrap Material Design -->
+    <!-- <link rel="stylesheet" type="text/css" href="node_modules/bootstrap-material-design/dist/css/bootstrap-material-design.css"> -->
+    <!-- <link rel="stylesheet" type="text/css" href="node_modules/bootstrap-material-design/dist/css/ripples.min.css"> -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/popper.js@1.12.6/dist/umd/popper.js" integrity="sha384-fA23ZRQ3G/J53mElWqVJEGJzU0sTs+SvzG8fXVWP+kJQ1lwFAOkcUOysnlKJC33U" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://unpkg.com/bootstrap-material-design@4.1.1/dist/css/bootstrap-material-design.min.css" integrity="sha384-wXznGJNEXNG1NFsbm0ugrLFMQPWswR3lds2VeinahP8N0zJw9VWSopbjv2x7WCvX" crossorigin="anonymous">
+    <script src="https://unpkg.com/bootstrap-material-design@4.1.1/dist/js/bootstrap-material-design.js" integrity="sha384-CauSuKpEqAFajSpkdjv3z9t8E7RlpJ1UP0lKM/+NdtSarroVKu069AlsRPKkFBz9" crossorigin="anonymous"></script>
 
-        <!-- Bootstrap Material Design -->
-        <link rel="stylesheet" type="text/css" href="node_modules/bootstrap-material-design/dist/css/bootstrap-material-design.css">
-        <link rel="stylesheet" type="text/css" href="node_modules/bootstrap-material-design/dist/css/ripples.min.css">
     <body>
-        <div class="jumbotron text-center" style="background-color:transparent !important;">
-            <h1>Tipsy Admin Panel</h1>
-            <p>Prutor</p>
-        </div>
+      <div class="jumbotron jumbotron-fluid text-center">
+        <h1>Tipsy Admin Panel</h1>
+        <p>Prutor</p>
+      </div>
 
-        <div class="container">
-            <div class="row">
-                <div class="jumbotron">
-                <center>
-                    <h1> Submit a program </h1>
-                    <div id="editor" style="width: 90%; min-height: 300px;"></div>
-                    <div class="row">
-                        <button class="btn btn-success" onclick="addToDB()">
-                            Save to database
-                        </button>
-                        <button class="btn btn-info" onclick="findCorr()">
-                            Find corrections
-                        </button>
-                        <input type="text" class="form-control floating-label"
-                               id="quesID" placeholder="Question ID"
-                               style="width: initial; display: unset;">
-                    </div>
-                </center>
-                </div>
-            </div>
-            <div class="row">
-              <div class="jumbotron">
-                <pre>
-                  <code id="results">
-                  </code>
-                </pre>
+      <div class="container">
+        <div class="row">
+          <h1 style="margin:auto;"> Submit a program </h1>
+          <div id="editor" style="width: 100%; min-height: 300px;"></div>
+          <div class="row" style="margin:auto;">
+            <button class="btn btn-success" onclick="addToDB()">
+              Save to database
+            </button>
+            <button class="btn btn-info" onclick="findCorr()">
+              Find corrections
+            </button>
+            <!-- <input type="text" class="form-control floating-label" -->
+            <!--        id="quesID" placeholder="Question ID" -->
+            <!--        style="width: initial; display: unset;"> -->
+
+            <div class="dropdown show">
+              <a class="btn btn-secondary dropdown" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                Select Question ID
+              </a>
+
+              <div class="dropdown-menu" aria-labelledby="dropdownMenuLink"
+                   id="question-dropdown">
               </div>
             </div>
+          </div>
         </div>
 
-        <!-- Ace Editor -->
-        <script src="node_modules/jquery/dist/jquery.min.js"></script>
-        <script src="node_modules/ace-builds/src-min-noconflict/ace.js"></script>
-        <script src="custom.js"></script>
-    </head>
+        <div class="card" style="margin-top: 20px;">
+          <div class="card-body">
+            <h4 class="card-header">Corrections</h4>
+            <pre style="padding:15px;">
+              <code id="results"></code>
+            </pre>
+          </div>
+        </div>
 
-    </body>
+      <!-- Ace Editor -->
+      <script src="node_modules/jquery/dist/jquery.min.js"></script>
+      <script src="node_modules/ace-builds/src-min-noconflict/ace.js"></script>
+      <script src="custom.js"></script>
+  </head>
+
+</body>
 </html>
