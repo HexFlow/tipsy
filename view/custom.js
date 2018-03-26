@@ -27,7 +27,7 @@ function getQuesIDs() {
       Snackbar.show({text: 'Error fetching new questions: ' + data.responseText});
       console.error(data);
     }
-  })
+  });
 }
 
 function showSol() {
@@ -47,7 +47,7 @@ function showSol() {
       Snackbar.show({text: 'Error fetching solution: ' + data.responseText});
       console.error(data);
     }
-  })
+  });
 }
 
 function addToDB() {
@@ -58,10 +58,10 @@ function addToDB() {
     contentType: "application/json; charset=utf-8",
     traditional: true,
     success: function (data) {
-      Snackbar.show({text: data});
+      Snackbar.show({text: data.responseJSON});
     },
     error: function(data) {
-      Snackbar.show({text: 'Error submitting to DB: ' + data});
+      Snackbar.show({text: 'Error submitting to DB: ' + data.responseJSON});
     },
     data: JSON.stringify(prog)
   });
@@ -75,20 +75,20 @@ function updateQuesCnt(q) {
       $('#quesCnt').html('Program count: ' + data);
     },
     error: function(data) {
-      Snackbar.show({text: 'Error fetching question count'});
+      Snackbar.show({text: 'Error fetching question count: ' + data.responseJSON});
     }
   });
 }
 
 function findCorr() {
   if (!editor.getValue().trim()) {
-    Snackbar.show({text: 'Missing code in editor'});
+    Snackbar.show({text: 'Empty code is not acceptable.'});
     return;
   }
 
   var q = $("#dropdownMenuLink").text();
   if (q === "Select Question ID") {
-    Snackbar.show({text: 'Missing question ID'});
+    Snackbar.show({text: 'Please select question ID from the dropdown list.'});
     return;
   }
 
@@ -112,7 +112,7 @@ function findCorr() {
           $('#results').append('<br>');
           $('#results').append('Distance: ' + dist);
           $('#results').append('<br>');
-          let diffs = JSON.stringify(data[i].diffs, null, 4)
+          let diffs = JSON.stringify(data[i].diffs, null, 4);
           $('#results').append(diffs);
           $('#results').append('<br>');
           $('#results').append('<hr>');
@@ -123,7 +123,7 @@ function findCorr() {
       Snackbar.show({text: 'Fetched corrections'});
     },
     error: function(data) {
-      Snackbar.show({text: 'Error fetching corrections: ' + data});
+      Snackbar.show({text: 'Error fetching corrections: ' + data.responseText});
     },
     data: JSON.stringify(prog)
   });
