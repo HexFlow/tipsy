@@ -6,8 +6,14 @@ Tipsy, a tool to parse, analyze, cluster programming MOOC submissions,  in order
 ## Requirements
 * JVM
 * sbt
+* python2
+* matplotlib
+* scipy
+* numpy
 
-That's it. You just need to download `sbt` (Scala Build Tool), and place it in your path. It will automatically download the required version of Scala.
+That's it. Download `sbt` (Scala Build Tool), and place it in your path. It will automatically download the required version of Scala.
+
+For the Python dependencies, you can use a virtualenv in the scripts folder with the above listed dependencies.
 
 ## Using
 ```
@@ -44,5 +50,5 @@ whether to serve as a web backend
   --port <value>           port to listen on
 ```
 
-## Notes
-Code for Undergraduate project by [Pallav Agarwal](https://github.com/pallavagarwal07) and [Saksham Sharma](https://github.com/sakshamsharma).
+## TODO
+* Provide a requirements.txt file to facilitate a virtualenv in the scripts folder.
