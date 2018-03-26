@@ -2,13 +2,13 @@ package tipsy.frontend
 
 import scala.concurrent.ExecutionContext
 
-/**
-  * CLI: Frontend which parses the CLI configuration and runs services.
+/** @constructor Frontend which parses the CLI configuration and runs services.
+  * @param cfg Configuration satisfying [[tipsy.frontend.Config]].
   */
-class CLI(c: Config) extends TipsyDriver
+class CLI(cfg: Config) extends TipsyDriver
     with CLIClusterHelpers with CLIExecHelpers {
 
-  implicit val config = c
+  implicit val config = cfg
   implicit val executionContext = ExecutionContext.global
 
   def run(): Unit = {

@@ -4,6 +4,9 @@ import tipsy.frontend._
 
 import com.typesafe.config.ConfigFactory
 
+/** The main object of the Tipsy project. Parses command line arguments
+  * to run CLI tasks or the web server, as required.
+  */
 object Tipsy {
   def main(args: Array[String]): Unit = {
     parser.parse(args, Config()) match {
