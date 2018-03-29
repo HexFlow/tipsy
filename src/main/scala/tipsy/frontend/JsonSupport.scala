@@ -2,6 +2,7 @@ package tipsy.frontend
 
 import tipsy.compare._
 import tipsy.parser._
+import Types._
 
 import io.circe._
 import io.circe.syntax._

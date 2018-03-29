@@ -4,6 +4,7 @@ import tipsy.frontend._
 import tipsy.db._
 import tipsy.db.schema._
 import tipsy.db.TipsyPostgresProfile.api._
+import Types._
 
 import scala.concurrent.Future
 

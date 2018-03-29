@@ -1,6 +1,7 @@
 package tipsy.compare
 
 import tipsy.parser._
+import Types._
 
 import scala.math._
 

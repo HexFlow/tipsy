@@ -3,6 +3,7 @@ package tipsy.frontend
 import tipsy.compare._
 import tipsy.compiler.WorkflowCompiler
 import tipsy.parser.ParseTree
+import Types.EditRet
 
 import java.io.File
 
