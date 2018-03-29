@@ -1,6 +1,7 @@
 package tipsy.compiler
 
-import tipsy.lexer._
+import tipsy.lexer.CLexer
+import tipsy.lexer.CToken._
 import tipsy.parser._
 
 object WorkflowCompiler {

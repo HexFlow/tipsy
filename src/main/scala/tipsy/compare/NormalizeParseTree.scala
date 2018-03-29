@@ -1,7 +1,7 @@
 package tipsy.compare
 
 import tipsy.parser._
-import tipsy.lexer._
+import tipsy.lexer.CToken._
 import tipsy.compiler._
 
 

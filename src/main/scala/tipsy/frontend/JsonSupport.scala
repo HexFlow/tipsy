@@ -12,16 +12,16 @@ import io.circe.{Encoder, Json }
   */
 trait JsonSupport {
 
-  implicit def allToJson[T](x: T)(implicit encoder: io.circe.Encoder[T]) = x.asJson
+  implicit protected def allToJson[T](x: T)(implicit encoder: io.circe.Encoder[T]) = x.asJson
 
-  implicit val encodeCF: Encoder[CFEnum] = new Encoder[CFEnum] {
+  implicit protected val encodeCF: Encoder[CFEnum] = new Encoder[CFEnum] {
     final def apply(a: CFEnum): Json = a match {
       case POSTEXPR(e) => ("Expr: " + e mkString "").asJson
       case _ => a.flowName.asJson
     }
   }
 
-  implicit val encodeDiff: Encoder[Diff] = new Encoder[Diff] {
+  implicit protected val encodeDiff: Encoder[Diff] = new Encoder[Diff] {
     final def apply(a: Diff): Json =
       a match {
         case AddDiff(add, _, fxn) => Json.obj (

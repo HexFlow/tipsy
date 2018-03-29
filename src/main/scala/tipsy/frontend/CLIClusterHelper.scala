@@ -9,12 +9,22 @@ import java.io.PrintWriter
 
 import scala.concurrent.{ Future, Await }
 import scala.concurrent.duration.Duration
-import scala.concurrent.ExecutionContext
 
+/** Contains handlers for running cluster commands from CLI.
+  * These are the functions exposed via the CLI.
+  */
 trait CLIClusterHelpers extends TipsyDriver with ClusterActions {
-  implicit val config: Config
-  implicit val executionContext: ExecutionContext
 
+  /** The configuration provided via CLI arguments, containing commands
+    * and programs to be run.
+    */
+  implicit val config: Config
+
+  /** Updates the cluster (stored in DB) for the given question ID.
+    * This will run the python script `hierarchical_clustering.py`.
+    * It needs to have its dependencies installed.
+    * @param quesId The question ID whose cluster has to be updated in DB.
+    */
   def cliUpdateClusters(implicit quesId: String) = {
     val action = for {
       matrix <- driver.runDB {
@@ -25,6 +35,9 @@ trait CLIClusterHelpers extends TipsyDriver with ClusterActions {
     Await.result(action, Duration.Inf)
   }
 
+  /** Prints the distance matrix for the provided question to STDOUT.
+    * @param quesId The question ID, whose submissions' distances (2D matrix) will be printed.
+    */
   def cliMatrixDump(implicit quesId: String) = {
     val action = for {
       matrix <- driver.runDB {
@@ -39,6 +52,9 @@ trait CLIClusterHelpers extends TipsyDriver with ClusterActions {
     Await.result(action, Duration.Inf)
   }
 
+  /** Prints the variances of the clusters of the given question to STDOUT.
+    * @param quesId The question ID whose clusters' variance is to be printed.
+    */
   def cliVariance(implicit quesId: String) = {
     val action = for {
       clusters <- driver.runDB {

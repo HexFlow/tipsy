@@ -1,15 +1,24 @@
 package tipsy.lexer
 
 import tipsy.compiler.{Location, CLexerError}
+import tipsy.lexer.CToken._
 
 import scala.util.parsing.combinator.RegexParsers
 
+/** Lexer for converting C program (string) to a list of lexical items.
+  * TODO: Perhaps find a more robust lexer/parser doublet.
+  */
 object CLexer extends RegexParsers {
   override def skipWhitespace = true
 
   // Handles comments as well as whitespace
   override val whiteSpace = """(\s|//.*|(?m)/\*(\*(?!/)|[^*])*\*/)+""".r
 
+  /** Runs the lexer on the input code and returns either [[tipsy.compiler.CLexerError]]
+    * or a list of [[tipsy.lexer.CToken]].
+    *
+    * @param code The input code to be converted to a list of lexical items.
+    */
   def apply(code: String): Either[CLexerError, List[CToken]] = {
     // parse function from RegexParsers
     parse(tokens, code) match {

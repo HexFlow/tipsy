@@ -1,6 +1,7 @@
 package tipsy
 
 import tipsy.frontend._
+import scopt.OptionParser
 
 import com.typesafe.config.ConfigFactory
 
@@ -25,12 +26,15 @@ object Tipsy {
               host = confFile.getString("web.host")
             )
           }
-        new CLI(finalConfig).run()
+        new CLI()(finalConfig).run
       case None =>
     }
   }
 
-  val parser = new scopt.OptionParser[Config]("scopt") {
+  /** CLI command parser generated using scopt.OptionParser.
+    * Refer to [[tipsy.frontend.Config]] for the configuration.
+    */
+  val parser = new OptionParser[Config]("scopt") {
     head("tipsy", "0.1")
 
     cmd("exec").action( (_, c) => c.copy(exec = true) ).

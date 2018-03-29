@@ -24,18 +24,18 @@ import io.circe.generic.auto._
 
 
 trait TipsyDriver {
-  implicit val executionContext: ExecutionContext
-  implicit val driver: Driver = TipsySlick()
+  implicit protected val executionContext: ExecutionContext
+  implicit protected val driver: Driver = TipsySlick()
 
-  val progTable: TableQuery[Programs] = TableQuery[Programs]
-  val clusterTable: TableQuery[Clusters] = TableQuery[Clusters]
-  val distTable: TableQuery[Dists] = TableQuery[Dists]
+  protected val progTable: TableQuery[Programs] = TableQuery[Programs]
+  protected val clusterTable: TableQuery[Clusters] = TableQuery[Clusters]
+  protected val distTable: TableQuery[Dists] = TableQuery[Dists]
 }
 
 trait TipsyActors {
-  implicit val system: ActorSystem = ActorSystem("web-tipsy")
-  implicit val materializer: ActorMaterializer = ActorMaterializer()
-  implicit val executionContext = system.dispatcher
+  implicit protected val system: ActorSystem = ActorSystem("web-tipsy")
+  implicit protected val materializer: ActorMaterializer = ActorMaterializer()
+  implicit protected val executionContext = system.dispatcher
   lazy val insertProgActorRef = system.actorSelection("/user/insertProgActor")
   lazy val updateClustersActorRef = system.actorSelection("/user/updateClustersActor")
 }

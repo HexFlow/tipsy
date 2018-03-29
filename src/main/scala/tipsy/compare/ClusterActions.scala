@@ -8,28 +8,43 @@ import tipsy.frontend._
 
 import io.circe.parser._
 
+/** Actions concerning clusters of questions.
+  */
 trait ClusterActions extends TipsyDriver {
 
-  var cnt = 0
+  private var cnt = 0
 
-  def mean(l: List[Double]) = {
+  private def mean(l: List[Double]) = {
     l.sum / l.length
   }
-  def sqr(x: Double) = {
+  private def sqr(x: Double) = {
     x*x
   }
-  def getVariance(x: List[Double]) = {
-    scala.math.sqrt(mean(x.map(sqr)) - sqr(mean(x)))
+
+  /** Returns the variance of the input values.
+    * @param l List of Double values whose variance is required.
+    */
+  def getVariance(l: List[Double]) = {
+    scala.math.sqrt(mean(l.map(sqr)) - sqr(mean(l)))
   }
 
+  /** Returns a Future of the variance of the requested question ID.
+    * @param quesId Question ID whose programs' scores' variance is required.
+    */
   def findVarianceOfQues(quesId: String): Future[Double] = {
     for {
-      progScores <-driver.runDB {
+      progScores <- driver.runDB {
         progTable.filter(_.quesId === quesId).map(_.score).result
       }.map(_.map(_.toDouble))
     } yield getVariance(progScores.toList)
   }
 
+  /** Consumes a 2D matrix of the program distances, belonging to a question,
+    * and updates the cluster of that question in the DB using `hierarchical_clustering.py`
+    * script.
+    * @param matrix Matrix containing distances between the program IDs.
+    * @param quesId The question ID in question.
+    */
   def doUpdateClusters(matrix: Seq[(Int, Int, Double)], quesId: String): Future[Unit] = {
     cnt = cnt + 1
 

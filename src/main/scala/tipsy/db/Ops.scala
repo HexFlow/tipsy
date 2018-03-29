@@ -9,8 +9,8 @@ import scala.util.{ Success, Failure }
 trait Ops {
   import Constraints._
 
-  implicit val driver: Driver
-  implicit val executionContext: ExecutionContext
+  implicit protected val driver: Driver
+  implicit protected val executionContext: ExecutionContext
 
   def handleError(cmds: () => Unit) =
     try {

@@ -1,6 +1,6 @@
 package tipsy.parser
 
-import tipsy.lexer._
+import tipsy.lexer.CToken._
 import tipsy.compare.FlowGraphTweaks.post
 import scala.util.parsing.input.{Positional, Position}
 

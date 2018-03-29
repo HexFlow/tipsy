@@ -1,6 +1,7 @@
 package tipsy.parser
 
-import tipsy.lexer._
+import tipsy.lexer.CLexer
+import tipsy.lexer.CToken._
 
 import scala.util.parsing.combinator.Parsers
 import scala.util.parsing.combinator.PackratParsers

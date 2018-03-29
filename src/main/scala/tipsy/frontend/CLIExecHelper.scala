@@ -5,17 +5,25 @@ import tipsy.compiler.WorkflowCompiler
 import tipsy.parser.ParseTree
 
 import java.io.File
-import scala.concurrent.ExecutionContext
 
 import scalaz._, Scalaz._
 import io.circe.syntax._
 
+/** Contains handlers for the simple execute commands which
+  * can be run via CLI.
+  */
 trait CLIExecHelpers extends TipsyDriver with JsonSupport {
+
+  /** The configuration provided via CLI arguments, containing commands
+    * and programs to be run.
+    */
   implicit val config: Config
-  implicit val executionContext: ExecutionContext
 
   import config._
 
+  /** Shows distances between the input program parse trees.
+    * @param validTrees Input instances of [[tipsy.parser.ParseTree]].
+    */
   def cliDistance(implicit validTrees: Vector[(ParseTree, String)]) = {
     validTrees.map(x => NormalizeParseTree(x._1)).sequenceU match {
       case Left(err) => println("ERROR: Could not normalize some trees: " ++ err.toString)
@@ -29,6 +37,10 @@ trait CLIExecHelpers extends TipsyDriver with JsonSupport {
     }
   }
 
+  /** Shows the corrections between the provided list of parse trees.
+    * @param validTrees Input instances of Vector[([[tipsy.parser.ParseTree]], String)],
+    * where the string is the name of the program.
+    */
   def cliCorrections(implicit validTrees: Vector[(ParseTree, String)]) = {
     if (validTrees.length == 2) {
       val res = for {
@@ -47,6 +59,10 @@ trait CLIExecHelpers extends TipsyDriver with JsonSupport {
     }
   }
 
+  /** Creates instances of Vector[([[tipsy.parser.ParseTree]], String)]
+    * using the instanciated member config. Reads the programs to be compiled from
+    * it, and compiles them to a pair of parse trees and the name of the program.
+    */
   def cliValidTrees(): Vector[(ParseTree, String)] = {
     val dirFileNames = dirs.map(expandDir).flatten
     val dirFiles = if (limit == -1) dirFileNames else dirFileNames.take(limit)
