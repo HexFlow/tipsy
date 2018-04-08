@@ -50,6 +50,10 @@ whether to serve as a web backend
   --port <value>           port to listen on
 ```
 
+# Publication
+
+[This paper](https://arxiv.org/abs/1804.00373) has been selected as a poster paper for AIED 2018.
+
 # Code structure
 
 ## Documentation
