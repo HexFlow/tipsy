@@ -37,7 +37,7 @@ trait Handlers extends JsonSupport with TableHandlers with Helpers with ClusterA
 
   def compiledFromDB(id: Int): HandleResp = {
     getFromDB(id).map(_ match {
-      case None => ((NotFound, "Program not found"))
+      case None => (NotFound, "Program not found")
       case Some(p: Program) =>
         Compiler(p.code) match {
           case -\/(err) => (BadRequest, err)

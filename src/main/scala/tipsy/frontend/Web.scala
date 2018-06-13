@@ -53,6 +53,8 @@ object Web extends JsonSupport with Ops with FailFastCirceSupport
 
     import config._
 
+    lazy val adminErr = complete((Forbidden, "Operation only for admins"))
+
     val insertProgActor = if (admin)
       system.actorOf(Props(classOf[InsertProgActor]), "insertProgActor")
     else
@@ -62,15 +64,16 @@ object Web extends JsonSupport with Ops with FailFastCirceSupport
       pathPrefix ("api") {
 
         post {
-          // entity is post body.
-          entity(as[Requests.ProgramInsertReq]) { prog =>
-            path("submit") {
-              if (admin) complete (insertProgram(prog))
-              else complete((Forbidden, "Operation only for admins"))
-            } ~ path("corrections") {
-              complete (correctProgramFromReq(prog))
-            }
+
+          // handleWith will automatically convert POST body
+          // to ProgramInsertReq type (parameter of insertProgram)
+          path("submit") {
+            if (admin) handleWith (insertProgram)
+            else adminErr
+          } ~ path("corrections") {
+            handleWith (correctProgramFromReq)
           }
+
         } ~ get {
 
           path ("getId" / IntNumber) { id => // Retreive a program given the ID
@@ -79,28 +82,28 @@ object Web extends JsonSupport with Ops with FailFastCirceSupport
             complete (compiledFromDB(id))
           } ~ path ("corrections" / IntNumber) { id =>
             complete (correctProgramFromDB(id))
-          } ~ path ("createSchema") { // Create the postgres schema
-            if (admin) complete (createSchema())
-            else complete((Forbidden, "Operation only for admins"))
-          } ~ path ("dropSchema") { // Drop the table schema
-            if (admin) complete (dropSchema())
-            else complete((Forbidden, "Operation only for admins"))
-          } ~ path ("dropQuestion" / Segment) { quesId =>
-            if (admin) complete (dropQuestion(quesId))
-            else complete((Forbidden, "Operation only for admins"))
           } ~ path ("updateClusters" / Segment) { quesId =>
             complete (updateClusterHandler(quesId))
           } ~ path ("progCount" / Segment) { quesId => // Get list of program IDs
             complete (getProgCount(quesId))
           } ~ path ("questions") { // Get list of question IDs
-            complete (getQuestions())
+            complete (getQuestions)
           } ~ path ("getSimpleSolution" / Segment) { quesId =>
             complete (getSimpleSolution(quesId))
+          } ~ path ("createSchema") { // Create the postgres schema
+            if (admin) complete (createSchema)
+            else adminErr
+          } ~ path ("dropSchema") { // Drop the table schema
+            if (admin) complete (dropSchema)
+            else adminErr
+          } ~ path ("dropQuestion" / Segment) { quesId =>
+            if (admin) complete (dropQuestion(quesId))
+            else adminErr
           }
         } ~ delete {
           path (IntNumber) { id =>
             if (admin) complete (deleteProgram(id))
-            else complete((Forbidden, "Operation only for admins"))
+            else adminErr
           }
         }
 
