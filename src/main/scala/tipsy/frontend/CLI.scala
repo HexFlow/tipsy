@@ -16,7 +16,7 @@ class CLI(implicit val config: Config) extends TipsyDriver
     import config._
 
     if (web) { // WEB actions
-      Web(config)
+      Web
     }
 
     if (exec) { // EXEC actions

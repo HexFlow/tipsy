@@ -1,7 +1,7 @@
 package tipsy.compiler
 
-import sys.process._
-import java.io.{ByteArrayOutputStream, PrintWriter}
+import scala.sys.process._
+import java.io.{ByteArrayOutputStream, PrintWriter, File}
 
 object Preprocessor {
   def runCommand(cmd: Seq[String]): (Int, String, String) = {
@@ -16,7 +16,7 @@ object Preprocessor {
     (exitValue, stdoutSt.toString, stderrSt.toString)
   }
 
-  def apply(filename: String): Either[CPreError, String] = {
+  def gcc(filename: String): Either[CPreError, String] = {
     val (ret, out, err) = runCommand(Seq("gcc", "-E", filename))
     if (ret != 0) {
       println("Error running preprocessor: " + ret)
@@ -45,5 +45,11 @@ object Preprocessor {
         Right("")
       }
     }
+  }
+
+  def clangFormat(filename: String): Either[CPreError, String] = {
+    val newfile = Compiler.getFilename()
+    ("clang-format" #< new File(filename) #> new File(newfile)).!
+    Right(newfile)
   }
 }

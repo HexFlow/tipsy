@@ -48,7 +48,7 @@ trait TipsyActors {
 object Web extends JsonSupport with Ops with FailFastCirceSupport
     with FileAndResourceDirectives with Handlers with TipsyDriver {
 
-  def apply(config: Config): Unit = {
+  def apply(implicit config: Config): Unit = {
     implicit val blockingDispatcher = system.dispatchers.lookup("tipsy-blocking-dispatcher")
 
     import config._
