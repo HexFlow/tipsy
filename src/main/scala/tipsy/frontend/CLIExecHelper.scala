@@ -68,16 +68,24 @@ trait CLIExecHelpers extends TipsyDriver with JsonSupport {
     */
   def cliCorrections(implicit validTrees: Vector[CompileResult]) = {
     if (validTrees.length == 2) {
-      val res = for {
+      (for {
         cf1 <- NormalizeParseTree(validTrees(0).tree)
         cf2 <- NormalizeParseTree(validTrees(1).tree)
         EditRet(diffs, dist) = Compare.findDist(cf1, cf2)
-      } yield ()
-
-      res match {
-        case -\/(err) => println("Error while fetching corrections: " ++ err.toString)
-        case \/-(_) => println("Corrections has not been implemented yet. Use --rawdiff to see the raw diffs instead.")
-      }
+      } yield {
+        println("Edit ret:")
+        println("Distance: " ++ dist.toString)
+        println("Diffs:")
+        diffs.foreach { diff =>
+          diff.lineAndCol match {
+            case Some((line, col)) =>
+              println("Original line:")
+              println(validTrees(0).code(line-1).drop(col-1))
+            case None =>
+          }
+          println(diff.asJson)
+        }
+      }).leftMap { err => println("Error while fetching corrections: " ++ err.toString) }
     } else {
       println("Corrections are not provided when given more than two files.")
     }
@@ -114,7 +122,8 @@ trait CLIExecHelpers extends TipsyDriver with JsonSupport {
                 }
             }
           }
-          CompileResult(tree, code, file)
+          val splitCode = code.split('\n').toVector
+          CompileResult(tree, file, splitCode)
         }).leftMap { err =>
           println(s"Error while compiling ${file}: " + err)
         }
@@ -125,7 +134,7 @@ trait CLIExecHelpers extends TipsyDriver with JsonSupport {
   case class CompileResult(
     tree: ParseTree,
     file: String,
-    code: String
+    code: Vector[String]
   )
 
   private def expandDir(name: String): List[String] = {

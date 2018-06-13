@@ -25,6 +25,10 @@ object Types {
     lazy val stringWithFxn: String = this.toString ++ " in " ++ fxn
     def setFxn(name: String): Diff
     def position(): String
+    def lineAndCol(): Option[(Int, Int)] = {
+      if (position == "") None else
+      Some(position.split(":").map(_.toInt) match {  case Array(a, b) => (a, b) })
+    }
   }
 
   case class AddDiff(add: CFEnum, prevPos: String, fxn: String = "") extends Diff {
