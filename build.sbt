@@ -26,7 +26,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.slick"      %% "slick"                    % "3.2.0",
   "com.typesafe.slick"      %% "slick-hikaricp"           % "3.2.0",
   "org.postgresql"          % "postgresql"                % "42.0.0",
-  "org.scalaz"              %% "scalaz-core"              % "7.2.10",
+  "org.scalaz"              %% "scalaz-core"              % "7.2.24",
   "com.github.tminglei"     %% "slick-pg"                 % "0.15.7",
   "com.github.tminglei"     %% "slick-pg_circe-json"      % "0.15.7",
   "com.typesafe.akka"       %% "akka-actor"               % "2.5.8",

@@ -1,5 +1,6 @@
 package tipsy.compiler
 
+import scalaz._
 import scala.sys.process._
 import java.io.{ByteArrayOutputStream, PrintWriter, File}
 
@@ -16,12 +17,12 @@ object Preprocessor {
     (exitValue, stdoutSt.toString, stderrSt.toString)
   }
 
-  def gcc(filename: String): Either[CPreError, String] = {
+  def gcc(filename: String): \/[CPreError, String] = {
     val (ret, out, err) = runCommand(Seq("gcc", "-E", filename))
     if (ret != 0) {
       println("Error running preprocessor: " + ret)
       println(err)
-      Left(CPreError(err))
+      -\/(CPreError(err))
     } else {
       // Extract the part of user code from GCC output.
       // Folding accumulator: (Lines collected till now, in reverse for efficient appends to list).
@@ -40,16 +41,16 @@ object Preprocessor {
       }.reverse
 
       if (tresult.length != 0) {
-        Right(tresult.reduceLeft(_ + "\n" + _))
+        \/-(tresult.reduceLeft(_ + "\n" + _))
       } else {
-        Right("")
+        \/-("")
       }
     }
   }
 
-  def clangFormat(filename: String): Either[CPreError, String] = {
+  def clangFormat(filename: String): \/[CPreError, String] = {
     val newfile = Compiler.getFilename()
     ("clang-format" #< new File(filename) #> new File(newfile)).!
-    Right(newfile)
+    \/-(newfile)
   }
 }

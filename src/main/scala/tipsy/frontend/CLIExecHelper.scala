@@ -27,8 +27,8 @@ trait CLIExecHelpers extends TipsyDriver with JsonSupport {
     */
   def cliDistance(implicit validTrees: Vector[(ParseTree, String)]) = {
     validTrees.map(x => NormalizeParseTree(x._1)).sequenceU match {
-      case Left(err) => println("ERROR: Could not normalize some trees: " ++ err.toString)
-      case Right(cfList) =>
+      case -\/(err) => println("ERROR: Could not normalize some trees: " ++ err.toString)
+      case \/-(cfList) =>
         val pairs = cfList.zipWithIndex.combinations(2).map {
           case Seq((cf1, idx1), (cf2, idx2)) =>
             val force = 100/(0.1+Compare.findDist(cf1, cf2).dist)
@@ -45,13 +45,13 @@ trait CLIExecHelpers extends TipsyDriver with JsonSupport {
   def cliCorrections(implicit validTrees: Vector[(ParseTree, String)]) = {
     if (validTrees.length == 2) {
       val res = for {
-        cf1 <- NormalizeParseTree(validTrees(0)._1).right
-        cf2 <- NormalizeParseTree(validTrees(1)._1).right
+        cf1 <- NormalizeParseTree(validTrees(0)._1)
+        cf2 <- NormalizeParseTree(validTrees(1)._1)
       } yield Compare.findDist(cf1, cf2)
 
       res match {
-        case Left(err) => println("Error while fetching corrections: " ++ err.toString)
-        case Right(EditRet(diffs, dist)) =>
+        case -\/(err) => println("Error while fetching corrections: " ++ err.toString)
+        case \/-(EditRet(diffs, dist)) =>
           println("Edit ret:")
           println("Distance: " ++ dist.toString)
           println("Diffs:")
@@ -74,13 +74,13 @@ trait CLIExecHelpers extends TipsyDriver with JsonSupport {
       case (file, count) => {
         println(s"[${count+1} of ${files.length}] Compiling " + file)
         WorkflowCompiler(file) match {
-          case Right(tree) => {
+          case \/-(tree) => {
             if (parseTree) println(tree)
             if (linearRep) println(tree.compress)
             if (normalRep) {
               NormalizeParseTree(tree) match {
-                case Left(err) => println("There was an error in normalization: " ++ err.toString)
-                case Right(NormCode(nfxns)) =>
+                case -\/(err) => println("There was an error in normalization: " ++ err.toString)
+                case \/-(NormCode(nfxns)) =>
                   nfxns.map {
                     case NormFxn(name, cfs) =>
                       println("Function: " ++ name)
@@ -92,7 +92,7 @@ trait CLIExecHelpers extends TipsyDriver with JsonSupport {
             }
             (Some(tree), file)
           }
-          case Left(err) => {
+          case -\/(err) => {
             println("Compilation error =>")
             println(err)
             (None, file)

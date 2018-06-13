@@ -1,5 +1,6 @@
 package tipsy.frontend.web
 
+import scalaz._
 import tipsy.db.Requests
 import tipsy.compiler._
 import tipsy.compare._
@@ -8,11 +9,9 @@ import tipsy.db._
 import tipsy.db.schema._
 import tipsy.db.TipsyPostgresProfile.api._
 import tipsy.frontend._
-
 import akka.http.scaladsl.model.StatusCodes._
 import scala.concurrent.{ Future, Await }
 import scala.concurrent.duration._
-
 import io.circe.generic.auto._
 import io.circe.syntax._
 
@@ -41,8 +40,8 @@ trait Handlers extends JsonSupport with TableHandlers with Helpers with ClusterA
       case None => ((NotFound, "Program not found"))
       case Some(p: Program) =>
         Compiler(p.code) match {
-          case Left(err) => (BadRequest, err)
-          case Right(tree: ParseTree) =>
+          case -\/(err) => (BadRequest, err)
+          case \/-(tree: ParseTree) =>
             val res = Map("tree" -> tree.toString,
               "flow" -> tree.compress.toString)
             (OK, res)
@@ -52,8 +51,8 @@ trait Handlers extends JsonSupport with TableHandlers with Helpers with ClusterA
 
   def correctProgramFromReq(progreq: Requests.ProgramInsertReq): HandleResp = {
     Compiler.compileWithStats(progreq) match {
-      case Left(err) => Future(BadRequest, ("Compilation failed: " ++ err.toString))
-      case Right(prog) => correctGivenCode(prog)
+      case -\/(err) => Future(BadRequest, ("Compilation failed: " ++ err.toString))
+      case \/-(prog) => correctGivenCode(prog)
     }
   }
 
@@ -69,11 +68,11 @@ trait Handlers extends JsonSupport with TableHandlers with Helpers with ClusterA
 
   private def correctGivenCode(prog: Program): HandleResp = {
     Compiler(prog.code) match {
-      case Left(err) => Future((BadRequest, ("Compilation failed: " ++ err.toString)))
-      case Right(mainTree: ParseTree) =>
+      case -\/(err) => Future((BadRequest, ("Compilation failed: " ++ err.toString)))
+      case \/-(mainTree: ParseTree) =>
         NormalizeParseTree(mainTree) match {
-          case Left(err) => Future((BadRequest, ("Normalization failed: " ++ err.toString)))
-          case Right(nc) => for {
+          case -\/(err) => Future((BadRequest, ("Normalization failed: " ++ err.toString)))
+          case \/-(nc) => for {
             res <- Correct.suggestCorrections(nc)(prog.quesId)
           } yield (OK, res)
         }

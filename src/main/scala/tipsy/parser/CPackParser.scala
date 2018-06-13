@@ -1,8 +1,8 @@
 package tipsy.parser
 
+import scalaz._
 import tipsy.compiler.{Location, CParserError}
 import tipsy.lexer.CToken._
-
 import scala.util.parsing.combinator.Parsers
 import scala.util.parsing.combinator.PackratParsers
 import scala.util.parsing.input.{NoPosition, Position, Reader}
@@ -23,12 +23,12 @@ object CPackParser extends PackratParsers with Parsers
   }
 
 
-  def apply(tokens: Seq[Elem]): Either[CParserError, ParseTree] = {
+  def apply(tokens: Seq[Elem]): \/[CParserError, ParseTree] = {
     val reader = new PackratReader(new CTokenReader(tokens))
     program(reader) match {
       case NoSuccess(msg, next) =>
-        Left(CParserError(Location(next.pos.line, next.pos.column), msg))
-      case Success(result, next) => Right(result)
+        -\/(CParserError(Location(next.pos.line, next.pos.column), msg))
+      case Success(result, next) => \/-(result)
     }
   }
 

@@ -1,19 +1,17 @@
 package tipsy.frontend.web
 
+import scalaz._
 import tipsy.db.Requests
 import tipsy.compiler._
 import tipsy.db._
 import tipsy.db.TipsyPostgresProfile.api._
 import tipsy.actors.InsertProgMsg
-
 import akka.http.scaladsl.model.StatusCodes._
 import akka.pattern.ask
 import akka.util.Timeout
-
 import scala.concurrent.Future
 import scala.util.{Success, Failure}
 import scala.concurrent.duration._
-
 import io.circe.syntax._
 
 trait TableHandlers extends Helpers {
@@ -37,9 +35,9 @@ trait TableHandlers extends Helpers {
   def insertProgram(prog: Requests.ProgramInsertReq): HandleResp = {
     implicit val timeout = new Timeout(100 seconds)
     Compiler.compileWithStats(prog) match {
-      case Left(err) => // Didn't compile
+      case -\/(err) => // Didn't compile
         Future((BadRequest, ("Compilation failed: " ++ err.toString).asJson))
-      case Right(compiledProg) => // Compiled fine, index it
+      case \/-(compiledProg) => // Compiled fine, index it
         for {
           id <- insertProgActorRef ? InsertProgMsg(
             compiledProg, prog.updateClusters.getOrElse(false))

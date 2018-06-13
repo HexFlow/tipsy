@@ -2,7 +2,7 @@ package tipsy.lexer
 
 import tipsy.compiler.{Location, CLexerError}
 import tipsy.lexer.CToken._
-
+import scalaz._
 import scala.util.parsing.combinator.RegexParsers
 
 /** Lexer for converting C program (string) to a list of lexical items.
@@ -19,11 +19,11 @@ object CLexer extends RegexParsers {
     *
     * @param code The input code to be converted to a list of lexical items.
     */
-  def apply(code: String): Either[CLexerError, List[CToken]] = {
+  def apply(code: String): \/[CLexerError, List[CToken]] = {
     // parse function from RegexParsers
     parse(tokens, code) match {
       case NoSuccess(msg, next) =>
-        Left(CLexerError(Location(next.pos.line, next.pos.column), msg))
+        -\/(CLexerError(Location(next.pos.line, next.pos.column), msg))
       case Success(result, next) => {
         /*Right(result.foldRight(List(): List[CToken]) {
           (x, acc) => x match{
@@ -31,7 +31,7 @@ object CLexer extends RegexParsers {
             case x => x :: acc
           }
         })*/
-       Right(result)
+       \/-(result)
       }
     }
   }

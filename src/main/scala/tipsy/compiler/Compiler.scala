@@ -1,5 +1,6 @@
 package tipsy.compiler
 
+import scalaz._
 import tipsy.compare.{ProgStats, NormalizeParseTree}
 import tipsy.db.schema._
 import tipsy.db.Requests._
@@ -31,13 +32,13 @@ object Compiler {
 
   def compileWithStats(
     prog: ProgramInsertReq
-  ): Either[CCompilationError, Program] = {
+  ): \/[CCompilationError, Program] = {
     val idReq: Int = prog.id.getOrElse(0)
     val curtime = System.currentTimeMillis().toString()
 
     for {
-      tree <- getTree(prog.code).right
-      cf <- NormalizeParseTree(tree).right
+      tree <- getTree(prog.code)
+      cf <- NormalizeParseTree(tree)
     } yield Program(
         id      = idReq,
         userId  = prog.userId,

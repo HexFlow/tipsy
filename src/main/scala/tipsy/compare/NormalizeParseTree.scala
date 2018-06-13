@@ -1,9 +1,9 @@
 package tipsy.compare
 
+import scalaz._
 import tipsy.parser._
 import tipsy.lexer.CToken._
 import tipsy.compiler._
-
 
 case class NormFxn(name: String, cf: List[CFEnum]) {
   def length(): Int = {
@@ -20,14 +20,12 @@ case class NormCode(fxns: List[NormFxn]) {
 object NormalizeParseTree {
 
   // We assume pt contains functions sorted in use order.
-  def apply(parseTree: ParseTree): Either[CCompilationError, NormCode] = {
+  def apply(parseTree: ParseTree): \/[CCompilationError, NormCode] = {
     for {
-
       topList <- (parseTree match {
-        case TopList(tl) => Right(tl)
-        case _ => Left(CCustomError("Given tree was not a TopList"))
-      }).right
-
+        case TopList(tl) => \/-(tl)
+        case _ => -\/(CCustomError("Given tree was not a TopList"))
+      })
     } yield NormCode(getFunctions(topList).map(fxnToPair(_)))
   }
 
