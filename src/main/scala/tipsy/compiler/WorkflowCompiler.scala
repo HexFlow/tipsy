@@ -19,7 +19,7 @@ object WorkflowCompiler {
     val res = for {
       newfile <- Preprocessor.clangFormat(filename)
       code <- Preprocessor.gcc(newfile)
-      _ <- \/-(s"rm -f ${filename}.1".!)
+      _ <- \/-(s"rm -f ${newfile}".!)
     } yield code
     res
   }
