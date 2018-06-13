@@ -49,6 +49,9 @@ object Tipsy {
         opt[Unit]('d', "distance").action( (_, c) =>
           c.copy(distance = true) ).text("whether to print distance between programs"),
 
+        opt[Unit]("rawdiff").action( (_, c) =>
+          c.copy(rawdiff = true) ).text("whether to print the raw diff"),
+
         opt[Unit]('c', "corrections").action( (_, c) =>
           c.copy(corrections = true) ).text("whether to print corrections"),
 

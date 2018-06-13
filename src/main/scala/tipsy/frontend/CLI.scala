@@ -23,6 +23,7 @@ class CLI(implicit val config: Config) extends TipsyDriver
       implicit val validTrees = cliValidTrees
 
       if (distance) cliDistance
+      if (rawdiff) cliRawDiff
       if (corrections) cliCorrections
     }
 

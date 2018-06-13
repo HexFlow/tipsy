@@ -23,10 +23,10 @@ trait CLIExecHelpers extends TipsyDriver with JsonSupport {
   import config._
 
   /** Shows distances between the input program parse trees.
-    * @param validTrees Input instances of [[tipsy.parser.ParseTree]].
+    * @param validTrees Input instances of Vector[CompileResult].
     */
-  def cliDistance(implicit validTrees: Vector[(ParseTree, String)]) = {
-    validTrees.map(x => NormalizeParseTree(x._1)).sequenceU match {
+  def cliDistance(implicit validTrees: Vector[CompileResult]) = {
+    validTrees.map(x => NormalizeParseTree(x.tree)).sequenceU match {
       case -\/(err) => println("ERROR: Could not normalize some trees: " ++ err.toString)
       case \/-(cfList) =>
         val pairs = cfList.zipWithIndex.combinations(2).map {
@@ -34,19 +34,19 @@ trait CLIExecHelpers extends TipsyDriver with JsonSupport {
             val force = 100/(0.1+Compare.findDist(cf1, cf2).dist)
             (idx1, idx2, force)
         }.toList
-        DistanceDraw(pairs, cfList.length, validTrees.map(_._2).toList)
+        DistanceDraw(pairs, cfList.length, validTrees.map(_.file).toList)
     }
   }
 
-  /** Shows the corrections between the provided list of parse trees.
-    * @param validTrees Input instances of Vector[([[tipsy.parser.ParseTree]], String)],
+  /** Shows the raw diff between the provided list of parse trees.
+    * @param validTrees Input instances of Vector[CompileResult],
     * where the string is the name of the program.
     */
-  def cliCorrections(implicit validTrees: Vector[(ParseTree, String)]) = {
+  def cliRawDiff(implicit validTrees: Vector[CompileResult]) = {
     if (validTrees.length == 2) {
       val res = for {
-        cf1 <- NormalizeParseTree(validTrees(0)._1)
-        cf2 <- NormalizeParseTree(validTrees(1)._1)
+        cf1 <- NormalizeParseTree(validTrees(0).tree)
+        cf2 <- NormalizeParseTree(validTrees(1).tree)
       } yield Compare.findDist(cf1, cf2)
 
       res match {
@@ -57,50 +57,76 @@ trait CLIExecHelpers extends TipsyDriver with JsonSupport {
           println("Diffs:")
           diffs.map(diff => println(diff.asJson))
       }
+    } else {
+      println("Corrections are not provided when given more than two files.")
     }
   }
 
-  /** Creates instances of Vector[([[tipsy.parser.ParseTree]], String)]
+  /** Shows the corrections between the provided list of parse trees.
+    * @param validTrees Input instances of Vector[CompileResult],
+    * where the string is the name of the program.
+    */
+  def cliCorrections(implicit validTrees: Vector[CompileResult]) = {
+    if (validTrees.length == 2) {
+      val res = for {
+        cf1 <- NormalizeParseTree(validTrees(0).tree)
+        cf2 <- NormalizeParseTree(validTrees(1).tree)
+        EditRet(diffs, dist) = Compare.findDist(cf1, cf2)
+      } yield ()
+
+      res match {
+        case -\/(err) => println("Error while fetching corrections: " ++ err.toString)
+        case \/-(_) => println("Corrections has not been implemented yet. Use --rawdiff to see the raw diffs instead.")
+      }
+    } else {
+      println("Corrections are not provided when given more than two files.")
+    }
+  }
+
+  /** Creates instances of Vector[CompileResult] (containing parse trees and codes)
     * using the instanciated member config. Reads the programs to be compiled from
     * it, and compiles them to a pair of parse trees and the name of the program.
     */
-  def cliValidTrees(): Vector[(ParseTree, String)] = {
+  def cliValidTrees(): Vector[CompileResult] = {
     val dirFileNames = dirs.map(expandDir).flatten
     val dirFiles = if (limit == -1) dirFileNames else dirFileNames.take(limit)
 
     val finalFiles = dirFiles ++ files
 
     finalFiles.zipWithIndex.map{
-      case (file, count) => {
-        println(s"[${count+1} of ${files.length}] Compiling " + file)
-        WorkflowCompiler(file) match {
-          case \/-(tree) => {
-            if (parseTree) println(tree)
-            if (linearRep) println(tree.compress)
-            if (normalRep) {
-              NormalizeParseTree(tree) match {
-                case -\/(err) => println("There was an error in normalization: " ++ err.toString)
-                case \/-(NormCode(nfxns)) =>
-                  nfxns.map {
-                    case NormFxn(name, cfs) =>
-                      println("Function: " ++ name)
-                      cfs.map { cf =>
-                        println(cf.position + "\t" + cf.toString)
-                      }
-                  }
-              }
+      case (file, idx) => {
+        println(s"[${idx+1} of ${finalFiles.length}] Compiling " + file)
+
+        (for {
+          code <- WorkflowCompiler.getCode(file)
+          tree <- WorkflowCompiler.getTree(code)
+          normalized <- NormalizeParseTree(tree)
+          NormCode(nfxns) = normalized
+        } yield {
+          if (parseTree) println(tree)
+          if (linearRep) println(tree.compress)
+          if (normalRep) {
+            nfxns.map {
+              case NormFxn(name, cfs) =>
+                println("Function: " ++ name)
+                cfs.map { cf =>
+                  println(cf.position + "\t" + cf.toString)
+                }
             }
-            (Some(tree), file)
           }
-          case -\/(err) => {
-            println("Compilation error =>")
-            println(err)
-            (None, file)
-          }
+          CompileResult(tree, code, file)
+        }).leftMap { err =>
+          println(s"Error while compiling ${file}: " + err)
         }
       }
-    }.collect { case (Some(x), y) => (x, y) }.toVector
+    }.collect { case \/-(x) => x }.toVector
   }
+
+  case class CompileResult(
+    tree: ParseTree,
+    file: String,
+    code: String
+  )
 
   private def expandDir(name: String): List[String] = {
     val fl = new File(name)

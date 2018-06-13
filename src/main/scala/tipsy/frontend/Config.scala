@@ -10,6 +10,7 @@ package tipsy.frontend
   * @param linearRep Whether to show LinearRepresentation.
   * @param normalRep Whether to show Normalized Linear Representation.
   * @param distance Whether to print distance between programs.
+  * @param rawdiff Whether to print raw diffs.
   * @param corrections Whether to print corrections.
   * @param cluster Whether to do cluster related operations.
   * @param ques The question, whose submissions will be used for cluster analysis.
@@ -33,6 +34,7 @@ case class Config(
   normalRep: Boolean = false,
 
   distance: Boolean = false,
+  rawdiff: Boolean = false,
   corrections: Boolean = false,
 
   cluster: Boolean = false,

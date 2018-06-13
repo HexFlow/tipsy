@@ -15,7 +15,14 @@ object WorkflowCompiler {
     } yield parseTree
   }
 
-  def getCode(filename: String): \/[CPreError, String] = {
+  def getTree(code: String): \/[CCompilationError, ParseTree] = {
+    for {
+      tokens <- CLexer(code)
+      parseTree <- CPackParser(tokens)
+    } yield parseTree
+  }
+
+  def getCode(filename: String): \/[CCompilationError, String] = {
     val res = for {
       newfile <- Preprocessor.clangFormat(filename)
       code <- Preprocessor.gcc(newfile)
