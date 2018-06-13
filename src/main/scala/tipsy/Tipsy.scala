@@ -43,6 +43,12 @@ object Tipsy {
         opt[Seq[String]]("files").valueName("<file1>,<file2>...").action( (x,c) =>
           c.copy(files = x) ).text("files to run analysis on"),
 
+        opt[Seq[String]]("dirs").valueName("<dir1>,<dir2>...").action( (x,c) =>
+          c.copy(dirs = x) ).text("directories to run analysis on"),
+
+        opt[Int]('l', "limit").action( (x, c) =>
+          c.copy(limit = x) ).text("limit on programs to analyse"),
+
         opt[Seq[Int]]("ids").valueName("<id1>,<id2>...").action( (x,c) =>
           c.copy(ids = x) ).text("program IDs to run analysis on"),
 
@@ -63,15 +69,6 @@ object Tipsy {
 
         opt[Unit]("normalRep").action( (_, c) =>
           c.copy(normalRep = true) ).text("whether to show Normalized Linear Representation"),
-
-        cmd("dir").action( (_, c) => c ).
-          text("directory to run analysis on").
-          children(
-            opt[Seq[String]]('n', "names").action( (x, c) =>
-              c.copy(dirs= x)),
-            opt[Int]('l', "limit").action( (x, c) =>
-              c.copy(limit = x) ).text("limit on programs to analyse")
-          )
       )
 
     cmd("cluster").action( (_, c) => c.copy(cluster = true) ).

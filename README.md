@@ -37,7 +37,7 @@ sbt> run exec --files <file1>.c,<file2>.c --corrections
 To see the linear representation of multiple files, you can do either of the following. The second one will run the command on all files in the provided directory.
 ```
 sbt> run exec --linearRep --files <file1>.c,<file2>.c,<file3.c>.....
-sbt> run exec dir -n <dir_name> --linearRep
+sbt> run exec --linearRep --dirs <dir1>,<dir2> --limit 40
 ```
 
 # Academic publication
