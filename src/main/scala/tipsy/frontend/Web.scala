@@ -25,11 +25,23 @@ import io.circe.generic.auto._
 
 trait TipsyDriver {
   implicit protected val executionContext: ExecutionContext
-  implicit protected val driver: Driver = TipsySlick()
+
+  // This variable is only set to true when the lazy driver is actually loaded.
+  // So for tasks not needing driver, the DB won't be started at all.
+  // Without this, the shutdown step always started the driver unneccesarily.
+  private var isDriverLoaded = false
+  lazy implicit protected val driver: Driver = {
+    isDriverLoaded = true
+    TipsySlick()
+  }
 
   protected val progTable: TableQuery[Programs] = TableQuery[Programs]
   protected val clusterTable: TableQuery[Clusters] = TableQuery[Clusters]
   protected val distTable: TableQuery[Dists] = TableQuery[Dists]
+
+  def tipsyShutdown() {
+    if (isDriverLoaded) driver.close()
+  }
 }
 
 trait TipsyActors {

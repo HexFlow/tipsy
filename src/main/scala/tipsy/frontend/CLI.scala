@@ -35,6 +35,6 @@ class CLI(implicit val config: Config) extends TipsyDriver
       if (matrixdump) cliMatrixDump
     }
 
-    driver.close()
+    tipsyShutdown()
   }
 }
