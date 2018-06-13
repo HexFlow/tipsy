@@ -6,53 +6,43 @@ Tipsy, a tool to parse, analyze, cluster programming MOOC submissions,  in order
 # Requirements
 * JVM
 * sbt
-* python2
-* matplotlib
-* scipy
-* numpy
+* postgres (optional)
+* python2 (optional)
+* matplotlib (optional)
+* scipy (optional)
+* numpy (optional)
 
-That's it. Download `sbt` (Scala Build Tool), and place it in your path. It will automatically download the required version of Scala.
+Download `sbt` (Scala Build Tool), and place it in your path. It will automatically download the required version of Scala.
 
 For the Python dependencies, you can use a virtualenv in the scripts folder with the above listed dependencies.
 
+You can run postgres using Docker (follow [instructions on their website](https://docs.docker.com/install/linux/docker-ce/ubuntu/) regarding how to install Docker). To do that, run the following:
+
+```bash
+docker run -d --name tipsy-db -e POSTGRES_PASSWORD=default -e POSTGRES_USER=default -e POSTGRES_DB=default -p 5432:5432 postgres
+```
+
 # Usage
+
 ```
 bash> sbt
 sbt> run help
 ```
 
-It should give you the following output:
-
+This would display the available commands. For instance, you can run the following to display corrections when comparing two files:
 ```
-Command: exec [dir] [options]
-whether to run operations on a given set of input programs
-  --files <file1>,<file2>...
-                           files to run analysis on
-  --ids <id1>,<id2>...     program IDs to run analysis on
-  -d, --distance           whether to print distance between programs
-  -c, --corrections        whether to print corrections
-  --parseTree              whether to show ParseTree
-  --linearRep              whether to show LinearRepresentation
-  --normalRep              whether to show Normalized Linear Representation
-Command: exec dir [options]
-directory to run analysis on
-  -n, --names <value>
-  -l, --limit <value>      limit on programs to analyse
-Command: cluster [options]
-whether to do cluster related operations
-  -q, --ques <value>       question whose cluster to run analysis on
-  -u, --update             whether to update cluster database
-  -v, --variance           whether to print cluster variance
-  -dm, --dumpmatrix        whether to dump distance matrix
-Command: web [options]
-whether to serve as a web backend
-  --host <value>           address to listen on
-  --port <value>           port to listen on
+sbt> run exec --files <file1>.c,<file2>.c --corrections
 ```
 
-# Publication
+To see the linear representation of multiple files, you can do either of the following. The second one will run the command on all files in the provided directory.
+```
+sbt> run exec --linearRep --files <file1>.c,<file2>.c,<file3.c>.....
+sbt> run exec dir -n <dir_name> --linearRep
+```
 
-[This paper](https://arxiv.org/abs/1804.00373) has been selected as a poster paper for AIED 2018.
+# Academic publication
+
+This work has been accepted at the [International Conference on Artificial Intelligence in Education, 2018](https://aied2018.utscic.edu.au) as a poster paper. The full text can be found [on arXiv](https://arxiv.org/abs/1804.00373).
 
 # Code structure
 
