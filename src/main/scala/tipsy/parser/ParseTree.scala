@@ -10,7 +10,7 @@ sealed trait CFEnum extends Serializable {
 
   var line: Int = 0
   var column: Int = 0
-  var isAfter = false
+  var relativePosition = 0
   def setPos(p: Position): CFEnum = {
     if (line == 0) line = p.line
     if (column == 0) column = p.column
@@ -21,12 +21,37 @@ sealed trait CFEnum extends Serializable {
     if (column == 0) column = p.column
     return this
   }
+  def setPos(l: Int, c: Int): CFEnum = {
+    if (line == 0) line = l
+    if (column == 0) column = c
+    return this
+  }
   def after(): CFEnum = {
-    isAfter = true
+    relativePosition = 1
+    return this
+  }
+  def before(): CFEnum = {
+    relativePosition = -1
     return this
   }
   def position(): String =
     s"${line}:${column}"
+
+  def nicePosition(): String = {
+    relativePosition match {
+      case 0 => position()
+      case 1 => "After " ++ position()
+      case -1 => "Before " ++ position()
+    }
+  }
+
+  def isLaterPosition(other: CFEnum): Boolean = {
+    if (line != other.line) {
+      return line > other.line
+    } else if (column != other.column) {
+      return column > other.column
+    } else return relativePosition > other.relativePosition
+  }
 }
 case class FUNC() extends CFEnum {
   val flowName = "Func"
@@ -92,13 +117,36 @@ case class TypedIdent(qt: QualifiedType, name: IDENT) extends ParseTree
 case class TopList(items: List[ParseTree]) extends ParseTree {
   override lazy val rawCompress = items.flatMap(_.compress)
 }
-case class BlockList(items: List[ParseTree]) extends ParseTree {
+case class BlockList(
+  items: List[ParseTree],
+  initBracePos: Option[(Int, Int)] = None,
+  endBracePos: Option[(Int, Int)] = None
+) extends ParseTree {
+
   override lazy val rawCompress = {
     val citems = items.flatMap(_.compress)
-    val lastItem = citems.lastOption
-    val blockClose = lastItem.map(item => BLOCKCLOSE().setPos(item).after)
-      .getOrElse(BLOCKCLOSE())
-    BLOCKOPEN() :: citems ++ List(blockClose)
+
+    val starting = initBracePos match {
+      case Some((l, c)) => BLOCKOPEN().setPos(l, c)
+      case None => {
+        val firstItem = citems.reduceLeft { (i1, i2) =>
+          if (i1.isLaterPosition(i2)) i2 else i1
+        }
+        BLOCKOPEN().setPos(citems.head).before
+      }
+    }
+
+    val ending = endBracePos match {
+      case Some((l, c)) => BLOCKCLOSE().setPos(l, c)
+      case None => {
+        val lastItem = citems.reduceLeft { (i1, i2) =>
+          if (i1.isLaterPosition(i2)) i1 else i2
+        }
+        BLOCKCLOSE().setPos(lastItem).after
+      }
+    }
+
+    starting :: citems ++ List(ending)
   }
 }
 

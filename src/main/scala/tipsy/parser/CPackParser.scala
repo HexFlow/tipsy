@@ -72,17 +72,18 @@ object CPackParser extends PackratParsers with Parsers
     }
   }
 
+  lazy val withBracesBlock: PackratParser[BlockList] = positioned {
+    BRACKET(CURLY(true)) ~ blockparser ~ BRACKET(CURLY(false)) ^^ {
+      case a ~ body ~ b => handleCurlyBody(a, body, b)
+    }
+  }
+
   lazy val maybeWithoutBracesBlock: PackratParser[BlockList] = positioned {
     val withoutBraces = (expressionStmt | statement | definitions) ^^ {
       case x => BlockList(customFlatten(List(x)))
     }
 
-    val withBraces =
-      BRACKET(CURLY(true)) ~ blockparser ~ BRACKET(CURLY(false)) ^^ {
-        case _ ~ body ~ _ => body
-      }
-
-    withoutBraces | withBraces
+    withoutBraces | withBracesBlock
   }
 
   lazy val flowStmt: PackratParser[FlowStatement] = positioned {
@@ -107,7 +108,7 @@ object CPackParser extends PackratParsers with Parsers
     }
     val withBraces = {
       BRACKET(CURLY(true)) ~ loopBlockparser ~ BRACKET(CURLY(false)) ^^ {
-        case _ ~ body ~ _ => body
+        case a ~ body ~ b => handleCurlyBody(a, body, b)
       }
     }
     withoutBraces | withBraces
@@ -120,7 +121,7 @@ object CPackParser extends PackratParsers with Parsers
 
     val withBraces = {
       BRACKET(CURLY(true)) ~ loopBlockparser ~ BRACKET(CURLY(false)) ^^ {
-        case _ ~ body ~ _ => body
+        case a ~ body ~ b => handleCurlyBody(a, body, b)
       }
     }
 
@@ -169,11 +170,9 @@ object CPackParser extends PackratParsers with Parsers
     val initialized = positioned {
       typedvariable ~
       (signature | voidSignature) ~
-      BRACKET(CURLY(true)) ~
-      blockparser ~
-      BRACKET(CURLY(false)) ^^ {
+      withBracesBlock ^^ {
 
-        case ret ~ args ~ _ ~ block ~ _ => {
+        case ret ~ args ~ block => {
           FxnDefinition(ret, args, Some(block))
         }
       }
@@ -182,10 +181,8 @@ object CPackParser extends PackratParsers with Parsers
     val main = positioned {
       IDENT("main") ~
       (signature | voidSignature) ~
-      BRACKET(CURLY(true)) ~
-      blockparser ~
-      BRACKET(CURLY(false)) ^^ {
-        case _ ~ args ~ _ ~ block ~ _ => {
+      withBracesBlock ^^ {
+        case _ ~ args ~ block => {
           FxnDefinition(TypedIdent(QualifiedType(List(), INT()),
             IDENT("main")), args, Some(block))
         }

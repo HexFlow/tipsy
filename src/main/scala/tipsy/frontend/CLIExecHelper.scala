@@ -82,7 +82,7 @@ trait CLIExecHelpers extends TipsyDriver with JsonSupport {
           validTrees(1).code,
           dist,
           diffs.toVector
- ).map(println(_))
+        ).map(println(_))
       }).leftMap { err => println("Error while fetching corrections: " ++ err.toString) }
     } else {
       println("Corrections are not provided when given more than two files.")
@@ -113,7 +113,7 @@ trait CLIExecHelpers extends TipsyDriver with JsonSupport {
           if (linearRep) {
             println("Linear representation:")
             tree.compress.foreach { elem =>
-              println("At " ++ elem.position ++ ": " ++ elem.toString)
+              println("At " ++ elem.nicePosition ++ ": " ++ elem.toString)
             }
           }
           if (normalRep) {

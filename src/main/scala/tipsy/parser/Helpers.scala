@@ -97,4 +97,10 @@ trait Helpers extends PackratParsers with Parsers {
     defs ++ processFxn("main")
   }
 
+  def handleCurlyBody(a: CToken, body: BlockList, b: CToken) = {
+    body.copy(
+      initBracePos = Some((a.pos.line, a.pos.column)),
+      endBracePos = Some((b.pos.line, b.pos.column))
+    )
+  }
 }
