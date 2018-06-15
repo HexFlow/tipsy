@@ -25,18 +25,16 @@ object Types {
     lazy val stringWithFxn: String = this.toString ++ " in " ++ fxn
     def setFxn(name: String): Diff
     def position(): String
-    def lineAndCol(): Option[(Int, Int)] = {
-      if (position == "") None else
-      Some(position.split(":").map(_.toInt) match {  case Array(a, b) => (a, b) })
-    }
+    def lineAndCol(): (Int, Int) =
+      position.split(":").map(_.toInt) match {  case Array(a, b) => (a, b) }
   }
 
-  case class AddDiff(add: CFEnum, prevPos: String, fxn: String = "") extends Diff {
+  case class AddDiff(add: CFEnum, prevToken: CFEnum, fxn: String = "") extends Diff {
     override def toString() = {
       "Add    : " ++ add.toString
     }
     def setFxn(name: String): Diff = this.copy(fxn = name)
-    def position() = prevPos
+    def position() = prevToken.position
   }
   case class DelDiff(del: CFEnum, fxn: String = "") extends Diff {
     override def toString() = {

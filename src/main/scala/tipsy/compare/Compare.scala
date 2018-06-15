@@ -90,7 +90,7 @@ object Compare {
       if (!action.isDefined) (editRet, (b, c))
       else action.get match {
              case DEL_d => (editRet.correct(DelDiff(cfEnum1(i)), cost(i, j, DEL_d, 3 * b)), (b + 1, c))
-             case ADD_d => (editRet.correct(AddDiff(cfEnum2(j), cfEnum1(i).position), cost(i, j, ADD_d, 3 * b)), (b + 1, c))
+             case ADD_d => (editRet.correct(AddDiff(cfEnum2(j), cfEnum1(i)), cost(i, j, ADD_d, 3 * b)), (b + 1, c))
              case _     => {
                (editRet.correct(ReplaceDiff(cfEnum2(j), cfEnum1(i)), cost(i, j, REPLACE_d, c)), (b, c + 1))
              }

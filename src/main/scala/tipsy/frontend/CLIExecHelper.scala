@@ -75,16 +75,14 @@ trait CLIExecHelpers extends TipsyDriver with JsonSupport {
       } yield {
         println("Edit ret:")
         println("Distance: " ++ dist.toString)
-        println("Diffs:")
-        diffs.foreach { diff =>
-          diff.lineAndCol match {
-            case Some((line, col)) =>
-              println("Original line:")
-              println(validTrees(0).code(line-1).drop(col-1))
-            case None =>
-          }
-          println(diff.asJson)
-        }
+        println("Corrections:")
+
+        RealCorrection(
+          validTrees(0).code,
+          validTrees(1).code,
+          dist,
+          diffs.toVector
+ ).map(println(_))
       }).leftMap { err => println("Error while fetching corrections: " ++ err.toString) }
     } else {
       println("Corrections are not provided when given more than two files.")
@@ -112,7 +110,12 @@ trait CLIExecHelpers extends TipsyDriver with JsonSupport {
           NormCode(nfxns) = normalized
         } yield {
           if (parseTree) println(tree)
-          if (linearRep) println(tree.compress)
+          if (linearRep) {
+            println("Linear representation:")
+            tree.compress.foreach { elem =>
+              println("At " ++ elem.position ++ ": " ++ elem.toString)
+            }
+          }
           if (normalRep) {
             nfxns.map {
               case NormFxn(name, cfs) =>

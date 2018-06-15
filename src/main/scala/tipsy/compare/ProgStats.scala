@@ -7,7 +7,8 @@ object ProgStats {
   def apply(code: ParseTree, file: Option[String]): Stats = {
 
     val counts = code.compress.collect {
-      case x @ (IFCOND() | FUNC() | LOOPCOND()) => x
+      case x @ (IFCOND() | FUNC()) => x
+      case x @ LOOPCOND(_) => LOOPCOND("fake")
     }.groupBy(identity).mapValues(_.size)
 
     var depth = 0
@@ -25,7 +26,7 @@ object ProgStats {
 
     Stats(
       ifs = Some(counts get IFCOND() getOrElse 0),
-      loops = Some(counts get LOOPCOND() getOrElse 0),
+      loops = Some(counts get LOOPCOND("fake") getOrElse 0),
       fxns = Some(counts get FUNC() getOrElse 0),
       depth = Some(maxdepth),
       file = file

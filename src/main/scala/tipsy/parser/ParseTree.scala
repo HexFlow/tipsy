@@ -25,11 +25,8 @@ sealed trait CFEnum extends Serializable {
     isAfter = true
     return this
   }
-  def position(): String = {
-    val res = s"${line}:${column}"
-    if (isAfter) res ++ "*"
-    else res
-  }
+  def position(): String =
+    s"${line}:${column}"
 }
 case class FUNC() extends CFEnum {
   val flowName = "Func"
@@ -46,7 +43,7 @@ case class IFCOND() extends CFEnum {
 case class SWITCHCOND() extends CFEnum {
   val flowName = "Switch"
 }
-case class LOOPCOND() extends CFEnum {
+case class LOOPCOND(name: String) extends CFEnum {
   val flowName = "Loop"
 }
 case class POSTEXPR(value: List[String]) extends CFEnum {
@@ -151,11 +148,7 @@ case class Continue() extends FlowStatement {
 // A statement. Ex: a += b * 3;
 sealed trait Statement extends ParseTree
 case class IfStatement(cond: Expression, body: BlockList,
-  elsebody: BlockList) extends Statement {
-  override lazy val rawCompress = {
-    IFCOND() :: post(cond) :: body.compress ++ elsebody.compress
-  }
-}
+  elsebody: BlockList) extends Statement
 
 case class SwitchStatement(value: Expression, caseBlocks: List[(Expression, BlockList)],
   defaultBlock: BlockList) extends Statement {
@@ -168,19 +161,19 @@ case class SwitchStatement(value: Expression, caseBlocks: List[(Expression, Bloc
 case class ForStatement(e1: Expression, e2: Expression,
   e3: Expression, body: BlockList) extends Statement {
   override lazy val rawCompress =
-    post(e1) :: LOOPCOND() :: post(e2) ::
+    post(e1) :: LOOPCOND("for") :: post(e2) ::
   body.copy(items = body.items :+ e3).compress
 }
 
 case class WhileStatement(cond: Expression,
   body: BlockList) extends Statement {
-  override lazy val rawCompress = LOOPCOND() :: post(cond) :: body.compress
+  override lazy val rawCompress = LOOPCOND("while") :: post(cond) :: body.compress
 }
 
 case class DoWhileStatement(body: BlockList,
   cond: Expression) extends Statement {
   lazy val compressedBody: List[CFEnum] = body.compress
-  override lazy val rawCompress = compressedBody ++ List(LOOPCOND(), post(cond)) ++ compressedBody
+  override lazy val rawCompress = compressedBody ++ List(LOOPCOND("do"), post(cond)) ++ compressedBody
 }
 
 case class ReturnStatement(code: Expression) extends Statement {
